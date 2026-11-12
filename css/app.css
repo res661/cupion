@@ -763,7 +763,7 @@ body, #app { overscroll-behavior: none; }
 .sheet h2 { font-size: 28px; line-height: 1.1; margin: 6px 0; }
 .sheet .hint { color: var(--text-2); margin-bottom: 14px; }
 .stars { display: flex; gap: 2px; justify-content: space-between; margin: 8px 0 12px; }
-.stars button { flex: 1; height: 40px; font-size: 20px; color: var(--text-3); }
+.stars button { flex: 1; height: 40px; font-size: 20px; color: var(--text-3); transition: transform 0.45s var(--spring), color 0.2s ease; }
 .stars button.on { color: var(--star); transform: scale(1.08); }
 .slider {
   -webkit-appearance: none;
@@ -783,6 +783,14 @@ body, #app { overscroll-behavior: none; }
 }
 .big-score { font-size: 64px; font-weight: 800; letter-spacing: -0.05em; text-align: center; line-height: 1; }
 .big-score span { color: var(--star); font-size: 28px; }
+.big-score.tick { animation: scorePop 0.45s var(--spring); }
+@keyframes scorePop {
+  0% { transform: scale(0.9); }
+  55% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.slider { transition: transform 0.45s var(--spring); }
+.slider.sprung { animation: scorePop 0.45s var(--spring); }
 .field, .area {
   width: 100%;
   border-radius: 16px;
@@ -1049,7 +1057,7 @@ body, #app { overscroll-behavior: none; }
   position: absolute;
   left: 50%;
   top: calc(var(--inset-top) + 12px);
-  transform: translateX(-50%) translateY(-12px);
+  transform: translateX(-50%) translateY(-18px) scale(0.96);
   z-index: 90;
   max-width: calc(100% - 32px);
   padding: 10px 14px;
@@ -1062,9 +1070,9 @@ body, #app { overscroll-behavior: none; }
   font-weight: 600;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s var(--spring), transform 0.35s var(--spring);
+  transition: opacity 0.45s var(--spring), transform 0.45s var(--spring);
 }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
 .empty { text-align: center; padding: 36px 28px; color: var(--text-2); }
 .empty h3 { color: var(--text); font-size: 22px; margin-bottom: 6px; }

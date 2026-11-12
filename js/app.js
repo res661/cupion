@@ -579,7 +579,7 @@
     return '<div class="' + cls + '"' + style + '>' + visual + chip + '</div>';
   }
 
-  function postCard(post) {
+  function postCard(post, index) {
     if (!post) return '';
     var photo = (post.photos || [])[0] || { id: '' };
     var city = post.city ? ' · ' + esc(post.city) : '';
@@ -587,7 +587,7 @@
     var score = avgScore(post);
     var scoreHtml = '<div class="post-score"><i>★</i><b' + (score ? ' data-tick="' + esc(score) + '"' : '') + '>' + esc(score || '—') + '</b></div>';
     var rateBtn = post.isMine ? '' : '<button class="rate-pill" data-act="rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '">Оценить</button>';
-    return '<article class="post" data-post="' + esc(post.id) + '"><div class="card">' +
+    return '<article class="post" data-post="' + esc(post.id) + '" style="--i:' + Math.min(index || 0, 7) + '"><div class="card">' +
       '<div class="post-head"><button class="mini-ava" data-act="person" data-id="' + esc(post.id) + '">' + phAvatar() + '</button>' +
       '<button class="post-user" data-act="person" data-id="' + esc(post.id) + '">' + esc(post.name) + (post.premium ? premMark() : '') + '</button>' +
       (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
@@ -625,7 +625,7 @@
       '<button class="btn btn-primary" data-act="person" data-id="' + esc(m.user.id) + '">Смотреть</button></section>';
   }
 
-  function ratingRow(row, incoming) {
+  function ratingRow(row, incoming, index) {
     if (!row || !row.user) return '';
     var who = row.user;
     var revealed = !incoming || row.revealed || row.score > 5;
@@ -652,7 +652,7 @@
       ? '<b data-act="person" data-id="' + esc(who.id) + '">' + esc(title) + (who.premium ? premMark() : '') + '</b>'
       : '<b>' + esc(title) + '</b>';
     var open = revealed ? ' data-act="person" data-id="' + esc(who.id) + '"' : '';
-    return '<article class="rate-row' + (revealed ? '' : ' anon') + '"' + open + '>' +
+    return '<article class="rate-row' + (revealed ? '' : ' anon') + '"' + open + ' style="--i:' + Math.min(index || 0, 7) + '">' +
       '<div class="rate-main">' + phAvatar(revealed ? '' : 'anon') +
       '<div>' + nameBtn + '<div class="sub">' + esc(line) + '</div></div>' +
       (revealed ? '<button class="thumb-btn" data-act="person" data-id="' + esc(who.id) + '">' + phPhoto() + '</button>' : '<span class="thumb-btn">' + phPhoto() + '</span>') +
@@ -668,10 +668,10 @@
     var hero = (S.ratingsTab !== 'out' && S.matches && S.matches[0]) ? matchHero(S.matches[0]) : '';
     var body = '';
     if (S.ratingsTab === 'in') {
-      body = (S.incoming || []).map(function (row) { return ratingRow(row, true); }).join('');
+      body = (S.incoming || []).map(function (row, i) { return ratingRow(row, true, i); }).join('');
       if (!body) body = '<div class="empty"><div class="empty-orb"></div><h3>Пока тихо</h3><p>Когда тебя оценят, это появится здесь.</p></div>';
     } else if (S.ratingsTab === 'out') {
-      body = (S.outgoing || []).map(function (row) { return ratingRow(row, false, 0); }).join('');
+      body = (S.outgoing || []).map(function (row, i) { return ratingRow(row, false, i); }).join('');
       if (!body) body = '<div class="empty"><div class="empty-orb"></div><h3>Ты ещё никого не оценил</h3><p>Поставь первую оценку в ленте.</p></div>';
     } else {
       body = (S.matches || []).slice(1).map(function (m) {
@@ -1076,17 +1076,57 @@
     });
   }
 
+  function motionOff() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
   function paintScore(n, haptic) {
     n = Math.max(1, Math.min(10, n));
     if (haptic && n !== S.score && window.TG) TG.selection();
     S.score = n;
     var label = document.querySelector('[data-score]');
-    if (label) label.textContent = String(n);
+    if (label) {
+      label.textContent = String(n);
+      var box = label.closest('.big-score');
+      if (box && !motionOff()) {
+        box.classList.remove('tick');
+        box.offsetWidth;
+        box.classList.add('tick');
+      }
+    }
     document.querySelectorAll('.stars button').forEach(function (btn, i) {
       btn.classList.toggle('on', i < n);
     });
     var range = document.querySelector('[data-score-range]');
-    if (range && String(range.value) !== String(n)) range.value = String(n);
+    if (range) {
+      if (String(range.value) !== String(n)) range.value = String(n);
+      if (!motionOff()) {
+        range.classList.remove('sprung');
+        range.offsetWidth;
+        range.classList.add('sprung');
+      }
+    }
+  }
+
+  function runCountUps(root) {
+    if (!root) return;
+    var nodes = root.querySelectorAll('[data-tick]');
+    Array.prototype.forEach.call(nodes, function (el) {
+      var raw = el.getAttribute('data-tick');
+      var target = parseFloat(raw);
+      if (!isFinite(target)) return;
+      if (motionOff()) { el.textContent = raw; return; }
+      var dec = String(raw).indexOf('.') !== -1;
+      var start = performance.now();
+      var step = function (now) {
+        var t = Math.min(1, (now - start) / 620);
+        var eased = 1 - Math.pow(1 - t, 3);
+        var val = target * eased;
+        el.textContent = dec ? val.toFixed(1) : String(Math.round(val));
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
   }
 
   /* ---------- stories / match / viewer ---------- */
@@ -1344,15 +1384,15 @@
     var medals = ['2', '1', '3'];
     var podium = order.map(function (row, i) {
       if (!row) return '<div class="pod empty"></div>';
-      return '<button class="pod p' + medals[i] + '" data-act="person" data-id="' + esc(row.id) + '">' +
+      return '<button class="pod p' + medals[i] + '" data-act="person" data-id="' + esc(row.id) + '" style="--i:' + i + '">' +
         '<span class="medal">' + medals[i] + '</span>' +
         boardFace(row, 'pod-ava') +
         '<b>' + esc(row.name) + (row.premium ? premMark() : '') + '</b>' +
         '<em>' + esc(Number(row.rating10 || 0).toFixed(1)) + '</em>' +
         '<span>' + esc(compactNum(row.ratingsCount)) + '</span></button>';
     }).join('');
-    var rest = rows.slice(3).map(function (row) {
-      return '<button class="board-row" data-act="person" data-id="' + esc(row.id) + '">' +
+    var rest = rows.slice(3).map(function (row, i) {
+      return '<button class="board-row" data-act="person" data-id="' + esc(row.id) + '" style="--i:' + Math.min(i, 7) + '">' +
         '<span class="rk">' + row.rank + '</span>' + boardFace(row, '') +
         '<span class="who"><b>' + esc(row.name) + (row.premium ? premMark() : '') + '</b><small>' + esc(row.city || '') + '</small></span>' +
         '<span class="sc"><b>' + esc(Number(row.rating10 || 0).toFixed(1)) + '</b><small>' + esc(compactNum(row.ratingsCount)) + '</small></span></button>';
@@ -1407,6 +1447,7 @@
     renderMatch();
     syncBack();
     requestAnimationFrame(function () { placePill(false); });
+    runCountUps(stage);
     S.justLiked = '';
   }
 
@@ -2322,6 +2363,16 @@
       if (e.target && (e.target.id === 'pick-images' || e.target.id === 'pick-video')) onFiles(e);
     });
     document.addEventListener('input', onRange);
+    document.addEventListener('scroll', function (e) {
+      var scroller = e.target;
+      if (!scroller || scroller.id !== 'feed-scroll' || motionOff()) return;
+      var orbit = scroller.querySelector('.orbit');
+      if (!orbit) return;
+      var y = scroller.scrollTop || 0;
+      var shift = Math.max(-16, -y * 0.055);
+      var scale = Math.max(0.965, 1 - y / 2000);
+      orbit.style.transform = 'translate3d(0,' + shift.toFixed(2) + 'px,0) scale(' + scale.toFixed(3) + ')';
+    }, true);
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
