@@ -461,15 +461,13 @@
   }
 
   function feedScreen() {
-    var n = S.unseen || 0;
-    var badge = n ? '<span class="badge">' + (n > 9 ? '9+' : n) + '</span>' : '';
     var posts = S.loading
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
       : (S.feed.length ? S.feed.map(postCard).join('')
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
     return '<div class="screen screen-feed">' +
       '<header class="app-header"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div><div class="header-actions">' +
-      '<button class="icon-btn heart-btn" data-act="tab" data-tab="ratings" aria-label="Оценки">' + ICON.heart + badge + '</button>' +
+      '<button class="icon-btn trophy-btn' + (S.screen === 'rating' ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + ICON.trophy + '</button>' +
       '</div></header><div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="spinner"></div></div>' +
       orbit() +
       '<button class="new-pill" data-act="new-pill">↑ Появились новые</button>' +
@@ -1105,7 +1103,8 @@
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
       '<button class="dock-btn left' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + ICON.user + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить"><span>+</span></button>' +
-      '<button class="dock-btn right' + (S.screen === 'rating' ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + ICON.trophy + '</button>' +
+      '<button class="dock-btn right heart-tab' + (S.screen === 'ratings' ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + ICON.heart +
+      (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
       '</div></div>';
   }
 

@@ -259,6 +259,24 @@ body, #app {
 .dock-btn.left { justify-self: start; }
 .dock-btn.right { justify-self: end; }
 .dock-btn.on { color: #1c1c1e; }
+.dock-btn.heart-tab { position: relative; }
+.dock-btn .badge {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: #ff3b30;
+  color: #fff;
+  border: 2px solid #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 6px rgba(255, 59, 48, 0.28);
+}
 .dock-btn svg { width: 26px; height: 26px; }
 .dock-plus {
   width: 44px;
