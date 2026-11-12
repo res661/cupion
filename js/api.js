@@ -30,6 +30,8 @@
     getStoryUsers: call('getStoryUsers'),
     getStories: call('getStories'),
     markStorySeen: call('markStorySeen'),
+    reactStory: call('reactStory'),
+    getReactions: call('getReactions'),
     rate: call('rate'),
     sendMessage: call('sendMessage'),
     getIncoming: call('getIncoming'),

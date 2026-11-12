@@ -22,7 +22,7 @@
 
   /* 20 profiles. pending:true anketas arrive after "Появились новые". */
   var PEOPLE = [
-    { id: 'alina', username: 'alina', name: 'Алина', age: 21, gender: 'female', premium: true, rating10: 9.6, ratingsCount: 128, matchesCount: 14, bio: 'кофе, плёнка и ночные кухни', caption: 'ищу с кем пропасть на выходные', createdAt: Date.now() - 2 * 3600000, photos: [ph('alina1', 'photo-1494790108377-be9c29b29330'), ph('alina2', 'photo-1524504388940-b1c1722653e1'), ph('alina3', 'photo-1531123897727-8f129e1688ce')], stories: ['photo-1494790108377-be9c29b29330', 'photo-1524504388940-b1c1722653e1'] },
+    { id: 'alina', username: 'alina', name: 'Алина', age: 21, gender: 'female', premium: true, rating10: 9.6, ratingsCount: 1200, matchesCount: 36, bio: 'кофе, плёнка и ночные кухни', caption: 'ищу с кем пропасть на выходные', createdAt: Date.now() - 2 * 3600000, photos: [ph('alina1', 'photo-1494790108377-be9c29b29330'), ph('alina2', 'photo-1524504388940-b1c1722653e1'), ph('alina3', 'photo-1531123897727-8f129e1688ce')], stories: ['photo-1494790108377-be9c29b29330', 'photo-1524504388940-b1c1722653e1'] },
     { id: 'masha', username: 'masha', name: 'Маша', age: 23, gender: 'female', premium: false, rating10: 9.2, ratingsCount: 86, matchesCount: 9, bio: 'танцую на кухне серьёзнее, чем в зале', caption: 'сегодня свет был слишком добрый', createdAt: Date.now() - 5 * 3600000, photos: [ph('masha1', 'photo-1534528741775-53994a69daeb'), ph('masha2', 'photo-1529626455594-4ff0802cfb7e')], stories: ['photo-1534528741775-53994a69daeb'] },
     { id: 'sonya', username: 'sonya', name: 'Соня', age: 20, gender: 'female', premium: false, rating10: 8.8, ratingsCount: 54, matchesCount: 4, bio: 'книги, дождь, поздний завтрак', caption: 'новый город, старые кеды', createdAt: Date.now() - 8 * 3600000, photos: [ph('sonya1', 'photo-1488426862026-3ee34a7d66df'), ph('sonya2', 'photo-1531746020798-e6953c6e8e04')], stories: ['photo-1488426862026-3ee34a7d66df'] },
     { id: 'eva', username: 'eva', name: 'Ева', age: 24, gender: 'female', premium: false, rating10: 9.0, ratingsCount: 73, matchesCount: 6, bio: 'снимаю людей, которые не позируют', caption: 'если улыбаюсь — уже почти да', createdAt: Date.now() - 14 * 3600000, photos: [ph('eva1', 'photo-1517841905240-472988babdf9'), ph('eva2', 'photo-1544005313-94ddf0286df2')], stories: [] },
@@ -44,29 +44,48 @@
     { id: 'egor', username: 'egor', name: 'Егор', age: 24, gender: 'male', premium: false, rating10: 9.2, ratingsCount: 18, matchesCount: 1, bio: 'новый район, новая анкета', caption: 'только что появился', createdAt: Date.now() - 30 * 1000, pending: true, photos: [ph('egor1', 'photo-1540569014015-19a7be504e3a'), ph('egor2', 'photo-1501196354995-cbb51c65aaea')], stories: [] }
   ];
 
+  var CITIES = {
+    alina: 'Москва', masha: 'Санкт-Петербург', sonya: 'Казань', eva: 'Сочи', kira: 'Москва',
+    lena: 'Екатеринбург', polina: 'Новосибирск', vika: 'Краснодар', dasha: 'Москва', mila: 'Тбилиси',
+    vera: 'Пермь', nika: 'Калининград', max_k: 'Москва', gleb: 'Санкт-Петербург', artem: 'Казань',
+    ivan: 'Москва', timur: 'Алматы', lev: 'Москва', mark: 'Минск', egor: 'Воронеж'
+  };
+
+  function storyTTL(person) {
+    return ((person && person.premium) ? 10 : 1) * 3600000;
+  }
+
   function storyList(person) {
-    return (person.stories || []).map(function (pid, i) {
+    var ttl = storyTTL(person);
+    return (person.stories || []).map(function (entry, i) {
+      var createdAt = typeof entry === 'string' ? (Date.now() - (i + 1) * 8 * 60000) : (entry.createdAt || Date.now());
+      var id = typeof entry === 'string' ? (person.id + '_s' + i) : entry.id;
+      var remain = Math.max(0, ttl - (Date.now() - createdAt));
       return {
-        id: person.id + '_s' + i,
-        url: img(pid, 900, 1400),
-        createdAt: Date.now() - (i + 1) * 3600000
+        id: id,
+        url: '',
+        createdAt: createdAt,
+        ttl: ttl,
+        remain: remain,
+        expiresAt: createdAt + ttl
       };
-    });
+    }).filter(function (s) { return s.remain > 0; });
   }
 
   function clone(v) { return JSON.parse(JSON.stringify(v)); }
 
   function seedRatings(now) {
     var rows = [
-      ['r_max', 'max_k', 'me', 9, 'Давай познакомимся — очень тёплые фото', 2 * 60000],
+      ['r_sonya', 'sonya', 'me', 9, '', 2 * 60000],
+      ['r_max', 'max_k', 'me', 9, 'Давай познакомимся — очень тёплые фото', 8 * 60000],
       ['r_alina', 'alina', 'me', 10, 'Какой свет, это почти кино', 3600000],
-      ['r_sonya', 'sonya', 'me', 10, '', 3 * 3600000],
-      ['r_eva', 'eva', 'me', 10, 'Привет', 5 * 3600000],
-      ['r_mark', 'mark', 'me', 9, '', 26 * 3600000],
+      ['r_eva', 'eva', 'me', 5, 'Привет', 5 * 3600000],
+      ['r_mark', 'mark', 'me', 4, '', 26 * 3600000],
       ['r_kira', 'kira', 'me', 10, '', 30 * 3600000],
-      ['r_timur', 'timur', 'me', 9, 'Классная улыбка', 2 * DAY],
+      ['r_timur', 'timur', 'me', 6, 'Классная улыбка', 2 * DAY],
       ['r_lena', 'lena', 'me', 10, '', 2.2 * DAY],
       ['r_masha_in', 'masha', 'me', 9, 'Взаимно, ты очень живой в кадре', 4.2 * 3600000],
+      ['r_me_max', 'me', 'max_k', 9, '', 3 * 60000],
       ['r_me_masha', 'me', 'masha', 9, '', 4 * 3600000],
       ['r_me_gleb', 'me', 'gleb', 7, '', DAY]
     ];
@@ -82,9 +101,14 @@
       theme: 'auto',
       me: null,
       ratings: seedRatings(now),
-      matches: [{ id: 'm_masha', userId: 'masha', createdAt: now - 4 * 3600000 }],
+      matches: [
+        { id: 'm_max', userId: 'max_k', createdAt: now - 3 * 60000 },
+        { id: 'm_masha', userId: 'masha', createdAt: now - 4 * 3600000 }
+      ],
       seenRatingIds: [],
       seenStoryIds: [],
+      reactions: [],
+      servedIds: [],
       releasedNew: false,
       sentCount: 0,
       pendingStart: ''
@@ -110,7 +134,9 @@
 
   var state = readStore() || freshState();
   if (!state.ratings) state = freshState();
-  state.theme = localStorage.getItem(THEME_KEY) || state.theme || 'auto';
+  if (!state.reactions) state.reactions = [];
+  if (!state.servedIds) state.servedIds = [];
+  state.theme = 'light';
 
   function personById(id) {
     if (id === 'me') return state.me;
@@ -129,7 +155,7 @@
   function publicUser(p) {
     if (!p) return null;
     var rating = ratingInfo(p.id);
-    var stories = p.id === 'me' ? (p.stories || []) : storyList(p);
+    var stories = storyList(p);
     return {
       id: p.id,
       username: p.username,
@@ -138,10 +164,23 @@
       gender: p.gender,
       bio: p.bio || '',
       caption: p.caption || '',
+      city: p.city || CITIES[p.id] || '',
       premium: !!p.premium,
       lookingFor: p.lookingFor || 'all',
-      photos: (p.photos || []).map(function (ph) { return { id: ph.id, type: ph.type || 'photo', url: ph.url, poster: ph.poster || '' }; }),
-      stories: stories.map(function (s) { return { id: s.id, url: s.url, createdAt: s.createdAt, seen: state.seenStoryIds.indexOf(s.id) !== -1 }; }),
+      photos: (p.photos || []).map(function (photo, i) {
+        var presets = [0.8, 1, 1.25, 1.5, 1.91, 0.9, 1.15];
+        var ratio = photo.ratio || presets[(String(photo.id || i).length + i) % presets.length];
+        if (ratio < 0.8) ratio = 0.8;
+        if (ratio > 1.91) ratio = 1.91;
+        return { id: photo.id, type: photo.type || 'photo', url: photo.url, poster: photo.poster || '', ratio: ratio };
+      }),
+      stories: stories.map(function (s) {
+        return {
+          id: s.id, url: s.url, createdAt: s.createdAt,
+          ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt,
+          seen: p.id === 'me' || state.seenStoryIds.indexOf(s.id) !== -1
+        };
+      }),
       avatar: avatarOf(p),
       ratingLabel: rating.label,
       rating10: rating.avg10,
@@ -202,6 +241,7 @@
       photoId: r.photoId,
       user: pub,
       matched: hasMatch(otherId),
+      revealed: r.to !== 'me' || r.score > 5,
       repliedScore: mine && mine.score ? mine.score : null,
       thumb: pub ? (pub.photos[0] && (pub.photos[0].poster || pub.photos[0].url)) : ''
     };
@@ -224,27 +264,35 @@
     },
 
     register: function (draft) {
-      var check = this.isUsernameAvailable(draft.username);
-      if (!check.ok) throw new Error(check.reason === 'format' ? 'Некорректный username' : 'Этот @username занят');
       var age = parseInt(draft.age, 10);
       if (!age || age < 18) throw new Error('Cupion только с 18 лет');
+      var city = String(draft.city || '').trim();
+      if (city.length < 2) throw new Error('Укажи город');
+      var name = String(draft.name || '').trim();
+      if (name.length < 2) throw new Error('Как тебя зовут?');
       var photos = (draft.photos || []).slice(0, 6).map(function (p, i) {
-        return { id: 'me_p' + (i + 1), type: 'photo', url: p.url };
+        var presets = [0.8, 1, 1.25, 1.5, 1.91];
+        return { id: 'me_p' + (i + 1), type: 'photo', url: p.url || '', ratio: presets[i % presets.length] };
       });
       if (!photos.length) throw new Error('Добавь хотя бы одно фото');
+      var username = String(draft.username || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (!USER_RE.test(username) || !this.isUsernameAvailable(username).ok) {
+        username = 'u' + String(Date.now()).slice(-7);
+      }
       state.me = {
         id: 'me',
-        username: String(draft.username).toLowerCase(),
-        name: String(draft.name || '').trim(),
+        username: username,
+        name: name,
         age: age,
-        gender: draft.gender,
-        lookingFor: draft.lookingFor || 'all',
+        city: city,
+        gender: draft.gender || '',
+        lookingFor: 'all',
         bio: String(draft.bio || '').trim(),
         caption: String(draft.bio || '').trim(),
         premium: false,
         photos: photos,
         stories: [],
-        avatar: photos[0].url,
+        avatar: '',
         createdAt: Date.now()
       };
       writeStore();
@@ -258,6 +306,7 @@
         state.me.bio = String(patch.bio).trim();
         state.me.caption = state.me.bio;
       }
+      if (patch.city != null) state.me.city = String(patch.city).trim();
       if (patch.lookingFor) state.me.lookingFor = patch.lookingFor;
       if (patch.photos) {
         state.me.photos = patch.photos.slice(0, 6).map(function (p, i) {
@@ -280,25 +329,30 @@
 
     getFeed: function (opts) {
       opts = opts || {};
-      var me = state.me;
-      var mode = opts.mode || 'new';
-      var limit = opts.limit || 10;
+      if (opts.restart) state.servedIds = [];
+      var premium = !!(state.me && state.me.premium);
+      var limit = opts.limit || (premium ? 20 : 10);
       var list = PEOPLE.filter(function (p) {
         if (p.pending && !state.releasedNew) return false;
-        if (!me) return true;
-        if (me.lookingFor === 'male' && p.gender !== 'male') return false;
-        if (me.lookingFor === 'female' && p.gender !== 'female') return false;
         return true;
       });
-      list.sort(function (a, b) {
-        if (mode === 'all') return (b.rating10 - a.rating10) || (b.createdAt - a.createdAt);
-        return b.createdAt - a.createdAt;
-      });
-      return list.slice(0, limit).map(function (p) {
-        var pub = publicUser(p);
-        pub.myScore = myScoreFor(p.id);
-        return pub;
-      });
+      list.sort(function (a, b) { return b.createdAt - a.createdAt; });
+      var fresh = list.filter(function (p) { return state.servedIds.indexOf(p.id) === -1; });
+      var slice = fresh.slice(0, limit);
+      slice.forEach(function (p) { state.servedIds.push(p.id); });
+      var presets = [0.8, 1.91, 1, 1.5, 0.85, 1.25, 1.91, 0.8, 1.15, 1.4];
+      writeStore();
+      return {
+        items: slice.map(function (p, idx) {
+          var pub = publicUser(p);
+          pub.myScore = myScoreFor(p.id);
+          if (pub.photos[0]) pub.photos[0].ratio = presets[idx % presets.length];
+          return pub;
+        }),
+        total: list.length,
+        remaining: fresh.length - slice.length,
+        limit: limit
+      };
     },
 
     getUser: function (id) {
@@ -310,21 +364,41 @@
     },
 
     getStoryUsers: function () {
-      return PEOPLE.filter(function (p) {
+      var list = PEOPLE.filter(function (p) {
         if (p.pending && !state.releasedNew) return false;
-        return (p.stories || []).length;
+        return storyList(p).length > 0;
       }).map(publicUser);
+      list.sort(function (a, b) { return a.username < b.username ? -1 : 1; });
+      return list;
     },
 
     getStories: function (userId) {
       var p = personById(userId);
       if (!p) return [];
-      if (userId === 'me') return (p.stories || []).map(function (s) {
-        return { id: s.id, url: s.url, createdAt: s.createdAt, seen: true };
-      });
       return storyList(p).map(function (s) {
-        return { id: s.id, url: s.url, createdAt: s.createdAt, seen: state.seenStoryIds.indexOf(s.id) !== -1 };
+        s.seen = userId === 'me' || state.seenStoryIds.indexOf(s.id) !== -1;
+        return s;
       });
+    },
+
+    reactStory: function (payload) {
+      if (!state.me) throw new Error('Сначала создай анкету');
+      var emoji = payload.emoji || '';
+      if (!emoji) throw new Error('Выбери реакцию');
+      state.reactions.unshift({
+        id: 'rx_' + Date.now(),
+        storyId: payload.storyId || '',
+        to: payload.toId,
+        emoji: emoji,
+        from: 'me',
+        createdAt: Date.now()
+      });
+      writeStore();
+      return { ok: true };
+    },
+
+    getReactions: function (userId) {
+      return (state.reactions || []).filter(function (r) { return r.to === userId; });
     },
 
     markStorySeen: function (id) {
@@ -337,25 +411,27 @@
       var to = payload.toId;
       if (!personById(to)) throw new Error('Анкета не найдена');
       var score = Math.max(1, Math.min(10, parseInt(payload.score, 10) || 0));
+      var note = payload.text != null ? String(payload.text).trim().slice(0, 180) : '';
       var existing = findRating('me', to);
       if (existing) {
         existing.score = score;
         existing.photoId = payload.photoId || existing.photoId;
         existing.createdAt = Date.now();
+        if (payload.text != null) existing.text = note;
       } else {
         state.ratings.unshift({
           id: 'r_' + Date.now(),
           from: 'me',
           to: to,
           score: score,
-          text: '',
+          text: note,
           photoId: payload.photoId || '',
           createdAt: Date.now()
         });
       }
       var back = findRating(to, 'me');
       var matched = false;
-      if (back && back.score && !hasMatch(to)) {
+      if (back && back.score > 8 && score > 8 && !hasMatch(to)) {
         state.matches.unshift({ id: 'm_' + Date.now(), userId: to, createdAt: Date.now() });
         matched = true;
       }
