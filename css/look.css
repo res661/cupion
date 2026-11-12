@@ -159,6 +159,7 @@ body, #app {
   letter-spacing: -0.02em;
   text-align: left;
 }
+#stage { touch-action: pan-y; }
 .post-user { flex: 1; }
 .card-more {
   margin-left: 8px;

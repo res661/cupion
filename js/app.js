@@ -1780,8 +1780,69 @@
 
   /* ---------- gestures ---------- */
 
+  var SPRING = 'transform .36s cubic-bezier(0.32, 0.72, 0, 1)';
+  var TABS = ['profile', 'feed', 'ratings'];
+
+  function tabIndex() {
+    var i = TABS.indexOf(S.screen);
+    return i < 0 ? 1 : i;
+  }
+
+  function edgeLayer() {
+    if (S.match) {
+      var match = document.querySelector('.match-layer');
+      if (match) return { mode: 'match', layer: match };
+    }
+    if (S.viewer) {
+      var viewer = document.querySelector('.viewer');
+      if (viewer) return { mode: 'viewer', layer: viewer };
+    }
+    if (S.story) {
+      var story = document.querySelector('.story-layer');
+      if (story) return { mode: 'story', layer: story };
+    }
+    if (S.sheet) {
+      var sheet = document.querySelector('.sheet');
+      if (sheet) return { mode: 'sheet', layer: sheet };
+    }
+    if (S.screen === 'person' || S.screen === 'rating' || (S.screen === 'register' && S.regStep > 0)) {
+      var stage = document.getElementById('stage');
+      if (stage) return { mode: 'page', layer: stage };
+    }
+    return null;
+  }
+
+  function springBack(layer) {
+    if (!layer) return;
+    layer.style.transition = SPRING;
+    layer.style.transform = '';
+  }
+
+  function finishEdge(g) {
+    if (g.mode === 'sheet') closeSheet({ dragged: true });
+    else if (g.mode === 'story') closeStory();
+    else if (g.mode === 'viewer') closeViewer();
+    else if (g.mode === 'match') closeMatch();
+    else {
+      if (g.layer) {
+        g.layer.style.transition = 'none';
+        g.layer.style.transform = '';
+      }
+      goBack();
+    }
+  }
+
   function onPointerDown(e) {
     if (e.button != null && e.button !== 0) return;
+    var onField = e.target.closest('input, textarea, a');
+    var onCarousel = e.target.closest('[data-swipe]');
+    if (!onField && !onCarousel && e.clientX <= 26 && !e.target.closest('button')) {
+      var edge = edgeLayer();
+      if (edge && edge.layer) {
+        gesture = { kind: 'edge-wait', x: e.clientX, y: e.clientY, mode: edge.mode, layer: edge.layer };
+        return;
+      }
+    }
     var story = e.target.closest('.story-layer');
     if (story && !e.target.closest('button')) {
       gesture = { kind: 'story', x: e.clientX, y: e.clientY, layer: story };
@@ -1810,9 +1871,16 @@
       gesture = { kind: 'photo-wait', x: e.clientX, y: e.clientY, id: clip.getAttribute('data-swipe'), clip: clip };
       return;
     }
-    var scroll = e.target.closest('#feed-scroll');
-    if (scroll && scroll.scrollTop <= 0 && !e.target.closest('button')) {
-      gesture = { kind: 'pull-wait', x: e.clientX, y: e.clientY, scroll: scroll };
+    if (onField || e.target.closest('button')) return;
+    if (S.screen === 'person' && !S.sheet && !S.story && !S.viewer && !S.match) {
+      var profileScroll = document.querySelector('#stage .scroll');
+      if (profileScroll && profileScroll.scrollTop <= 0) {
+        gesture = { kind: 'profile-wait', x: e.clientX, y: e.clientY, layer: document.getElementById('stage'), sc: profileScroll };
+        return;
+      }
+    }
+    if (!S.sheet && !S.story && !S.viewer && !S.match && (S.screen === 'feed' || S.screen === 'profile' || S.screen === 'ratings')) {
+      gesture = { kind: 'nav-wait', x: e.clientX, y: e.clientY, scroll: e.target.closest('#feed-scroll') };
     }
   }
 
@@ -1820,6 +1888,68 @@
     if (!gesture) return;
     var dx = e.clientX - (gesture.x || 0);
     var dy = e.clientY - (gesture.y || 0);
+    if (gesture.kind === 'edge-wait') {
+      if (dx > 8 && Math.abs(dx) > Math.abs(dy)) {
+        gesture.kind = 'edge';
+        gesture.layer.style.transition = 'none';
+      } else if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) {
+        if (gesture.mode === 'story') {
+          gesture.kind = 'story-drag';
+          gesture.layer.style.transition = 'none';
+        } else if (gesture.mode === 'viewer') gesture.kind = 'viewer';
+        else if (gesture.mode === 'sheet') {
+          gesture.kind = 'sheet';
+          gesture.sheet = gesture.layer;
+          gesture.scTop = 0;
+        } else if (gesture.mode === 'page' && S.screen === 'person' && dy > 0) {
+          var top = document.querySelector('#stage .scroll');
+          if (top && top.scrollTop <= 0) {
+            gesture.kind = 'profile';
+            gesture.layer.style.transition = 'none';
+          } else gesture = null;
+        } else gesture = null;
+      }
+    }
+    if (!gesture) return;
+    if (gesture.kind === 'edge') {
+      var follow = Math.max(0, e.clientX - gesture.x);
+      gesture.layer.style.transform = 'translateX(' + follow + 'px)';
+      gesture.drag = follow;
+      e.preventDefault();
+      return;
+    }
+    if (gesture.kind === 'profile-wait') {
+      if (dy > 12 && dy > Math.abs(dx) && gesture.sc && gesture.sc.scrollTop <= 0) {
+        gesture.kind = 'profile';
+        gesture.layer.style.transition = 'none';
+      } else if (Math.abs(dx) > 12 || dy < -8) gesture = null;
+    }
+    if (!gesture) return;
+    if (gesture.kind === 'profile') {
+      var downY = Math.max(0, e.clientY - gesture.y);
+      gesture.layer.style.transform = 'translateY(' + downY + 'px)';
+      gesture.drag = downY;
+      e.preventDefault();
+      return;
+    }
+    if (gesture.kind === 'nav-wait') {
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+        gesture.kind = 'nav';
+        gesture.layer = document.getElementById('stage');
+        if (gesture.layer) gesture.layer.style.transition = 'none';
+      } else if (dy > 10 && dy > Math.abs(dx) && gesture.scroll && gesture.scroll.scrollTop <= 0) gesture.kind = 'pull';
+      else if (Math.abs(dy) > 12) gesture = null;
+    }
+    if (!gesture) return;
+    if (gesture.kind === 'nav' && gesture.layer) {
+      var shift = e.clientX - gesture.x;
+      var at = tabIndex();
+      if ((at === 0 && shift > 0) || (at === TABS.length - 1 && shift < 0)) shift *= 0.32;
+      gesture.layer.style.transform = 'translateX(' + shift + 'px)';
+      gesture.drag = shift;
+      e.preventDefault();
+      return;
+    }
     if (gesture.kind === 'story') {
       if (dy > 16 && dy > Math.abs(dx)) {
         clearTimeout(gesture.hold);
@@ -1858,6 +1988,7 @@
       gesture.drag = e.clientX - gesture.x;
       return;
     }
+    if (!gesture) return;
     if (gesture.kind === 'pull-wait') {
       var py = e.clientY - gesture.y;
       if (gesture.scroll.scrollTop <= 0 && py > 8 && py > Math.abs(e.clientX - gesture.x)) gesture.kind = 'pull';
@@ -1931,6 +2062,52 @@
       var x = g.x - rect.left;
       if (x < rect.width * 0.35) prevStory();
       else nextStory();
+      return;
+    }
+    if (g.kind === 'edge-wait' && g.mode === 'story') {
+      prevStory();
+      return;
+    }
+    if (g.kind === 'edge') {
+      var width = window.innerWidth || 390;
+      if ((g.drag || 0) > Math.min(110, width * 0.28)) {
+        g.layer.style.transition = SPRING;
+        g.layer.style.transform = 'translateX(' + width + 'px)';
+        swallowClick = true;
+        setTimeout(function () { finishEdge(g); }, 340);
+      } else springBack(g.layer);
+      return;
+    }
+    if (g.kind === 'profile') {
+      if ((g.drag || 0) > 110) {
+        var h = window.innerHeight || 700;
+        g.layer.style.transition = SPRING;
+        g.layer.style.transform = 'translateY(' + h + 'px)';
+        swallowClick = true;
+        setTimeout(function () {
+          g.layer.style.transition = 'none';
+          g.layer.style.transform = '';
+          goBack();
+        }, 340);
+      } else springBack(g.layer);
+      return;
+    }
+    if (g.kind === 'nav') {
+      var index = tabIndex();
+      var next = index;
+      if ((g.drag || 0) < -64 && index < TABS.length - 1) next = index + 1;
+      if ((g.drag || 0) > 64 && index > 0) next = index - 1;
+      if (next !== index && g.layer) {
+        var page = window.innerWidth || 390;
+        g.layer.style.transition = SPRING;
+        g.layer.style.transform = 'translateX(' + ((g.drag || 0) < 0 ? -page : page) + 'px)';
+        swallowClick = true;
+        setTimeout(function () {
+          g.layer.style.transition = 'none';
+          g.layer.style.transform = '';
+          goTab(TABS[next]);
+        }, 340);
+      } else springBack(g.layer);
       return;
     }
     if (g.kind === 'pull') {
