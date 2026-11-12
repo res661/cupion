@@ -311,33 +311,99 @@
     return '<span class="time-ring' + (seen ? ' seen' : ' live') + (extra ? ' ' + extra : '') + '" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
   }
 
-  function storyPool() {
-    var list = (S.stories || []).filter(function (u) { return u.stories && u.stories.length; });
-    var slots = BUBBLES.slice().sort(function (a, b) { return parseFloat(a.x) - parseFloat(b.x); });
-    var shift = S.storyShift || 0;
-    return slots.map(function (slot, i) {
-      return { slot: slot, user: list.length ? list[(i + shift) % list.length] : null, i: i };
+  function storyPeople() {
+    return (S.stories || []).filter(function (u) {
+      return u && u.id !== 'me' && u.stories && u.stories.length;
     });
   }
 
-  function bubble(user, slot, i) {
+  function ensureStrip() {
+    if (S.slots || !storyPeople().length) return;
+    var people = storyPeople();
+    var ordered = BUBBLES.slice().sort(function (a, b) { return parseFloat(a.x) - parseFloat(b.x); });
+    var chosen = [];
+    var used = {};
+    for (var i = 0; i < people.length && i < ordered.length; i++) {
+      var idx = people.length === 1 ? Math.floor(ordered.length / 2) : Math.round(i * (ordered.length - 1) / (people.length - 1));
+      while (used[idx] && idx < ordered.length - 1) idx += 1;
+      used[idx] = true;
+      chosen.push(ordered[idx]);
+    }
+    S.seenBubbles = S.seenBubbles || {};
+    S.slots = chosen.map(function (slot, i) {
+      return { i: i, x: slot.x, y: slot.y, s: slot.s, userId: people[i].id, bye: false, arrive: false };
+    });
+  }
+
+  function findStoryUser(id) {
+    var list = S.stories || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  function bubble(user, slot, i, extra) {
     var dx = (i % 2 ? 4 : -3) + 'px';
     var dy = (i % 3 ? -7 : 5) + 'px';
     var dur = (8 + (i % 5) * 0.7) + 's';
     var delay = (-i * 0.35) + 's';
-    return '<button class="bubble' + (S.cycle ? ' cycle' : '') + '" style="--x:' + slot.x + ';--y:' + slot.y + ';--s:' + slot.s + 'px;--dx:' + dx + ';--dy:' + dy + ';--dur:' + dur + ';--delay:' + delay + '" data-act="story" data-id="' + esc(user.id) + '" aria-label="' + esc(user.name) + '">' +
+    return '<button class="bubble' + (extra || '') + '" style="--x:' + slot.x + ';--y:' + slot.y + ';--s:' + slot.s + 'px;--dx:' + dx + ';--dy:' + dy + ';--dur:' + dur + ';--delay:' + delay + '" data-act="story" data-id="' + esc(user.id) + '" aria-label="' + esc(user.name) + '">' +
       '<span class="bubble-swap"><span class="bubble-drift">' + timeRing(user) + '</span></span></button>';
   }
 
   function orbit() {
-    var html = storyPool().map(function (row) {
-      return row.user ? bubble(row.user, row.slot, row.i) : '';
+    ensureStrip();
+    var html = (S.slots || []).map(function (slot, i) {
+      if (!slot.userId) return '';
+      var user = findStoryUser(slot.userId);
+      if (!user) return '';
+      var extra = slot.bye ? ' bye' : (slot.arrive ? ' arrive' : '');
+      return bubble(user, slot, i, extra);
     }).join('');
-    var mine = S.me && S.me.stories && S.me.stories.length;
-    html += '<button class="bubble me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
-      (mine ? timeRing(S.me, 'mine') : phAvatar()) +
-      '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span></span></button>';
     return '<div class="orbit">' + html + '</div>';
+  }
+
+  function paintOrbit() {
+    var node = document.querySelector('.orbit');
+    if (!node) return;
+    var scroller = document.getElementById('feed-scroll');
+    var y = scroller ? scroller.scrollTop : 0;
+    node.outerHTML = orbit();
+    if (scroller) scroller.scrollTop = y;
+  }
+
+  function nextFreePerson() {
+    var taken = {};
+    (S.slots || []).forEach(function (sl) { if (sl.userId) taken[sl.userId] = true; });
+    var list = storyPeople();
+    for (var i = 0; i < list.length; i++) {
+      if (!taken[list[i].id] && !(S.seenBubbles && S.seenBubbles[list[i].id])) return list[i];
+    }
+    return null;
+  }
+
+  function retireBubble(userId) {
+    if (!userId || !S.slots) return;
+    S.seenBubbles = S.seenBubbles || {};
+    if (S.seenBubbles[userId]) return;
+    S.seenBubbles[userId] = true;
+    var slot = null;
+    S.slots.forEach(function (sl) { if (sl.userId === userId) slot = sl; });
+    if (!slot) return;
+    slot.bye = true;
+    paintOrbit();
+    setTimeout(function () {
+      slot.bye = false;
+      slot.userId = null;
+      paintOrbit();
+      setTimeout(function () {
+        var next = nextFreePerson();
+        if (!next || slot.userId) return;
+        slot.userId = next.id;
+        slot.arrive = true;
+        paintOrbit();
+        setTimeout(function () { slot.arrive = false; }, 700);
+      }, 5000);
+    }, 460);
   }
 
   function mediaBlock(post, chip) {
@@ -822,7 +888,8 @@
       '<div class="story-user">' + phAvatar() + '<span>' + esc(st.user ? st.user.name : '') + '</span>' +
       '<em>' + timeAgo(item.createdAt) + '</em></div></div>' +
       '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥', '👏'].map(function (emo) {
-        return '<button class="emoji-btn" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
+        var picked = S.picked && S.picked[item.id] === emo;
+        return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
       }).join('') + '</div></div>';
   }
 
@@ -874,15 +941,25 @@
       renderStory();
       return;
     }
-    var ids = S.stories.map(function (u) { return u.id; });
-    var at = ids.indexOf(st.userId);
-    if (at >= 0 && ids[at + 1]) startStory(ids[at + 1], 0);
-    else closeStory();
+    var finished = st.userId;
+    var ids = (S.stories || []).map(function (u) { return u.id; }).filter(function (id) { return id !== 'me'; });
+    var at = ids.indexOf(finished);
+    var nextId = at >= 0 ? ids[at + 1] : null;
+    if (nextId) {
+      retireBubble(finished);
+      startStory(nextId, 0);
+      return;
+    }
+    closeStory();
   }
 
   function prevStory() {
     var st = S.story;
     if (!st) return;
+    if (!(S.me && S.me.premium)) {
+      premiumHint();
+      return;
+    }
     if (st.index > 0) {
       st.index -= 1;
       storySig = '';
@@ -891,13 +968,30 @@
   }
 
   function closeStory() {
+    var id = S.story && S.story.userId;
     S.story = null;
     storySig = '';
     stopClock();
     var root = document.getElementById('story-root');
     if (root && !S.viewer) root.innerHTML = '';
     syncBack();
-    loadStories().then(function () { if (S.screen === 'feed') render(); }).catch(function () {});
+    if (id) retireBubble(id);
+  }
+
+  function premiumHint() {
+    var layer = document.querySelector('.story-layer');
+    if (!layer) return;
+    var hint = layer.querySelector('.story-hint');
+    if (!hint) {
+      hint = document.createElement('div');
+      hint.className = 'story-hint';
+      hint.textContent = 'Назад — в Premium';
+      layer.appendChild(hint);
+    }
+    hint.classList.remove('show');
+    hint.offsetWidth;
+    hint.classList.add('show');
+    if (window.TG) TG.impact('light');
   }
 
   function restartClock() {
@@ -1169,14 +1263,35 @@
     if (act === 'story') { startStory(t.getAttribute('data-id'), parseInt(t.getAttribute('data-index') || '0', 10)); return; }
     if (act === 'react') {
       if (needAccount()) return;
-      var btn = t;
-      CupionAPI.reactStory({ toId: t.getAttribute('data-id'), storyId: t.getAttribute('data-story'), emoji: t.getAttribute('data-emoji') }).then(function () {
-        btn.classList.remove('pop');
-        btn.offsetWidth;
-        btn.classList.add('pop');
-        if (window.TG) TG.impact('light');
-        toast('Реакция отправлена');
-      }).catch(function (err) { toast(err.message || 'Не вышло'); });
+      var emo = t.getAttribute('data-emoji');
+      var sid = t.getAttribute('data-story');
+      S.picked = S.picked || {};
+      S.picked[sid] = emo;
+      var row = t.parentNode;
+      if (row) Array.prototype.forEach.call(row.children, function (btn) {
+        btn.classList.toggle('on', btn === t);
+      });
+      t.classList.remove('pop');
+      t.offsetWidth;
+      t.classList.add('pop');
+      var layer = t.closest('.story-layer');
+      if (layer) {
+        var host = layer.getBoundingClientRect();
+        var rect = t.getBoundingClientRect();
+        for (var bi = 0; bi < 6; bi++) {
+          var bit = document.createElement('span');
+          bit.className = 'emoji-bit';
+          bit.textContent = emo;
+          bit.style.left = (rect.left - host.left + rect.width / 2) + 'px';
+          bit.style.top = (rect.top - host.top) + 'px';
+          bit.style.setProperty('--tx', ((bi - 2.5) * 16) + 'px');
+          bit.style.setProperty('--ty', (-36 - bi * 10) + 'px');
+          layer.appendChild(bit);
+          (function (node) { setTimeout(function () { if (node.parentNode) node.remove(); }, 760); })(bit);
+        }
+      }
+      if (window.TG) TG.impact('medium');
+      CupionAPI.reactStory({ toId: t.getAttribute('data-id'), storyId: sid, emoji: emo }).catch(function () {});
       return;
     }
     if (act === 'tg') {
@@ -1782,15 +1897,7 @@
       S.loading = false;
       render();
     });
-    setInterval(function () {
-      if (!S.stories || S.stories.length < 2 || S.screen !== 'feed') return;
-      S.storyShift = (S.storyShift || 0) + 1;
-      S.cycle = true;
-      var node = document.querySelector('.orbit');
-      if (node) node.outerHTML = orbit();
-      S.cycle = false;
-    }, 60000);
-  }
+    }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
