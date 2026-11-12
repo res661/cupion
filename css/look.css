@@ -159,6 +159,18 @@ body, #app {
   letter-spacing: -0.02em;
   text-align: left;
 }
+.post-user { flex: 1; }
+.card-more {
+  margin-left: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: rgba(60, 60, 67, 0.55);
+  font-size: 16px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+.card-more:active { transform: scale(0.92); }
 .heart-fill {
   margin-left: auto;
   width: 36px;

@@ -110,6 +110,8 @@
       seenStoryIds: [],
       reactions: [],
       servedIds: [],
+      hiddenIds: [],
+      reports: [],
       releasedNew: false,
       sentCount: 0,
       pendingStart: ''
@@ -137,6 +139,8 @@
   if (!state.ratings) state = freshState();
   if (!state.reactions) state.reactions = [];
   if (!state.servedIds) state.servedIds = [];
+  if (!state.hiddenIds) state.hiddenIds = [];
+  if (!state.reports) state.reports = [];
   state.theme = 'light';
 
   function personById(id) {
@@ -335,6 +339,7 @@
       var limit = opts.limit || (premium ? 20 : 10);
       var list = PEOPLE.filter(function (p) {
         if (p.pending && !state.releasedNew) return false;
+        if (state.hiddenIds.indexOf(p.id) !== -1) return false;
         return true;
       });
       list.sort(function (a, b) { return b.createdAt - a.createdAt; });
@@ -608,6 +613,28 @@
     hasPendingNew: function () {
       if (state.releasedNew) return false;
       return PEOPLE.some(function (p) { return p.pending; });
+    },
+
+    hideProfile: function (id) {
+      if (!id || (state.me && id === state.me.id)) return false;
+      if (state.hiddenIds.indexOf(id) === -1) state.hiddenIds.push(id);
+      writeStore();
+      return true;
+    },
+
+    reportProfile: function (payload) {
+      var id = payload.userId;
+      if (!id || (state.me && id === state.me.id)) throw new Error('Нельзя пожаловаться на свою анкету');
+      state.reports.unshift({
+        id: 'rep_' + Date.now(),
+        userId: id,
+        reason: payload.reason || 'Другое',
+        text: String(payload.text || '').trim().slice(0, 200),
+        createdAt: Date.now()
+      });
+      if (state.hiddenIds.indexOf(id) === -1) state.hiddenIds.push(id);
+      writeStore();
+      return { ok: true };
     },
 
     releaseNew: function () {

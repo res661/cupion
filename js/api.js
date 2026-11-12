@@ -46,6 +46,8 @@
     setPremium: call('setPremium'),
     hasPendingNew: call('hasPendingNew'),
     releaseNew: call('releaseNew'),
+    hideProfile: call('hideProfile'),
+    reportProfile: call('reportProfile'),
     getLimits: call('getLimits'),
     getLeaderboard: call('getLeaderboard'),
     getTheme: call('getTheme'),

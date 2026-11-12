@@ -454,6 +454,7 @@
     return '<article class="post" data-post="' + esc(post.id) + '"><div class="card">' +
       '<div class="post-head"><button class="mini-ava" data-act="person" data-id="' + esc(post.id) + '">' + phAvatar() + '</button>' +
       '<button class="post-user" data-act="person" data-id="' + esc(post.id) + '">' + esc(post.name) + '</button>' +
+      (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
       '<button class="heart-fill' + (S.justLiked === post.id ? ' pop' : '') + '" data-act="rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '" aria-label="Оценить">' + ICON.heartFill + '</button></div>' +
       '<div class="frame">' + mediaBlock(post, '<span class="rate-chip"><b>★</b> ' + esc(post.ratingLabel) + '</span>') + '</div>' +
       '<div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + (city ? ' <span class="muted">· ' + city + '</span>' : '') + ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span></div>' +
@@ -836,6 +837,48 @@
     );
   }
 
+  function profileById(id) {
+    if (S.me && id === S.me.id) return S.me;
+    if (S.person && S.person.id === id) return S.person;
+    var found = null;
+    (S.feed || []).forEach(function (p) { if (p.id === id) found = p; });
+    (S.boardRows || []).forEach(function (p) { if (p.id === id) found = p; });
+    return found;
+  }
+
+  function actionsSheet(p) {
+    var link = 'https://t.me/cupion_app?startapp=u_' + encodeURIComponent(p.username || '');
+    return sheetFrame(
+      '<h2>' + esc(p.name || 'Анкета') + '</h2><div class="choice-list">' +
+      '<button class="choice-row" data-act="report-open" data-id="' + esc(p.id) + '"><span>Пожаловаться</span></button>' +
+      '<button class="choice-row" data-act="hide-profile" data-id="' + esc(p.id) + '"><span>Скрыть анкету</span></button>' +
+      '<button class="choice-row" data-act="share" data-link="' + esc(link) + '"><span>Поделиться</span></button></div>'
+    );
+  }
+
+  function reportSheet(p) {
+    var reasons = ['Реклама / спам', '18+ контент', 'Оскорбления', 'Фейк', 'Мошенничество', 'Другое'];
+    var buttons = reasons.map(function (reason) {
+      return '<button class="choice-row" data-act="report-send" data-id="' + esc(p.id) + '" data-reason="' + esc(reason) + '"><span>' + esc(reason) + '</span></button>';
+    }).join('');
+    return sheetFrame(
+      '<h2>Пожаловаться</h2><p class="hint">' + esc(p.name || '') + '</p><div class="choice-list">' + buttons + '</div>' +
+      '<textarea class="area" id="report-text" maxlength="200" placeholder="Комментарий, если нужно"></textarea>'
+    );
+  }
+
+  function dropProfile(id) {
+    S.feed = (S.feed || []).filter(function (p) { return p.id !== id; });
+    if (S.person && S.person.id === id) {
+      S.person = null;
+      S.personId = null;
+      S.screen = 'feed';
+    }
+    if (S.slots) {
+      S.slots.forEach(function (sl) { if (sl.userId === id) sl.userId = null; });
+    }
+  }
+
   function moreSheet(p) {
     var link = 'https://t.me/cupion_app?startapp=u_' + encodeURIComponent(p.username || '');
     var own = S.me && p.username === S.me.username;
@@ -869,6 +912,8 @@
     else if (S.sheet === 'compose') html = composeSheet();
     else if (S.sheet === 'edit') html = editSheet();
     else if (S.sheet === 'more') html = moreSheet(S.sheetPayload || {});
+    else if (S.sheet === 'actions') html = actionsSheet(S.sheetPayload || {});
+    else if (S.sheet === 'report') html = reportSheet(S.sheetPayload || {});
     else if (S.sheet === 'search') html = searchSheet();
     root.innerHTML = html;
     requestAnimationFrame(function () {
@@ -1437,11 +1482,42 @@
       return;
     }
     if (act === 'save-edit') { saveEdit(); return; }
-    if (act === 'more') {
+    if (act === 'card-more' || act === 'more') {
       var uid = t.getAttribute('data-id');
-      var user = (S.me && uid === S.me.id) ? S.me : S.person;
+      var user = profileById(uid);
+      if (!user && S.person && S.person.id === uid) user = S.person;
       if (!user) return;
-      openSheet('more', { username: user.username, key: 'more-' + user.username });
+      if (S.me && uid === S.me.id) {
+        openSheet('more', { username: user.username, name: user.name, id: user.id, key: 'more-' + user.username });
+      } else {
+        openSheet('actions', { username: user.username, name: user.name, id: user.id, key: 'act-' + user.id });
+      }
+      return;
+    }
+    if (act === 'report-open') {
+      var reported = profileById(t.getAttribute('data-id')) || { id: t.getAttribute('data-id'), name: '' };
+      openSheet('report', { id: reported.id, name: reported.name, key: 'rep-' + reported.id });
+      return;
+    }
+    if (act === 'report-send') {
+      var rid = t.getAttribute('data-id');
+      var note = (document.getElementById('report-text') || {}).value || '';
+      CupionAPI.reportProfile({ userId: rid, reason: t.getAttribute('data-reason'), text: note }).then(function () {
+        dropProfile(rid);
+        closeSheet();
+        toast('Жалоба отправлена');
+        render();
+      }).catch(function (err) { toast(err.message || 'Не вышло'); });
+      return;
+    }
+    if (act === 'hide-profile') {
+      var hid = t.getAttribute('data-id');
+      CupionAPI.hideProfile(hid).then(function () {
+        dropProfile(hid);
+        closeSheet();
+        toast('Анкета скрыта');
+        render();
+      }).catch(function () {});
       return;
     }
     if (act === 'share') {
