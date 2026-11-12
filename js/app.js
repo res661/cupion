@@ -26,6 +26,7 @@
     photoIndex: {},
     loading: true,
     newPill: false,
+    hasNew: false,
     theme: 'auto',
     sheet: null,
     sheetPayload: null,
@@ -82,14 +83,16 @@
     heart: svg('<path d="M12 19.6c-.35 0-7.2-4.15-7.2-8.9A3.7 3.7 0 0 1 12 7.55a3.7 3.7 0 0 1 7.2 3.15c0 4.75-6.85 8.9-7.2 8.9z"/>'),
     heartFill: svg('<path d="M12 20.1c-.4 0-7.55-4.35-7.55-9.25A3.9 3.9 0 0 1 12 7.15a3.9 3.9 0 0 1 7.55 3.7c0 4.9-7.15 9.25-7.55 9.25z"/>', true),
     grid: svg('<rect x="4.2" y="4.2" width="6.4" height="6.4" rx="1.7"/><rect x="13.4" y="4.2" width="6.4" height="6.4" rx="1.7"/><rect x="4.2" y="13.4" width="6.4" height="6.4" rx="1.7"/><rect x="13.4" y="13.4" width="6.4" height="6.4" rx="1.7"/>'),
-    user: svg('<circle cx="12" cy="8" r="3.15"/><path d="M5.6 19.15c.55-2.85 2.85-4.4 6.4-4.4s5.85 1.55 6.4 4.4"/>'),
-    userFill: svg('<circle cx="12" cy="8" r="3.35"/><path d="M5.15 19.35c.75-3.15 3.2-4.85 6.85-4.85s6.1 1.7 6.85 4.85c.12.45-.22.75-.68.75H5.83c-.46 0-.8-.3-.68-.75z"/>', true),
-    plus: svg('<path d="M12 5.2v13.6M5.2 12h13.6"/>'),
+    user: svg('<circle cx="12" cy="7.8" r="4"/><path d="M4.4 20.4c.8-3.7 3.5-5.6 7.6-5.6s6.8 1.9 7.6 5.6"/>'),
+    userFill: svg('<circle cx="12" cy="7.8" r="4.15"/><path d="M4.2 20.8c.9-4 3.7-6.1 7.8-6.1s6.9 2.1 7.8 6.1c.12.5-.25.8-.75.8H4.95c-.5 0-.87-.3-.75-.8z"/>', true),
+    home: svg('<path d="M4.2 11.2 12 4.2l7.8 7V19.4c0 .8-.6 1.4-1.4 1.4h-4.1v-5.2H9.7v5.2H5.6c-.8 0-1.4-.6-1.4-1.4z"/>'),
+    homeFill: svg('<path d="M3.6 11.4 12 3.6l8.4 7.8v8.2c0 1-.8 1.8-1.8 1.8h-3.7v-5.6H9.1v5.6H5.4c-1 0-1.8-.8-1.8-1.8z"/>', true),
+    plus: svg('<path d="M12 4.2v15.6M4.2 12h15.6"/>'),
     refresh: svg('<path d="M19.2 12a7.2 7.2 0 1 1-2.1-5.1"/><path d="M19.2 4.6V8.7h-4.1"/>'),
     play: svg('<path d="M9.1 7.15v9.7l8.05-4.85L9.1 7.15z"/>', true),
     lock: svg('<rect x="6.2" y="10.3" width="11.6" height="8.5" rx="2"/><path d="M8.7 10.3V8.15a3.3 3.3 0 0 1 6.6 0v2.15"/>'),
     mail: svg('<rect x="3.8" y="5.8" width="16.4" height="12.4" rx="2.2"/><path d="M4.6 8l7.4 5.1L19.4 8"/>'),
-    back: svg('<path d="M14.8 5.4L8.2 12l6.6 6.6"/>'),
+    back: svg('<path d="M15.2 4.2 7 12l8.2 7.8"/>'),
     more: svg('<circle cx="6.5" cy="12" r="1.15"/><circle cx="12" cy="12" r="1.15"/><circle cx="17.5" cy="12" r="1.15"/>', true),
     star: svg('<path d="M12 3.9l1.9 4.15 4.5.5-3.35 3.05.95 4.45L12 13.95 8 16.05l.95-4.45L5.6 8.55l4.5-.5L12 3.9z"/>'),
     eye: svg('<path d="M2.8 12S6.1 6.8 12 6.8 21.2 12 21.2 12 17.9 17.2 12 17.2 2.8 12 2.8 12z"/><circle cx="12" cy="12" r="2.3"/>'),
@@ -97,11 +100,12 @@
     video: svg('<rect x="3.7" y="6.3" width="11.2" height="11.4" rx="2"/><path d="M15 10.15l4.6-2.4v8.5L15 13.85"/>'),
     spark: svg('<path d="M12 3.2v3.4M12 17.4v3.4M4.6 4.6l2.4 2.4M17 17l2.4 2.4M3.2 12h3.4M17.4 12h3.4M4.6 19.4l2.4-2.4M17 7l2.4-2.4"/>'),
     search: svg('<circle cx="11" cy="11" r="6"/><path d="M15.7 15.7L20.2 20.2"/>'),
-    trophy: svg('<path d="M8 4.1h8v2.35a4 4 0 0 1-8 0V4.1z"/><path d="M8 5.7H5.55a2.45 2.45 0 0 0 2.5 3.35"/><path d="M16 5.7h2.45a2.45 2.45 0 0 1-2.5 3.35"/><path d="M12 10.55V13.2"/><path d="M9.35 18.15h5.3"/><path d="M10.15 13.2h3.7v1.85c0 .75-.55 1.25-1.25 1.25h-1.2c-.7 0-1.25-.5-1.25-1.25V13.2z"/>')
+    trophy: svg('<path d="M6.8 2.6h10.4v4a5.2 5.2 0 0 1-10.4 0v-4z"/><path d="M6.8 4.6H3.2a3.5 3.5 0 0 0 3.7 4.6"/><path d="M17.2 4.6h3.6a3.5 3.5 0 0 1-3.7 4.6"/><path d="M12 12.2V15"/><path d="M8 21.2h8"/><path d="M9.3 15h5.4v2.5c0 1-.7 1.7-1.6 1.7h-2.2c-.9 0-1.6-.7-1.6-1.7V15z"/>'),
+    trophyFill: svg('<path d="M6.6 2.3h10.8v4.2a5.4 5.4 0 0 1-10.8 0V2.3zM6.7 4.5H2.8a3.7 3.7 0 0 0 4 5M17.3 4.5h3.9a3.7 3.7 0 0 1-4 5M9.6 12.4h4.8V15h2.3c.8 0 1.3.6 1.3 1.4V21H6v-4.6c0-.8.5-1.4 1.3-1.4h2.3v-2.6zM7.2 20.4h9.6V22H7.2z"/>', true)
   };
 
   var SIL = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="9" fill="#C4CAD3"/><path fill="#C4CAD3" d="M16 52c2.8-9 8.6-13.5 16-13.5S45.2 43 48 52"/></svg>';
-  var GLYPH = '<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="15" y="18" width="34" height="28" rx="5" fill="none" stroke="#C4CAD3" stroke-width="2.2"/><circle cx="25" cy="28" r="2.6" fill="#C4CAD3"/><path d="M17 40l9-7 6 4.5 4.5-3.2L47 40" fill="none" stroke="#C4CAD3" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+  var GLYPH = '<svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><rect x="4" y="10" width="56" height="44" rx="8" fill="none" stroke="#C4CAD3" stroke-width="3.4"/><circle cx="22" cy="26" r="5" fill="#C4CAD3"/><path d="M8 48l16-14 12 9 7-6 13 11" fill="none" stroke="#C4CAD3" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 
   function phAvatar(extra) {
     return '<span class="ph ph-ava' + (extra ? ' ' + extra : '') + '">' + SIL + '</span>';
@@ -602,12 +606,12 @@
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
       : (S.feed.length ? S.feed.map(postCard).join('')
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
+    var pillLabel = S.hasNew ? '↑ Появились новые' : '↑ Наверх';
     return '<div class="screen screen-feed">' +
-      '<header class="app-header"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div><div class="header-actions">' +
-      '<button class="icon-btn trophy-btn' + (S.screen === 'rating' ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + ICON.trophy + '</button>' +
-      '</div></header><div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="spinner"></div></div>' +
+      '<header class="app-header is-center"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div></header>' +
+      '<button class="float-pill" id="float-pill" data-act="float-pill">' + pillLabel + '</button>' +
+      '<div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="spinner"></div></div>' +
       orbit() +
-      '<button class="new-pill" data-act="new-pill">↑ Появились новые</button>' +
       posts + '</div></div>';
   }
 
@@ -683,7 +687,7 @@
       }).join('');
       if (!S.matches || !S.matches.length) body = '<div class="empty"><div class="empty-orb"></div><h3>Мэтчей пока нет</h3><p>Взаимная оценка превращается в мэтч.</p></div>';
     }
-    return '<div class="screen"><div class="scroll"><div class="page-head"><button class="brand" data-act="tab" data-tab="feed">Cupion</button><h1>Оценки</h1><p>Кто оценил тебя</p></div>' +
+    return '<div class="screen"><div class="scroll"><div class="page-head"><h1>Оценки</h1><p>Кто оценил тебя</p></div>' +
       '<div class="pad"><div class="seg" data-i="' + i + '"><i class="seg-pill"></i>' +
       '<button type="button" data-act="rtab" data-tab="in" class="' + (i === 0 ? 'on' : '') + '">Тебе</button>' +
       '<button type="button" data-act="rtab" data-tab="out" class="' + (i === 1 ? 'on' : '') + '">Ты</button>' +
@@ -732,8 +736,8 @@
       ? '<button class="btn btn-primary" data-act="edit">Редактировать</button>'
       : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(user.id) + '" data-photo="' + esc(user.photos[0] ? user.photos[0].id : '') + '">Оценить</button>';
     return '<div class="screen"><div class="scroll"><div class="profile-bar">' +
-      '<button class="glass-circle" data-act="back" aria-label="Назад">' + ICON.back + '</button>' +
-      '<button class="brand" data-act="tab" data-tab="feed">Cupion</button>' +
+      '<button class="glass-circle" data-act="' + (own ? 'tab' : 'back') + '" data-tab="feed" aria-label="Назад">' + ICON.back + '</button>' +
+      (own ? '<button class="brand" data-act="tab" data-tab="feed">Cupion</button>' : '<span></span>') +
       '<button class="glass-circle" data-act="more" data-id="' + esc(user.id) + '" aria-label="Ещё">' + ICON.more + '</button></div>' +
       '<div class="profile-hero"><button class="big-ava" data-act="story" data-id="' + esc(user.id) + '"><span class="ring">' + phAvatar() + '</span></button>' +
       '<h1><span>' + esc(user.name) + ', ' + esc(user.age) + '</span>' + (user.premium ? premMark() : '') + '</h1>' + (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
@@ -1337,12 +1341,26 @@
 
   function tabs() {
     var onProfile = S.screen === 'profile' || S.screen === 'person';
+    var onProfile = S.screen === 'profile' || S.screen === 'person';
+    var onFeed = S.screen === 'feed';
+    var onBoard = S.screen === 'rating';
+    var onRates = S.screen === 'ratings';
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
-      '<button class="dock-btn left' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + iconPair(ICON.user, ICON.userFill) + '</button>' +
+      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + iconPair(ICON.user, ICON.userFill) + '</button>' +
+      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Лента">' + iconPair(ICON.home, ICON.homeFill) + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
-      '<button class="dock-btn right heart-tab' + (S.screen === 'ratings' ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + iconPair(ICON.heart, ICON.heartFill) +
+      '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + iconPair(ICON.trophy, ICON.trophyFill) + '</button>' +
+      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + iconPair(ICON.heart, ICON.heartFill) +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
       '</div></div>';
+  }
+
+  function syncFloatPill(scroller) {
+    var pill = document.getElementById('float-pill');
+    if (!pill) return;
+    var y = scroller ? scroller.scrollTop : 0;
+    pill.textContent = S.hasNew ? '↑ Появились новые' : '↑ Наверх';
+    pill.classList.toggle('show', y > 64);
   }
 
   function placePill(animate) {
@@ -1446,7 +1464,7 @@
     renderStory();
     renderMatch();
     syncBack();
-    requestAnimationFrame(function () { placePill(false); });
+    requestAnimationFrame(function () { placePill(false); syncFloatPill(document.getElementById('feed-scroll')); });
     runCountUps(stage);
     S.justLiked = '';
   }
@@ -1486,7 +1504,13 @@
     var act = t.getAttribute('data-act');
     if (act === 'tab') {
       var nextTab = t.getAttribute('data-tab') || 'feed';
-      if (nextTab === 'profile' && (S.screen === 'profile' || S.screen === 'person')) nextTab = 'feed';
+      var here = (nextTab === 'profile' && (S.screen === 'profile' || S.screen === 'person')) || S.screen === nextTab;
+      if (here && nextTab === 'feed') {
+        var top = document.getElementById('feed-scroll');
+        if (top) top.scrollTo({ top: 0, behavior: motionOff() ? 'auto' : 'smooth' });
+        return;
+      }
+      if (here) { goTab('feed'); return; }
       goTab(nextTab);
       return;
     }
@@ -1496,6 +1520,19 @@
         S.mode = mode;
         if (window.TG) TG.selection();
         loadFeed().then(render);
+      }
+      return;
+    }
+    if (act === 'float-pill') {
+      var feed = document.getElementById('feed-scroll');
+      if (S.hasNew) {
+        CupionAPI.releaseNew().then(function () {
+          S.hasNew = false;
+          S.forceTop = true;
+          return loadFeed(false);
+        }).then(function () { return loadStories(); }).then(render).catch(function () {});
+      } else if (feed) {
+        feed.scrollTo({ top: 0, behavior: motionOff() ? 'auto' : 'smooth' });
       }
       return;
     }
@@ -2003,7 +2040,7 @@
   /* ---------- gestures ---------- */
 
   var SPRING = 'transform .45s cubic-bezier(0.32, 0.72, 0, 1)';
-  var TABS = ['profile', 'feed', 'ratings'];
+  var TABS = ['profile', 'feed', 'rating', 'ratings'];
 
   function tabIndex() {
     var i = TABS.indexOf(S.screen);
@@ -2101,7 +2138,7 @@
         return;
       }
     }
-    if (!S.sheet && !S.story && !S.viewer && !S.match && (S.screen === 'feed' || S.screen === 'profile' || S.screen === 'ratings')) {
+    if (!S.sheet && !S.story && !S.viewer && !S.match && (S.screen === 'feed' || S.screen === 'profile' || S.screen === 'ratings' || S.screen === 'rating')) {
       gesture = { kind: 'nav-wait', x: e.clientX, y: e.clientY, scroll: e.target.closest('#feed-scroll') };
     }
   }
@@ -2365,7 +2402,9 @@
     document.addEventListener('input', onRange);
     document.addEventListener('scroll', function (e) {
       var scroller = e.target;
-      if (!scroller || scroller.id !== 'feed-scroll' || motionOff()) return;
+      if (!scroller || scroller.id !== 'feed-scroll') return;
+      syncFloatPill(scroller);
+      if (motionOff()) return;
       var orbit = scroller.querySelector('.orbit');
       if (!orbit) return;
       var y = scroller.scrollTop || 0;
@@ -2415,6 +2454,10 @@
       if (!res) return;
       S.unseen = res[2] || 0;
       render();
+      CupionAPI.hasPendingNew().then(function (fresh) {
+        S.hasNew = !!fresh;
+        syncFloatPill(document.getElementById('feed-scroll'));
+      }).catch(function () {});
       if (S.startUser && S.me) {
         var id = S.startUser;
         S.startUser = '';
