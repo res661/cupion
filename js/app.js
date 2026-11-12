@@ -427,24 +427,29 @@
 
   function mediaBlock(post, chip) {
     var photo = (post.photos || [])[0];
-    var ratio = photo && photo.ratio ? photo.ratio : 1;
-    if (ratio < 0.8) ratio = 0.8;
-    if (ratio > 1.91) ratio = 1.91;
-    var style = ' style="--ratio:' + ratio + '"';
+    var natural = photo && Number(photo.ratio) > 0 ? Number(photo.ratio) : 1;
+    var frame = natural;
+    if (frame < 0.8) frame = 0.8;
+    if (frame > 1.91) frame = 1.91;
+    var real = !!(photo && (ownUrl(photo.url) || ownUrl(photo.poster)));
+    var contain = real && photo.type !== 'video' && (natural < 0.799 || natural > 1.911);
+    var style = ' style="--ratio:' + frame.toFixed(4) + '"';
+    var cls = 'frame-media' + (real ? ' is-real' : '') + (contain ? ' is-contain' : '');
     chip = chip || '';
     var mine = post.isMine || (S.me && post.id === S.me.id);
     var visual = '';
     if (photo && photo.type === 'video' && ownUrl(photo.url)) visual = realVideo(photo.url, photo.poster);
+    else if (contain && ownUrl(photo.url)) visual = realImg(photo.url, 'blur-bg') + realImg(photo.url, 'fit');
     else if (photo && ownUrl(photo.url)) visual = realImg(photo.url);
     else if (photo && ownUrl(photo.poster)) visual = realImg(photo.poster);
     else visual = phPhoto(photo && photo.type === 'video' && !mine && !(S.me && S.me.premium) ? 'is-blur' : '');
     if (photo && photo.type === 'video' && !mine && !(S.me && S.me.premium)) {
-      return '<div class="frame-media video-locked" data-act="premium"' + style + '>' + visual + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
+      return '<div class="' + cls + ' video-locked" data-act="premium"' + style + '>' + visual + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
     }
     if (photo && photo.type === 'video') {
-      return '<div class="frame-media"' + style + '>' + visual + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" data-poster="' + esc(photo.poster || '') + '" aria-label="Смотреть видео">' + ICON.play + '</button>' + chip + '</div>';
+      return '<div class="' + cls + '"' + style + '>' + visual + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" data-poster="' + esc(photo.poster || '') + '" aria-label="Смотреть видео">' + ICON.play + '</button>' + chip + '</div>';
     }
-    return '<div class="frame-media"' + style + '>' + visual + chip + '</div>';
+    return '<div class="' + cls + '"' + style + '>' + visual + chip + '</div>';
   }
 
   function postCard(post) {
@@ -1475,7 +1480,7 @@
         name: S.me.name,
         bio: S.me.bio || '',
         lookingFor: S.me.lookingFor || 'all',
-        photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '' }; })
+        photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '', ratio: p.ratio || 0 }; })
       };
       openSheet('edit', { key: 'edit' });
       return;
@@ -1694,18 +1699,19 @@
       var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        var max = 1080;
-        var w = img.width;
-        var h = img.height;
-        var scale = Math.min(1, max / Math.max(w, h));
-        w = Math.max(1, Math.round(w * scale));
-        h = Math.max(1, Math.round(h * scale));
+        var max = 1600;
+        var nw = img.naturalWidth || img.width;
+        var nh = img.naturalHeight || img.height;
+        var ratio = nh ? nw / nh : 1;
+        var scale = Math.min(1, max / Math.max(nw, nh));
+        var w = Math.max(1, Math.round(nw * scale));
+        var h = Math.max(1, Math.round(nh * scale));
         var canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/jpeg', 0.72));
+        resolve({ url: canvas.toDataURL('image/jpeg', 0.9), ratio: ratio, type: 'photo' });
       };
       img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Не удалось прочитать фото')); };
       img.src = url;
@@ -1758,8 +1764,7 @@
       return;
     }
     var room = purpose === 'reg' ? Math.max(0, 6 - S.reg.photos.length) : purpose === 'edit' ? Math.max(0, 6 - S.edit.photos.length) : 6;
-    Promise.all(files.slice(0, room || 1).map(readImage)).then(function (urls) {
-      var pics = urls.map(function (url) { return { url: url, type: 'photo' }; });
+    Promise.all(files.slice(0, room || 1).map(readImage)).then(function (pics) {
       if (purpose === 'reg') {
         S.reg.photos = S.reg.photos.concat(pics).slice(0, 6);
         render();

@@ -174,9 +174,8 @@
       lookingFor: p.lookingFor || 'all',
       photos: (p.photos || []).map(function (photo, i) {
         var presets = [0.8, 1, 1.25, 1.5, 1.91, 0.9, 1.15];
-        var ratio = photo.ratio || presets[(String(photo.id || i).length + i) % presets.length];
-        if (ratio < 0.8) ratio = 0.8;
-        if (ratio > 1.91) ratio = 1.91;
+        var ratio = Number(photo.ratio);
+        if (!ratio || ratio <= 0) ratio = presets[(String(photo.id || i).length + i) % presets.length];
         return { id: photo.id, type: photo.type || 'photo', url: photo.url, poster: photo.poster || '', ratio: ratio };
       }),
       stories: stories.map(function (s) {
@@ -276,8 +275,7 @@
       var name = String(draft.name || '').trim();
       if (name.length < 2) throw new Error('Как тебя зовут?');
       var photos = (draft.photos || []).slice(0, 6).map(function (p, i) {
-        var presets = [0.8, 1, 1.25, 1.5, 1.91];
-        return { id: 'me_p' + (i + 1), type: 'photo', url: p.url || '', ratio: presets[i % presets.length] };
+        return { id: 'me_p' + (i + 1), type: p.type || 'photo', url: p.url || '', poster: p.poster || '', ratio: Number(p.ratio) || 0 };
       });
       if (!photos.length) throw new Error('Добавь хотя бы одно фото');
       var username = String(draft.username || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -315,7 +313,7 @@
       if (patch.lookingFor) state.me.lookingFor = patch.lookingFor;
       if (patch.photos) {
         state.me.photos = patch.photos.slice(0, 6).map(function (p, i) {
-          return { id: p.id || ('me_p' + (i + 1) + '_' + Date.now()), type: p.type || 'photo', url: p.url, poster: p.poster || '' };
+          return { id: p.id || ('me_p' + (i + 1) + '_' + Date.now()), type: p.type || 'photo', url: p.url, poster: p.poster || '', ratio: Number(p.ratio) || 0 };
         });
         var first = state.me.photos[0];
         state.me.avatar = first ? (first.poster || first.url) : '';
@@ -514,7 +512,8 @@
           id: 'me_up_' + Date.now() + '_' + i,
           type: type,
           url: item.url,
-          poster: item.poster || ''
+          poster: item.poster || '',
+          ratio: Number(item.ratio) || 0
         });
       });
       if (payload.caption) state.me.caption = String(payload.caption).trim();
