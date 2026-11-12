@@ -3,14 +3,13 @@
   'use strict';
 
   var BUBBLES = [
-    { x: '8%', y: '20%', s: 30 }, { x: '18%', y: '58%', s: 42 }, { x: '12%', y: '86%', s: 26 },
-    { x: '27%', y: '16%', s: 34 }, { x: '24%', y: '40%', s: 26 }, { x: '32%', y: '78%', s: 48 },
-    { x: '38%', y: '28%', s: 28 }, { x: '42%', y: '62%', s: 34 }, { x: '50%', y: '10%', s: 26 },
-    { x: '63%', y: '14%', s: 36 }, { x: '58%', y: '42%', s: 26 }, { x: '61%', y: '76%', s: 44 },
-    { x: '72%', y: '28%', s: 30 }, { x: '76%', y: '60%', s: 54 }, { x: '80%', y: '10%', s: 26 },
-    { x: '86%', y: '38%', s: 32 }, { x: '90%', y: '78%', s: 40 }, { x: '94%', y: '20%', s: 28 },
-    { x: '16%', y: '34%', s: 26 }, { x: '46%', y: '88%', s: 30 }, { x: '68%', y: '90%', s: 26 },
-    { x: '36%', y: '50%', s: 26 }, { x: '88%', y: '54%', s: 26 }, { x: '70%', y: '46%', s: 28 }
+    { x: '10%', y: '22%', s: 36 }, { x: '22%', y: '16%', s: 28 }, { x: '16%', y: '62%', s: 48 },
+    { x: '8%', y: '78%', s: 26 }, { x: '32%', y: '28%', s: 32 }, { x: '30%', y: '74%', s: 40 },
+    { x: '44%', y: '14%', s: 30 }, { x: '42%', y: '84%', s: 26 }, { x: '62%', y: '18%', s: 38 },
+    { x: '58%', y: '80%', s: 32 }, { x: '74%', y: '26%', s: 28 }, { x: '80%', y: '62%', s: 50 },
+    { x: '90%', y: '18%', s: 30 }, { x: '92%', y: '76%', s: 36 }, { x: '70%', y: '84%', s: 26 },
+    { x: '24%', y: '88%', s: 26 }, { x: '86%', y: '44%', s: 26 }, { x: '68%', y: '46%', s: 28 },
+    { x: '12%', y: '42%', s: 26 }
   ];
 
   var S = {
@@ -289,8 +288,8 @@
     var live = stories.filter(function (s) { return s.remain > 0; });
     var sample = live[0];
     var p = sample ? Math.max(0.04, Math.min(1, sample.remain / (sample.ttl || 3600000))) : 0;
-    var seen = live.length && live.every(function (s) { return s.seen; });
-    return '<span class="time-ring' + (seen ? ' seen' : '') + (extra ? ' ' + extra : '') + '" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
+    var seen = !live.length || live.every(function (s) { return s.seen; });
+    return '<span class="time-ring' + (seen ? ' seen' : ' live') + (extra ? ' ' + extra : '') + '" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
   }
 
   function storyPool() {
@@ -322,32 +321,32 @@
     return '<div class="orbit">' + html + '</div>';
   }
 
-  function mediaBlock(post) {
+  function mediaBlock(post, chip) {
     var photo = (post.photos || [])[0];
     var ratio = photo && photo.ratio ? photo.ratio : 1;
     if (ratio < 0.8) ratio = 0.8;
     if (ratio > 1.91) ratio = 1.91;
     var style = ' style="--ratio:' + ratio + '"';
+    chip = chip || '';
     if (photo && photo.type === 'video' && !(S.me && S.me.premium)) {
-      return '<div class="frame-media video-locked" data-act="premium"' + style + '>' + phPhoto('is-blur') + '<span class="lock-badge">🔒 Premium</span></div>';
+      return '<div class="frame-media video-locked" data-act="premium"' + style + '>' + phPhoto('is-blur') + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
     }
     if (photo && photo.type === 'video') {
-      return '<div class="frame-media"' + style + '>' + phPhoto() + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" aria-label="Смотреть видео">' + ICON.play + '</button></div>';
+      return '<div class="frame-media"' + style + '>' + phPhoto() + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" aria-label="Смотреть видео">' + ICON.play + '</button>' + chip + '</div>';
     }
-    return '<div class="frame-media"' + style + '>' + phPhoto() + '</div>';
+    return '<div class="frame-media"' + style + '>' + phPhoto() + chip + '</div>';
   }
 
   function postCard(post) {
     if (!post) return '';
     var photo = (post.photos || [])[0] || { id: '' };
-    var city = post.city ? ' · ' + esc(post.city) : '';
+    var city = post.city ? esc(post.city) : '';
     return '<article class="post" data-post="' + esc(post.id) + '"><div class="card">' +
       '<div class="post-head"><button class="mini-ava" data-act="person" data-id="' + esc(post.id) + '">' + phAvatar() + '</button>' +
       '<button class="post-user" data-act="person" data-id="' + esc(post.id) + '">' + esc(post.name) + '</button>' +
       '<button class="heart-fill' + (S.justLiked === post.id ? ' pop' : '') + '" data-act="rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '" aria-label="Оценить">' + ICON.heartFill + '</button></div>' +
-      '<div class="frame">' + mediaBlock(post) +
-      '<div class="notch"><span class="rate-chip"><b>★</b> ' + esc(post.ratingLabel) + '</span></div></div>' +
-      '<div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + city + ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span></div>' +
+      '<div class="frame">' + mediaBlock(post, '<span class="rate-chip"><b>★</b> ' + esc(post.ratingLabel) + '</span>') + '</div>' +
+      '<div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + (city ? ' <span class="muted">· ' + city + '</span>' : '') + ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span></div>' +
       '<p class="caption">' + esc(post.caption || post.bio || '') + '</p></div></article>';
   }
 
