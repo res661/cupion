@@ -88,6 +88,7 @@
     video: svg('<rect x="4" y="6" width="12" height="12" rx="2"/><path d="M16 10l4-2v8l-4-2"/>'),
     spark: svg('<path d="M12 3v4M12 17v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M3 12h4M17 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>'),
     search: svg('<circle cx="11" cy="11" r="6.2"/><path d="M16 16l4 4"/>'),
+    trophy: svg('<path d="M8 4h8v2.2a4 4 0 0 1-8 0V4z"/><path d="M8 5.2H5.6a2.4 2.4 0 0 0 2.5 3.6"/><path d="M16 5.2h2.4a2.4 2.4 0 0 1-2.5 3.6"/><path d="M12 10.8V13"/><path d="M9.2 17h5.6"/><path d="M10 13.2h4V17h-4z"/>'),
     heartFill: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#111" d="M12 19.4c-.25 0-6.8-4.1-6.8-8.8A3.6 3.6 0 0 1 12 7.8a3.6 3.6 0 0 1 6.8 2.8c0 4.7-6.55 8.8-6.8 8.8z"/></svg>'
   };
 
@@ -221,6 +222,7 @@
       CupionAPI.markRatingsSeen().catch(function () {});
       loadRatings().then(render);
     }
+    if (tab === 'rating') loadBoard().then(render);
     if (window.TG) TG.impact('light');
     render();
   }
@@ -359,8 +361,7 @@
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
     return '<div class="screen screen-feed">' +
       '<header class="app-header"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div><div class="header-actions">' +
-      '<button class="icon-btn" data-act="tab" data-tab="ratings" aria-label="Оценки">' + ICON.heart + badge + '</button>' +
-      '<button class="icon-btn" data-act="tab" data-tab="profile" aria-label="Профиль">' + ICON.user + '</button>' +
+      '<button class="icon-btn heart-btn" data-act="tab" data-tab="ratings" aria-label="Оценки">' + ICON.heart + badge + '</button>' +
       '</div></header><div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="spinner"></div></div>' +
       orbit() +
       '<button class="new-pill" data-act="new-pill">↑ Появились новые</button>' +
@@ -955,7 +956,7 @@
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
       '<button class="dock-btn left' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + ICON.user + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить"><span>+</span></button>' +
-      '<button class="dock-btn right" data-act="search" aria-label="Поиск">' + ICON.search + '</button>' +
+      '<button class="dock-btn right' + (S.screen === 'rating' ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + ICON.trophy + '</button>' +
       '</div></div>';
   }
 
@@ -978,9 +979,55 @@
     }
   }
 
+  function loadBoard() {
+    return CupionAPI.getLeaderboard(S.board || 'all').then(function (rows) {
+      S.boardRows = rows || [];
+    }).catch(function () { S.boardRows = []; });
+  }
+
+  function boardFace(row, cls) {
+    if (row.photo && row.photo.indexOf('data:') === 0) {
+      return '<img class="real-media ' + cls + '" src="' + esc(row.photo) + '" alt="">';
+    }
+    return phAvatar(cls);
+  }
+
+  function ratingBoard() {
+    var period = S.board || 'all';
+    var rows = S.boardRows || [];
+    var top = rows.slice(0, 3);
+    var order = [top[1], top[0], top[2]];
+    var medals = ['2', '1', '3'];
+    var podium = order.map(function (row, i) {
+      if (!row) return '<div class="pod empty"></div>';
+      return '<button class="pod p' + medals[i] + '" data-act="person" data-id="' + esc(row.id) + '">' +
+        '<span class="medal">' + medals[i] + '</span>' +
+        boardFace(row, 'pod-ava') +
+        '<b>' + esc(row.name) + '</b>' +
+        '<em>' + esc(Number(row.rating10 || 0).toFixed(1)) + '</em>' +
+        '<span>' + esc(compactNum(row.ratingsCount)) + '</span></button>';
+    }).join('');
+    var rest = rows.slice(3).map(function (row) {
+      return '<button class="board-row" data-act="person" data-id="' + esc(row.id) + '">' +
+        '<span class="rk">' + row.rank + '</span>' + boardFace(row, '') +
+        '<span class="who"><b>' + esc(row.name) + '</b><small>' + esc(row.city || '') + '</small></span>' +
+        '<span class="sc"><b>' + esc(Number(row.rating10 || 0).toFixed(1)) + '</b><small>' + esc(compactNum(row.ratingsCount)) + '</small></span></button>';
+    }).join('');
+    function seg(id, label) {
+      return '<button type="button" data-act="board" data-period="' + id + '" class="' + (period === id ? 'on' : '') + '">' + label + '</button>';
+    }
+    var idx = period === 'today' ? 0 : period === 'week' ? 1 : 2;
+    return '<div class="screen"><div class="scroll"><div class="page-head"><button class="brand" data-act="tab" data-tab="feed">Cupion</button><h1>Рейтинг</h1><p>Лучшие анкеты</p></div>' +
+      '<div class="pad"><div class="seg" data-i="' + idx + '"><i class="seg-pill"></i>' +
+      seg('today', 'Сегодня') + seg('week', 'Неделя') + seg('all', 'Всё время') + '</div></div>' +
+      '<div class="podium">' + podium + '</div>' +
+      '<div class="board">' + rest + '</div></div></div>';
+  }
+
   function stageHTML() {
     if (S.screen === 'register') return regScreen();
     if (S.screen === 'ratings') return ratingsScreen();
+    if (S.screen === 'rating') return ratingBoard();
     if (S.screen === 'profile') return profileView(S.me, true);
     if (S.screen === 'person') return profileView(S.person, false);
     return feedScreen();
@@ -1059,6 +1106,12 @@
       S.ratingsTab = t.getAttribute('data-tab') || 'in';
       if (window.TG) TG.selection();
       render();
+      return;
+    }
+    if (act === 'board') {
+      S.board = t.getAttribute('data-period') || 'all';
+      if (window.TG) TG.selection();
+      loadBoard().then(render);
       return;
     }
     if (act === 'person') {

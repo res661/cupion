@@ -544,6 +544,40 @@
       return true;
     },
 
+    getLeaderboard: function (period) {
+      var list = PEOPLE.filter(function (p) { return !(p.pending && !state.releasedNew); }).map(publicUser);
+      if (state.me && state.me.name) list.push(publicUser(state.me));
+      function hash(id) {
+        var h = 0;
+        var s = String(id || '');
+        for (var i = 0; i < s.length; i++) h = (h + s.charCodeAt(i) * (i + 3)) % 97;
+        return h;
+      }
+      function key(p) {
+        var h = hash(p.id);
+        var rate = Number(p.rating10) || 0;
+        var count = Number(p.ratingsCount) || 0;
+        if (period === 'today') return (count % 29) * 10 + (h % 9) + rate / 10;
+        if (period === 'week') return rate * 8 + (h % 13) + count / 500;
+        return rate * 1000 + count;
+      }
+      list.sort(function (a, b) { return key(b) - key(a); });
+      return list.map(function (p, i) {
+        var own = state.me && p.id === state.me.id;
+        var photo = own && p.photos && p.photos[0] ? (p.photos[0].url || '') : '';
+        return {
+          rank: i + 1,
+          id: p.id,
+          name: p.name,
+          city: p.city || '',
+          rating10: p.rating10,
+          ratingsCount: p.ratingsCount,
+          photo: photo,
+          own: !!own
+        };
+      });
+    },
+
     getLimits: function () {
       var premium = !!(state.me && state.me.premium);
       return {

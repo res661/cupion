@@ -45,6 +45,7 @@
     hasPendingNew: call('hasPendingNew'),
     releaseNew: call('releaseNew'),
     getLimits: call('getLimits'),
+    getLeaderboard: call('getLeaderboard'),
     getTheme: call('getTheme'),
     setTheme: call('setTheme'),
     shareLink: call('shareLink'),
