@@ -98,6 +98,8 @@
     eye: svg('<path d="M2.8 12S6.1 6.8 12 6.8 21.2 12 21.2 12 17.9 17.2 12 17.2 2.8 12 2.8 12z"/><circle cx="12" cy="12" r="2.3"/>'),
     send: svg('<path d="M4.8 12h14.2"/><path d="M13 6.4L18.6 12 13 17.6"/>'),
     video: svg('<rect x="3.7" y="6.3" width="11.2" height="11.4" rx="2"/><path d="M15 10.15l4.6-2.4v8.5L15 13.85"/>'),
+    speaker: svg('<path d="M4.5 9.5h3.2L12 6.2v11.6L7.7 14.5H4.5z"/><path d="M15.2 9.4a3.2 3.2 0 0 1 0 5.2"/>'),
+    speakerOn: svg('<path d="M4.5 9.5h3.2L12 6.2v11.6L7.7 14.5H4.5z"/><path d="M15.2 9.4a3.2 3.2 0 0 1 0 5.2M17.4 7.2a6 6 0 0 1 0 9.6"/>'),
     spark: svg('<path d="M12 3.2v3.4M12 17.4v3.4M4.6 4.6l2.4 2.4M17 17l2.4 2.4M3.2 12h3.4M17.4 12h3.4M4.6 19.4l2.4-2.4M17 7l2.4-2.4"/>'),
     search: svg('<circle cx="11" cy="11" r="6"/><path d="M15.7 15.7L20.2 20.2"/>'),
     trophy: svg('<path d="M6.8 2.6h10.4v4a5.2 5.2 0 0 1-10.4 0v-4z"/><path d="M6.8 4.6H3.2a3.5 3.5 0 0 0 3.7 4.6"/><path d="M17.2 4.6h3.6a3.5 3.5 0 0 1-3.7 4.6"/><path d="M12 12.2V15"/><path d="M8 21.2h8"/><path d="M9.3 15h5.4v2.5c0 1-.7 1.7-1.6 1.7h-2.2c-.9 0-1.6-.7-1.6-1.7V15z"/>'),
@@ -129,6 +131,10 @@
 
   function ownUrl(url) {
     return !!url && (String(url).indexOf('data:') === 0 || String(url).indexOf('blob:') === 0);
+  }
+
+  function assetUrl(url) {
+    return !!url && String(url).indexOf('assets/') === 0;
   }
 
   var mediaCache = {};
@@ -408,6 +414,12 @@
     }).catch(function () { S.inbox = []; });
   }
 
+  function reactionsSheet() {
+    var html = inboxBlock(null, false);
+    if (!html) return sheetFrame('<h2>Реакции</h2><p class="hint">Пока никто не отреагировал. Список живёт, пока история на экране.</p>');
+    return sheetFrame(html);
+  }
+
   function inboxBlock(storyId, floating) {
     var rows = (S.inbox || []).filter(function (r) { return !storyId || r.storyId === storyId; });
     if (!rows.length) return '';
@@ -559,7 +571,8 @@
     var natural = photo && Number(photo.ratio) > 0 ? Number(photo.ratio) : 1;
     var shown = photo ? displayUrl(photo.url) : '';
     var shownPoster = photo ? displayUrl(photo.poster) : '';
-    var real = !!(photo && (ownUrl(shown) || ownUrl(shownPoster)));
+    var file = !!(photo && (assetUrl(photo.url) || assetUrl(shown)));
+    var real = !!(photo && (ownUrl(shown) || ownUrl(shownPoster) || file));
     var frame = natural;
     if (!real) {
       if (frame < 0.8) frame = 0.8;
@@ -570,10 +583,17 @@
     chip = chip || '';
     var mine = post.isMine || (S.me && post.id === S.me.id);
     var visual = '';
-    if (photo && photo.type === 'video' && ownUrl(shown)) visual = realVideo(photo.url, photo.poster);
+    if (photo && photo.type === 'video' && (ownUrl(shown) || file)) {
+      visual = '<video class="feed-video" data-feed-video playsinline muted loop src="' + esc(shown || photo.url) + '"></video>' +
+        '<button class="sound-btn" data-act="feed-sound" aria-label="Звук">' + ICON.speaker + '</button>' +
+        '<span class="vid-glyph" aria-hidden="true">' + ICON.video + '</span>';
+    }
     else if (photo && ownUrl(shown)) visual = realImg(photo.url);
     else if (photo && ownUrl(shownPoster)) visual = realImg(photo.poster);
     else visual = phPhoto(photo && photo.type === 'video' && !mine && !(S.me && S.me.premium) ? 'is-blur' : '');
+    if (photo && photo.type === 'video' && (file || ownUrl(shown))) {
+      return '<div class="' + cls + '"' + style + '>' + visual + chip + '</div>';
+    }
     if (photo && photo.type === 'video' && !mine && !(S.me && S.me.premium)) {
       return '<div class="' + cls + ' video-locked" data-act="premium"' + style + '>' + visual + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
     }
@@ -732,6 +752,8 @@
         '<div class="profile-hero"><div class="big-ava"><span class="ring">' + phAvatar() + '</span></div><h1>Твоя анкета</h1><p class="bio">Создай профиль, чтобы оценивать и получать мэтчи.</p></div>' +
         '<div class="profile-actions"><button class="btn btn-primary" data-act="start-reg">Создать анкету</button></div></div></div>';
     }
+    var rxN = own && S.inbox ? S.inbox.length : 0;
+    var rxBadge = rxN ? '<span class="rx-badge">' + (rxN > 9 ? '9+' : rxN) + '</span>' : '';
     var primary = own
       ? '<button class="btn btn-primary" data-act="edit">Редактировать</button>'
       : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(user.id) + '" data-photo="' + esc(user.photos[0] ? user.photos[0].id : '') + '">Оценить</button>';
@@ -739,7 +761,7 @@
       '<button class="glass-circle" data-act="' + (own ? 'tab' : 'back') + '" data-tab="feed" aria-label="Назад">' + ICON.back + '</button>' +
       (own ? '<button class="brand" data-act="tab" data-tab="feed">Cupion</button>' : '<span></span>') +
       '<button class="glass-circle" data-act="more" data-id="' + esc(user.id) + '" aria-label="Ещё">' + ICON.more + '</button></div>' +
-      '<div class="profile-hero"><button class="big-ava" data-act="story" data-id="' + esc(user.id) + '"><span class="ring">' + phAvatar() + '</span></button>' +
+      '<div class="profile-hero"><button class="big-ava" data-act="story" data-id="' + esc(user.id) + '">' + rxBadge + '<span class="ring">' + phAvatar() + '</span></button>' +
       '<h1><span>' + esc(user.name) + ', ' + esc(user.age) + '</span>' + (user.premium ? premMark() : '') + '</h1>' + (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
       (user.bio ? '<p class="bio">' + esc(user.bio) + '</p>' : '') + '</div>' +
       '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
@@ -766,8 +788,26 @@
     }
     if (S.regStep === 2) return validName(r.name);
     if (S.regStep === 3) return String(r.bio || '').trim().length >= 2;
-    if (S.regStep === 4) return r.photos.length >= 1 && r.photos.length <= 6;
+    if (S.regStep === 4) return r.photos.length >= 1 && r.photos.length <= 3;
     return true;
+  }
+
+  function photoCap() {
+    return (S.me && S.me.premium) ? 6 : 3;
+  }
+
+  function countPhotos(list) {
+    return (list || []).filter(function (p) { return (p.type || 'photo') !== 'video'; }).length;
+  }
+
+  function photoPick(p, idx, total, kind) {
+    var face = realImg(p.url) || realImg(p.poster) || phPhoto();
+    var prev = idx > 0 ? '<button class="mv" data-act="photo-move" data-kind="' + kind + '" data-dir="-1" data-index="' + idx + '" aria-label="Раньше">‹</button>' : '';
+    var next = idx < total - 1 ? '<button class="mv next" data-act="photo-move" data-kind="' + kind + '" data-dir="1" data-index="' + idx + '" aria-label="Позже">›</button>' : '';
+    var rmAct = kind === 'edit' ? 'rm-edit' : 'rm-photo';
+    return '<div class="pick"><button class="pick-face" data-act="replace-photo" data-kind="' + kind + '" data-index="' + idx + '" aria-label="Заменить">' + face + '</button>' +
+      prev + next +
+      '<button class="rm" data-act="' + rmAct + '" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
   }
 
   function validName(s) {
@@ -800,10 +840,10 @@
         '<div class="count" data-count>' + r.bio.length + '/80</div>';
     } else {
       var tiles = r.photos.map(function (p, idx) {
-        return '<div class="pick">' + (realImg(p.url) || phPhoto()) + '<button class="rm" data-act="rm-photo" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
+        return photoPick(p, idx, r.photos.length, 'reg');
       }).join('');
-      var add = r.photos.length < 6 ? '<button class="pick-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '';
-      body = '<h1>Добавь фото</h1><p class="lead">От 1 до 6. В ленте это серые карточки, пока фото не подключены.</p><div class="pick-grid">' + tiles + add + '</div>';
+      var add = r.photos.length < 3 ? '<button class="pick-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '';
+      body = '<h1>Добавь фото</h1><p class="lead">От 1 до 3. Больше фото и видео — в Premium.</p><div class="pick-grid">' + tiles + add + '</div>';
     }
     var label = S.regStep === 4 ? 'Готово' : 'Дальше';
     var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : '';
@@ -858,6 +898,8 @@
     sheetToken += 1;
     S.sheet = name;
     S.sheetPayload = payload || {};
+    var host = document.getElementById('sheet-root');
+    if (host) host.classList.toggle('above-story', name === 'reactions');
     if (S.story) S.story.paused = true;
     sheetSig = '';
     renderSheet();
@@ -871,6 +913,8 @@
   }
 
   function closeSheet(opts) {
+    var host = document.getElementById('sheet-root');
+    if (host) host.classList.remove('above-story');
     var sheet = document.querySelector('.sheet');
     var bd = document.querySelector('.backdrop');
     if (sheet && !(opts && opts.dragged)) {
@@ -903,9 +947,9 @@
     for (var i = 1; i <= 10; i++) stars += '<button type="button" data-act="star" data-n="' + i + '" class="' + (i <= n ? 'on' : '') + '" aria-label="' + i + '">★</button>';
     return sheetFrame(
       '<h2>Оценка</h2><p class="hint">' + esc(p.name || 'анкета') + (p.city ? ' · ' + esc(p.city) : '') + '</p>' +
-      '<div class="big-score"><span>★</span> <b data-score>' + n + '</b></div>' +
-      '<div class="stars">' + stars + '</div>' +
-      '<input class="slider" data-score-range type="range" min="1" max="10" step="1" value="' + n + '" aria-label="Оценка от 1 до 10">' +
+      '<div class="big-score"><b data-score>' + n + '</b></div>' +
+      '<div class="rate-controls"><div class="stars">' + stars + '</div>' +
+      '<input class="slider" data-score-range type="range" min="1" max="10" step="1" value="' + n + '" aria-label="Оценка от 1 до 10"></div>' +
       '<textarea class="area" id="rate-note" maxlength="180" placeholder="Комментарий — уйдёт вместе с оценкой"></textarea><div class="count"><span id="rate-count">0</span>/180</div>',
       '<button class="btn btn-primary btn-block" data-act="send-rate" data-id="' + esc(p.userId) + '" data-photo="' + esc(p.photoId || '') + '">Готово</button>'
     );
@@ -960,24 +1004,37 @@
         '<button class="btn btn-primary btn-block" data-act="publish">Опубликовать</button>'
       );
     }
-    var videoRow = (S.me && S.me.premium)
+    var premium = !!(S.me && S.me.premium);
+    var cap = photoCap();
+    var used = countPhotos(S.me && S.me.photos);
+    var photoAct = (!premium && used >= cap) ? 'premium' : 'pick-post';
+    var photoHint = (!premium && used >= cap) ? 'лимит · больше в Premium' : ('до ' + cap + ' фото');
+    var videoRow = premium
       ? '<button class="choice-row" data-act="pick-video"><span>Видео<small>в ленту и профиль</small></span></button>'
       : '<button class="choice-row" data-act="premium"><span>Видео<small>Premium</small></span><span class="prem-tag">Premium</span></button>';
+    var storyRow = premium
+      ? '<button class="choice-row" data-act="pick-story"><span>История<small>на 10 часов</small></span></button>'
+      : '<button class="choice-row" data-act="pick-story"><span>История<small>на 1 час</small></span><span class="prem-tag">10 часов в Premium</span></button>';
     return sheetFrame(
       '<h2>Новая публикация</h2><p class="hint">Фото, видео или история.</p><div class="choice-list">' +
-      '<button class="choice-row" data-act="pick-post"><span>Фото<small>добавится в анкету</small></span></button>' +
+      '<button class="choice-row" data-act="' + photoAct + '"><span>Фото в анкету<small>' + photoHint + '</small></span>' +
+      (photoAct === 'premium' ? '<span class="prem-tag">Premium</span>' : '') + '</button>' +
       videoRow +
-      '<button class="choice-row" data-act="pick-story"><span>История<small>кружок на 24 часа</small></span></button></div>'
+      storyRow + '</div>'
     );
   }
 
   function editSheet() {
     var e = S.edit;
     if (!e) return '';
+    var cap = photoCap();
+    var used = countPhotos(e.photos);
     var tiles = e.photos.map(function (p, idx) {
-      return '<div class="pick">' + (realImg(p.url) || realImg(p.poster) || phPhoto()) + '<button class="rm" data-act="rm-edit" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
+      return photoPick(p, idx, e.photos.length, 'edit');
     }).join('');
-    var add = e.photos.length < 6 ? '<button class="pick-add" data-act="pick-edit">+</button>' : '';
+    var add = used < cap
+      ? '<button class="pick-add" data-act="pick-edit" aria-label="Добавить фото">+</button>'
+      : (S.me && S.me.premium ? '' : '<button class="pick-add" data-act="premium" aria-label="Больше фото в Premium">+</button>');
     var look = function (v, label) {
       return '<button type="button" data-act="edit-look" data-value="' + v + '" class="' + (e.lookingFor === v ? 'on' : '') + '">' + label + '</button>';
     };
@@ -985,7 +1042,7 @@
     return sheetFrame(
       '<h2>Анкета</h2><input class="field" id="edit-name" maxlength="32" value="' + esc(e.name) + '" placeholder="Имя">' +
       '<div style="height:10px"></div><textarea class="area" id="edit-bio" maxlength="80" placeholder="О себе">' + esc(e.bio) + '</textarea>' +
-      '<div class="count">' + e.bio.length + '/80</div><div class="pick-grid">' + tiles + add + '</div>' +
+      '<div class="count">' + e.bio.length + '/80</div><p class="hint">' + (S.me && S.me.premium ? 'До 6 фото и видео. Нажми фото, чтобы заменить.' : 'До 3 фото. Больше и видео — в Premium.') + '</p><div class="pick-grid">' + tiles + add + '</div>' +
       '<div class="label" style="margin:14px 0 8px;color:var(--text-2);font-size:13px">Кого показывать</div>' +
       '<div class="seg" data-i="' + li + '"><i class="seg-pill"></i>' + look('all', 'Все') + look('male', 'Парни') + look('female', 'Девушки') + '</div>' +
       '<div class="sheet-error" id="sheet-error"></div>',
@@ -1057,7 +1114,7 @@
   function renderSheet() {
     var root = document.getElementById('sheet-root');
     if (!root) return;
-    var key = S.sheet ? (S.sheet + ':' + ((S.sheetPayload && S.sheetPayload.key) || '') + ':' + ((S.compose && (S.compose.stage + ':' + (S.compose.photos ? S.compose.photos.length : 0))) || '') + ':' + ((S.edit && S.edit.photos) ? S.edit.photos.length + S.edit.lookingFor : '')) : '';
+    var key = S.sheet ? (S.sheet + ':' + ((S.sheetPayload && S.sheetPayload.key) || '') + ':' + ((S.compose && (S.compose.stage + ':' + (S.compose.photos ? S.compose.photos.length : 0))) || '') + ':' + ((S.edit && S.edit.photos) ? S.edit.photos.map(function (p) { return p.id || p.url; }).join('|') + S.edit.lookingFor : '') + ':' + ((S.inbox && S.inbox.length) || 0)) : '';
     if (key === sheetSig) return;
     sheetSig = key;
     if (!S.sheet) { root.innerHTML = ''; return; }
@@ -1071,6 +1128,7 @@
     else if (S.sheet === 'actions') html = actionsSheet(S.sheetPayload || {});
     else if (S.sheet === 'report') html = reportSheet(S.sheetPayload || {});
     else if (S.sheet === 'search') html = searchSheet();
+    else if (S.sheet === 'reactions') html = reactionsSheet();
     root.innerHTML = html;
     requestAnimationFrame(function () {
       var sheet = root.querySelector('.sheet');
@@ -1112,6 +1170,32 @@
     }
   }
 
+  var feedObserver = null;
+
+  function bindFeedVideos() {
+    var nodes = document.querySelectorAll('[data-feed-video]');
+    if (!nodes.length) return;
+    if (!window.IntersectionObserver) {
+      Array.prototype.forEach.call(nodes, function (v) { v.play().catch(function () {}); });
+      return;
+    }
+    if (!feedObserver) {
+      feedObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          var v = en.target;
+          if (en.intersectionRatio >= 0.6) v.play().catch(function () {});
+          else v.pause();
+        });
+      }, { threshold: [0, 0.6, 1] });
+    }
+    Array.prototype.forEach.call(nodes, function (v) {
+      if (v.dataset.watched) return;
+      v.dataset.watched = '1';
+      v.muted = true;
+      feedObserver.observe(v);
+    });
+  }
+
   function runCountUps(root) {
     if (!root) return;
     var nodes = root.querySelectorAll('[data-tick]');
@@ -1142,11 +1226,18 @@
       var w = i < st.index ? 100 : 0;
       return '<b><i data-bar="' + i + '" style="width:' + w + '%"></i></b>';
     }).join('');
-    return '<div class="story-layer">' + (realImg(item.url, 'story-bg') || phPhoto('story-bg')) +
+    var bg = item.type === 'video' && (assetUrl(item.url) || ownUrl(displayUrl(item.url)))
+      ? '<video class="story-video story-bg" playsinline muted src="' + esc(item.url) + '"></video>'
+      : (realImg(item.url, 'story-bg') || phPhoto('story-bg'));
+    var sound = item.type === 'video'
+      ? '<button class="sound-btn story-sound' + (S.storySound ? ' on' : '') + '" data-act="story-sound" aria-label="Звук">' + (S.storySound ? ICON.speakerOn : ICON.speaker) + '</button>'
+      : '';
+    return '<div class="story-layer">' + bg + sound +
       '<div class="story-shade"></div><div class="story-ui"><div class="bars">' + bars + '</div>' +
       '<div class="story-user">' + phAvatar() + '<span>' + esc(st.user ? st.user.name : '') + '</span>' +
       '<em>' + timeAgo(item.createdAt) + '</em></div></div>' +
-      (st.userId === 'me' ? inboxBlock(item.id, true) : '') +
+      (st.userId === 'me' ? '<button class="rx-pill" data-act="story-reactions">Реакции' +
+        ((S.inbox && S.inbox.length) ? '<b>' + (S.inbox.length > 9 ? '9+' : S.inbox.length) + '</b>' : '') + '</button>' : '') +
       '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥', '👏'].map(function (emo) {
         var picked = S.picked && S.picked[item.id] === emo;
         return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
@@ -1258,6 +1349,24 @@
     stopClock();
     storyAcc = 0;
     storyLast = performance.now();
+    var video = document.querySelector('.story-layer video.story-video');
+    if (video) {
+      video.muted = !S.storySound;
+      var tick = function () {
+        if (!S.story) return;
+        if (S.story.paused || S.sheet) { if (!video.paused) video.pause(); }
+        else if (video.paused) video.play().catch(function () {});
+        var dur = video.duration || 0;
+        var p = dur ? Math.min(1, video.currentTime / dur) : 0;
+        var bar = document.querySelector('[data-bar="' + S.story.index + '"]');
+        if (bar) bar.style.width = (p * 100) + '%';
+        if (dur && video.ended) { nextStory(); return; }
+        storyRAF = requestAnimationFrame(tick);
+      };
+      video.play().catch(function () {});
+      storyRAF = requestAnimationFrame(tick);
+      return;
+    }
     var loop = function (now) {
       if (!S.story) return;
       var dt = now - storyLast;
@@ -1464,7 +1573,7 @@
     renderStory();
     renderMatch();
     syncBack();
-    requestAnimationFrame(function () { placePill(false); syncFloatPill(document.getElementById('feed-scroll')); });
+    requestAnimationFrame(function () { placePill(false); syncFloatPill(document.getElementById('feed-scroll')); bindFeedVideos(); });
     runCountUps(stage);
     S.justLiked = '';
   }
@@ -1570,6 +1679,7 @@
         if (window.TG) TG.notify('success');
         return loadInbox().then(function () {
           if (res && res.match) {
+            closeSheet();
             return CupionAPI.getUser(toId).then(function (user) {
               showMatch(user, 'story');
               return loadRatings();
@@ -1579,6 +1689,7 @@
         });
       }).then(function () {
         storySig = '';
+        if (S.sheet === 'reactions') { sheetSig = ''; renderSheet(); }
         if (S.story) renderStory();
         if (S.screen === 'profile' || S.screen === 'ratings') render();
       }).catch(function (err) { toast(err.message || 'Не вышло'); });
@@ -1598,6 +1709,25 @@
       else openCompose('story');
       return;
     }
+    if (act === 'story-sound') {
+      S.storySound = !S.storySound;
+      var storyVideo = document.querySelector('.story-layer video.story-video');
+      if (storyVideo) storyVideo.muted = !S.storySound;
+      t.classList.toggle('on', !!S.storySound);
+      t.innerHTML = S.storySound ? ICON.speakerOn : ICON.speaker;
+      return;
+    }
+    if (act === 'feed-sound') {
+      var frame = t.closest('.frame');
+      var feedVideo = frame && frame.querySelector('video');
+      if (!feedVideo) return;
+      feedVideo.muted = !feedVideo.muted;
+      t.classList.toggle('on', !feedVideo.muted);
+      t.innerHTML = feedVideo.muted ? ICON.speaker : ICON.speakerOn;
+      if (!feedVideo.muted) feedVideo.play().catch(function () {});
+      return;
+    }
+    if (act === 'story-reactions') { openSheet('reactions', { key: 'rx-' + ((S.inbox && S.inbox.length) || 0) }); return; }
     if (act === 'story') { startStory(t.getAttribute('data-id'), parseInt(t.getAttribute('data-index') || '0', 10)); return; }
     if (act === 'react') {
       if (needAccount()) return;
@@ -1694,12 +1824,40 @@
       }).then(render).catch(function (err) { toast(err.message || 'Не вышло'); });
       return;
     }
-    if (act === 'pick-post') { S.compose.type = 'photo'; pickFiles('post'); return; }
+    if (act === 'pick-post') {
+      var usedNow = countPhotos(S.me && S.me.photos);
+      if (usedNow >= photoCap()) {
+        if (S.me && S.me.premium) toast('Уже ' + photoCap() + ' фото');
+        else openSheet('premium', { key: 'photos' });
+        return;
+      }
+      S.compose.type = 'photo';
+      pickFiles('post');
+      return;
+    }
     if (act === 'pick-story') { S.compose.type = 'story'; pickFiles('story'); return; }
     if (act === 'pick-video') { S.compose.type = 'video'; pickFiles('video'); return; }
     if (act === 'pick-reg') { pickFiles('reg'); return; }
     if (act === 'pick-edit') { pickFiles('edit'); return; }
     if (act === 'publish') { publishCompose(); return; }
+    if (act === 'photo-move') {
+      var list = t.getAttribute('data-kind') === 'edit' ? (S.edit && S.edit.photos) : S.reg.photos;
+      if (!list) return;
+      var from = parseInt(t.getAttribute('data-index'), 10);
+      var to = from + parseInt(t.getAttribute('data-dir'), 10);
+      if (to < 0 || to >= list.length) return;
+      var moved = list[from];
+      list[from] = list[to];
+      list[to] = moved;
+      if (t.getAttribute('data-kind') === 'edit') { sheetSig = ''; renderSheet(); }
+      else render();
+      return;
+    }
+    if (act === 'replace-photo') {
+      S.replaceAt = parseInt(t.getAttribute('data-index'), 10);
+      pickFiles(t.getAttribute('data-kind') === 'edit' ? 'replace-edit' : 'replace-reg');
+      return;
+    }
     if (act === 'rm-photo') {
       S.reg.photos.splice(parseInt(t.getAttribute('data-index'), 10), 1);
       render();
@@ -2012,13 +2170,30 @@
       });
       return;
     }
-    var room = purpose === 'reg' ? Math.max(0, 6 - S.reg.photos.length) : purpose === 'edit' ? Math.max(0, 6 - S.edit.photos.length) : 6;
-    Promise.all(files.slice(0, room || 1).map(readImage)).then(function (pics) {
+    var room = 1;
+    if (purpose === 'reg') room = Math.max(0, 3 - S.reg.photos.length);
+    else if (purpose === 'edit') room = Math.max(0, photoCap() - countPhotos(S.edit.photos));
+    else if (purpose === 'post') room = Math.max(0, photoCap() - countPhotos(S.me && S.me.photos));
+    else if (purpose === 'replace-edit' || purpose === 'replace-reg') room = 1;
+    else room = 1;
+    if (!room) { toast(purpose === 'reg' ? 'Можно 3 фото' : 'Лимит фото'); return; }
+    Promise.all(files.slice(0, room).map(readImage)).then(function (pics) {
+      if (purpose === 'replace-reg' || purpose === 'replace-edit') {
+        var bucket = purpose === 'replace-edit' ? S.edit.photos : S.reg.photos;
+        var at = S.replaceAt || 0;
+        if (bucket && bucket[at] && pics[0]) {
+          bucket[at] = Object.assign({}, bucket[at], pics[0], { type: 'photo' });
+        }
+        if (purpose === 'replace-edit') { sheetSig = ''; renderSheet(); }
+        else render();
+        return;
+      }
       if (purpose === 'reg') {
-        S.reg.photos = S.reg.photos.concat(pics).slice(0, 6);
+        S.reg.photos = S.reg.photos.concat(pics).slice(0, 3);
         render();
       } else if (purpose === 'edit') {
-        S.edit.photos = S.edit.photos.concat(pics).slice(0, 6);
+        var roomLeft = photoCap() - countPhotos(S.edit.photos);
+        S.edit.photos = S.edit.photos.concat(pics.slice(0, roomLeft));
         sheetSig = '';
         renderSheet();
       } else if (purpose === 'story') {
@@ -2029,7 +2204,7 @@
         renderSheet();
       } else {
         S.compose.type = 'photo';
-        S.compose.photos = pics.slice(0, 6);
+        S.compose.photos = pics.slice(0, photoCap());
         S.compose.stage = 'preview';
         sheetSig = '';
         renderSheet();

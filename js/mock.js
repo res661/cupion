@@ -26,7 +26,7 @@
     { id: 'masha', username: 'masha', name: 'Маша', age: 23, gender: 'female', premium: false, rating10: 9.2, ratingsCount: 86, matchesCount: 9, bio: 'танцую на кухне серьёзнее, чем в зале', caption: 'сегодня свет был слишком добрый', createdAt: Date.now() - 5 * 3600000, photos: [ph('masha1', 'photo-1534528741775-53994a69daeb'), ph('masha2', 'photo-1529626455594-4ff0802cfb7e')], stories: ['photo-1534528741775-53994a69daeb'] },
     { id: 'sonya', username: 'sonya', name: 'Соня', age: 20, gender: 'female', premium: false, rating10: 8.8, ratingsCount: 54, matchesCount: 4, bio: 'книги, дождь, поздний завтрак', caption: 'новый город, старые кеды', createdAt: Date.now() - 8 * 3600000, photos: [ph('sonya1', 'photo-1488426862026-3ee34a7d66df'), ph('sonya2', 'photo-1531746020798-e6953c6e8e04')], stories: ['photo-1488426862026-3ee34a7d66df'] },
     { id: 'eva', username: 'eva', name: 'Ева', age: 24, gender: 'female', premium: false, rating10: 9.0, ratingsCount: 73, matchesCount: 6, bio: 'снимаю людей, которые не позируют', caption: 'если улыбаюсь — уже почти да', createdAt: Date.now() - 14 * 3600000, photos: [ph('eva1', 'photo-1517841905240-472988babdf9'), ph('eva2', 'photo-1544005313-94ddf0286df2')], stories: ['eva-story'] },
-    { id: 'kira', username: 'kira', name: 'Кира', age: 22, gender: 'female', premium: true, rating10: 9.4, ratingsCount: 141, matchesCount: 18, bio: 'видео, море и слишком громкий смех', caption: 'короткое видео с набережной', createdAt: Date.now() - 20 * 3600000, photos: [ph('kira1', 'photo-1525134479668-1bee5c7c6845', 'video'), ph('kira2', 'photo-1438761681033-6461ffad8d80')], stories: ['photo-1438761681033-6461ffad8d80'] },
+    { id: 'kira', username: 'kira', name: 'Кира', age: 22, gender: 'female', premium: true, rating10: 9.4, ratingsCount: 141, matchesCount: 18, bio: 'видео, море и слишком громкий смех', caption: 'короткое видео с набережной', createdAt: Date.now() - 40 * 60000, photos: [{ id: 'kira1', type: 'video', url: 'assets/video/clip2.mp4', ratio: 720 / 1280 }, ph('kira2', 'photo-1438761681033-6461ffad8d80')], stories: [{ id: 'kira_vid', type: 'video', url: 'assets/video/clip1.mp4', createdAt: Date.now() - 6 * 60000 }] },
     { id: 'lena', username: 'lena', name: 'Лена', age: 27, gender: 'female', premium: false, rating10: 8.6, ratingsCount: 97, matchesCount: 11, bio: 'архитектура и хороший хлеб', caption: 'воскресенье без будильника', createdAt: Date.now() - 26 * 3600000, photos: [ph('lena1', 'photo-1524502397800-2eeaad7c3fe5'), ph('lena2', 'photo-1502823403499-6ccfcf4fb453')], stories: ['lena-story'] },
     { id: 'polina', username: 'polina', name: 'Полина', age: 19, gender: 'female', premium: false, rating10: 9.1, ratingsCount: 41, matchesCount: 3, bio: 'учусь, гуляю, опаздываю красиво', caption: 'первое тёплое утро', createdAt: Date.now() - 30 * 3600000, photos: [ph('polina1', 'photo-1548142813-c348350df52b'), ph('polina2', 'photo-1504703395950-b89145a5425b')], stories: ['photo-1548142813-c348350df52b'] },
     { id: 'vika', username: 'vika', name: 'Вика', age: 25, gender: 'female', premium: false, rating10: 8.4, ratingsCount: 66, matchesCount: 7, bio: 'бег по утрам, кино по вечерам', caption: 'после длинной пробежки', createdAt: Date.now() - 36 * 3600000, photos: [ph('vika1', 'photo-1464863979621-258859e62245'), ph('vika2', 'photo-1487412720507-e7ab37603c6f')], stories: ['vika-story'] },
@@ -78,6 +78,7 @@
         id: id,
         url: typeof entry === 'string' ? '' : (entry.url || ''),
         poster: typeof entry === 'string' ? '' : (entry.poster || ''),
+        type: typeof entry === 'string' ? 'photo' : (entry.type || 'photo'),
         createdAt: createdAt,
         ttl: ttl,
         remain: remain,
@@ -198,7 +199,7 @@
       }),
       stories: stories.map(function (s) {
         return {
-          id: s.id, url: s.url, poster: s.poster || '', createdAt: s.createdAt,
+          id: s.id, url: s.url, poster: s.poster || '', type: s.type || 'photo', createdAt: s.createdAt,
           ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt,
           seen: storyIsSeen(s.id, p.id)
         };
@@ -292,7 +293,7 @@
       if (city && city.length < 2) throw new Error('Укажи город');
       var name = String(draft.name || '').trim();
       if (name.length < 2) throw new Error('Как тебя зовут?');
-      var photos = (draft.photos || []).slice(0, 6).map(function (p, i) {
+      var photos = (draft.photos || []).slice(0, 3).map(function (p, i) {
         return { id: 'me_p' + (i + 1), type: p.type || 'photo', url: p.url || '', poster: p.poster || '', ratio: Number(p.ratio) || 0 };
       });
       if (!photos.length) throw new Error('Добавь хотя бы одно фото');
@@ -330,7 +331,17 @@
       if (patch.city != null) state.me.city = String(patch.city).trim();
       if (patch.lookingFor) state.me.lookingFor = patch.lookingFor;
       if (patch.photos) {
-        state.me.photos = patch.photos.slice(0, 6).map(function (p, i) {
+        var cap = state.me.premium ? 6 : 3;
+        var kept = [];
+        var n = 0;
+        patch.photos.forEach(function (p) {
+          var video = (p.type || 'photo') === 'video';
+          if (video) { if (state.me.premium) kept.push(p); return; }
+          if (n >= cap) return;
+          n += 1;
+          kept.push(p);
+        });
+        state.me.photos = kept.map(function (p, i) {
           return { id: p.id || ('me_p' + (i + 1) + '_' + Date.now()), type: p.type || 'photo', url: p.url, poster: p.poster || '', ratio: Number(p.ratio) || 0 };
         });
         var first = state.me.photos[0];
@@ -368,7 +379,7 @@
         items: slice.map(function (p, idx) {
           var pub = publicUser(p);
           pub.myScore = myScoreFor(p.id);
-          if (pub.photos[0]) pub.photos[0].ratio = presets[idx % presets.length];
+          if (pub.photos[0] && String(pub.photos[0].url || '').indexOf('assets/') !== 0) pub.photos[0].ratio = presets[idx % presets.length];
           return pub;
         }),
         total: list.length,
@@ -542,6 +553,10 @@
       if (type === 'video' && !state.me.premium) return { ok: false, reason: 'premium' };
       var items = payload.photos || [];
       if (!items.length) throw new Error('Нет файла');
+      var cap = state.me.premium ? 6 : 3;
+      var have = state.me.photos.filter(function (p) { return (p.type || 'photo') !== 'video'; }).length;
+      if (type !== 'video' && have >= cap) return { ok: false, reason: 'premium' };
+      if (type !== 'video') items = items.slice(0, Math.max(0, cap - have));
       items.forEach(function (item, i) {
         state.me.photos.push({
           id: 'me_up_' + Date.now() + '_' + i,
@@ -552,7 +567,6 @@
         });
       });
       if (payload.caption) state.me.caption = String(payload.caption).trim();
-      if (state.me.photos.length > 12) state.me.photos = state.me.photos.slice(-12);
       writeStore();
       return { ok: true, me: publicUser(state.me) };
     },
