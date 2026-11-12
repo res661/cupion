@@ -635,24 +635,32 @@
     var quote = row.text && revealed ? '<div class="quote">«' + esc(row.text) + '»</div>' : '';
     var score = incoming ? row.score : (row.score || '');
     var title = revealed ? ('@' + who.username) : 'Аноним';
-    var action = '';
+    var photoId = who.photos && who.photos[0] ? who.photos[0].id : '';
+    var actions = '';
     if (incoming && revealed) {
-      action = '<button class="btn btn-primary btn-sm" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>';
+      if (!row.repliedScore) {
+        actions += '<button class="btn btn-glass btn-sm" data-act="rate" data-id="' + esc(who.id) + '" data-photo="' + esc(photoId) + '">Оценить в ответ</button>';
+      }
+      if (row.score > 5) {
+        actions += '<button class="btn btn-primary btn-sm" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>';
+      }
     } else if (!incoming) {
-      action = '<button class="btn btn-primary btn-sm" data-act="person" data-id="' + esc(who.id) + '">Смотреть</button>';
+      actions = '<button class="btn btn-primary btn-sm" data-act="person" data-id="' + esc(who.id) + '">Смотреть</button>';
     }
+    var mineScore = incoming && row.repliedScore ? '<span class="score-outline mine">ты ★ ' + esc(row.repliedScore) + '</span>' : '';
     var nameBtn = revealed
       ? '<b data-act="person" data-id="' + esc(who.id) + '">' + esc(title) + (who.premium ? premMark() : '') + '</b>'
       : '<b>' + esc(title) + '</b>';
-    return '<article class="rate-row' + (revealed ? '' : ' anon') + '">' +
+    var open = revealed ? ' data-act="person" data-id="' + esc(who.id) + '"' : '';
+    return '<article class="rate-row' + (revealed ? '' : ' anon') + '"' + open + '>' +
       '<div class="rate-main">' + phAvatar(revealed ? '' : 'anon') +
       '<div>' + nameBtn + '<div class="sub">' + esc(line) + '</div></div>' +
       (revealed ? '<button class="thumb-btn" data-act="person" data-id="' + esc(who.id) + '">' + phPhoto() + '</button>' : '<span class="thumb-btn">' + phPhoto() + '</span>') +
       '</div>' + quote +
       '<div class="hair"></div>' +
       '<div class="rate-foot">' +
-      (score ? '<span class="score-outline">★ ' + esc(score) + '</span>' : '<span></span>') +
-      action + '</div></article>';
+      '<span class="score-pair">' + (score ? '<span class="score-outline">★ ' + esc(score) + '</span>' : '<span></span>') + mineScore + '</span>' +
+      (actions ? '<span class="rate-actions">' + actions + '</span>' : '') + '</div></article>';
   }
 
   function ratingsScreen() {
@@ -1572,8 +1580,9 @@
         S.justLiked = id;
         closeSheet();
         if (res.match) {
-          return CupionAPI.getUser(id).then(function (user) {
-            return refreshMe().then(function () { showMatch(user); render(); });
+          return Promise.all([CupionAPI.getUser(id), loadRatings(), refreshMe()]).then(function (out) {
+            showMatch(out[0]);
+            render();
           });
         }
         if (window.TG) TG.impact('light');

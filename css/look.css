@@ -462,7 +462,10 @@ body, #app {
   font-size: 15px;
 }
 .hair { height: 1px; background: rgba(0, 0, 0, 0.06); margin: 12px 0 10px; }
-.rate-foot { display: flex; align-items: center; justify-content: space-between; }
+.rate-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rate-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.score-pair { display: flex; align-items: center; gap: 6px; flex: none; }
+.score-outline.mine { color: #1c1c1e; }
 .score-outline {
   height: 32px;
   padding: 0 12px;
