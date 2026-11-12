@@ -63,7 +63,8 @@
       var remain = Math.max(0, ttl - (Date.now() - createdAt));
       return {
         id: id,
-        url: '',
+        url: typeof entry === 'string' ? '' : (entry.url || ''),
+        poster: typeof entry === 'string' ? '' : (entry.poster || ''),
         createdAt: createdAt,
         ttl: ttl,
         remain: remain,
@@ -176,7 +177,7 @@
       }),
       stories: stories.map(function (s) {
         return {
-          id: s.id, url: s.url, createdAt: s.createdAt,
+          id: s.id, url: s.url, poster: s.poster || '', createdAt: s.createdAt,
           ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt,
           seen: p.id === 'me' || state.seenStoryIds.indexOf(s.id) !== -1
         };

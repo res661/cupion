@@ -105,6 +105,20 @@
 
   function ph() { return phAvatar(); }
 
+  function ownUrl(url) {
+    return !!url && (String(url).indexOf('data:') === 0 || String(url).indexOf('blob:') === 0);
+  }
+
+  function realImg(url, extra) {
+    if (!ownUrl(url)) return '';
+    return '<img class="real-media' + (extra ? ' ' + extra : '') + '" src="' + esc(url) + '" alt="">';
+  }
+
+  function realVideo(url, poster) {
+    if (!ownUrl(url)) return '';
+    return '<video class="real-media" src="' + esc(url) + '" playsinline' + (ownUrl(poster) ? ' poster="' + esc(poster) + '"' : '') + '></video>';
+  }
+
   function compactNum(n) {
     n = Number(n) || 0;
     if (n < 1000) return String(n);
@@ -257,6 +271,9 @@
     S.loading = !next && !(S.feed && S.feed.length);
     return CupionAPI.getFeed({ restart: !next, limit: limit }).then(function (res) {
       var items = (res && res.items) || [];
+      if (!next && S.me && S.me.photos && S.me.photos.length) {
+        items = [Object.assign({}, S.me, { isMine: true })].concat(items);
+      }
       S.feed = items;
       S.feedExhausted = items.length === 0;
       S.loading = false;
@@ -330,13 +347,19 @@
     if (ratio > 1.91) ratio = 1.91;
     var style = ' style="--ratio:' + ratio + '"';
     chip = chip || '';
-    if (photo && photo.type === 'video' && !(S.me && S.me.premium)) {
-      return '<div class="frame-media video-locked" data-act="premium"' + style + '>' + phPhoto('is-blur') + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
+    var mine = post.isMine || (S.me && post.id === S.me.id);
+    var visual = '';
+    if (photo && photo.type === 'video' && ownUrl(photo.url)) visual = realVideo(photo.url, photo.poster);
+    else if (photo && ownUrl(photo.url)) visual = realImg(photo.url);
+    else if (photo && ownUrl(photo.poster)) visual = realImg(photo.poster);
+    else visual = phPhoto(photo && photo.type === 'video' && !mine && !(S.me && S.me.premium) ? 'is-blur' : '');
+    if (photo && photo.type === 'video' && !mine && !(S.me && S.me.premium)) {
+      return '<div class="frame-media video-locked" data-act="premium"' + style + '>' + visual + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
     }
     if (photo && photo.type === 'video') {
-      return '<div class="frame-media"' + style + '>' + phPhoto() + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" aria-label="Смотреть видео">' + ICON.play + '</button>' + chip + '</div>';
+      return '<div class="frame-media"' + style + '>' + visual + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" data-poster="' + esc(photo.poster || '') + '" aria-label="Смотреть видео">' + ICON.play + '</button>' + chip + '</div>';
     }
-    return '<div class="frame-media"' + style + '>' + phPhoto() + chip + '</div>';
+    return '<div class="frame-media"' + style + '>' + visual + chip + '</div>';
   }
 
   function postCard(post) {
@@ -446,17 +469,24 @@
     var video = photo.type === 'video';
     var locked = video && !(S.me && S.me.premium);
     var mark = '';
-    if (locked) mark = '<span class="prem-pill">🔒 Premium</span>';
+    if (locked && !ownUrl(photo.url)) mark = '<span class="prem-pill">🔒 Premium</span>';
     else if (video) mark = '<span class="mark">' + ICON.play + '</span>';
-    var act = locked ? 'premium' : (video ? 'play' : 'view-photo');
-    return '<button class="tile' + (locked ? ' locked' : '') + '" data-act="' + act + '" data-src="' + esc(photo.url || '') + '" data-id="' + esc(user.id) + '">' +
-      phPhoto(locked ? 'is-blur' : '') + mark + '</button>';
+    var act = (locked && !ownUrl(photo.url)) ? 'premium' : (video ? 'play' : 'view-photo');
+    var face = '';
+    if (video && ownUrl(photo.poster)) face = realImg(photo.poster);
+    else if (video && ownUrl(photo.url)) face = realVideo(photo.url, photo.poster);
+    else if (ownUrl(photo.url)) face = realImg(photo.url);
+    else face = phPhoto(locked ? 'is-blur' : '');
+    return '<button class="tile' + (locked && !ownUrl(photo.url) ? ' locked' : '') + '" data-act="' + act + '" data-src="' + esc(photo.url || '') + '" data-poster="' + esc(photo.poster || '') + '" data-id="' + esc(user.id) + '">' +
+      face + mark + '</button>';
   }
 
   function highlightRow(user) {
     var html = '<div class="highlights">';
     for (var i = 0; i < 6; i++) {
-      html += '<button class="hl" data-act="story" data-id="' + esc(user.id) + '" data-index="' + i + '">' + phAvatar() + '</button>';
+      var st = (user.stories || [])[i];
+      var face = st && ownUrl(st.url) ? realImg(st.url) : phAvatar();
+      html += '<button class="hl" data-act="story" data-id="' + esc(user.id) + '" data-index="' + i + '">' + face + '</button>';
     }
     return html + '</div>';
   }
@@ -531,7 +561,7 @@
         '<div class="count" data-count>' + r.bio.length + '/80</div>';
     } else {
       var tiles = r.photos.map(function (p, idx) {
-        return '<div class="pick">' + phPhoto() + '<button class="rm" data-act="rm-photo" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
+        return '<div class="pick">' + (realImg(p.url) || phPhoto()) + '<button class="rm" data-act="rm-photo" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
       }).join('');
       var add = r.photos.length < 6 ? '<button class="pick-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '';
       body = '<h1>Добавь фото</h1><p class="lead">От 1 до 6. В ленте это серые карточки, пока фото не подключены.</p><div class="pick-grid">' + tiles + add + '</div>';
@@ -678,7 +708,10 @@
   function composeSheet() {
     var c = S.compose || { stage: 'menu', photos: [], caption: '' };
     if (c.stage === 'preview') {
-      var tiles = c.photos.map(function () { return '<div class="pick">' + phPhoto() + '</div>'; }).join('');
+      var tiles = c.photos.map(function (p) {
+        var face = (p.type === 'video' && ownUrl(p.poster)) ? realImg(p.poster) : (realImg(p.url) || (p.type === 'video' && ownUrl(p.url) ? realVideo(p.url, p.poster) : '') || phPhoto());
+        return '<div class="pick">' + face + '</div>';
+      }).join('');
       return sheetFrame(
         '<h2>' + (c.type === 'story' ? 'Новая история' : 'Новая анкета') + '</h2>' +
         '<div class="pick-grid">' + tiles + '</div>' +
@@ -701,7 +734,7 @@
     var e = S.edit;
     if (!e) return '';
     var tiles = e.photos.map(function (p, idx) {
-      return '<div class="pick">' + phPhoto() + '<button class="rm" data-act="rm-edit" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
+      return '<div class="pick">' + (realImg(p.url) || realImg(p.poster) || phPhoto()) + '<button class="rm" data-act="rm-edit" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
     }).join('');
     var add = e.photos.length < 6 ? '<button class="pick-add" data-act="pick-edit">+</button>' : '';
     var look = function (v, label) {
@@ -784,7 +817,7 @@
       var w = i < st.index ? 100 : 0;
       return '<b><i data-bar="' + i + '" style="width:' + w + '%"></i></b>';
     }).join('');
-    return '<div class="story-layer">' + phPhoto('story-bg') +
+    return '<div class="story-layer">' + (realImg(item.url, 'story-bg') || phPhoto('story-bg')) +
       '<div class="story-shade"></div><div class="story-ui"><div class="bars">' + bars + '</div>' +
       '<div class="story-user">' + phAvatar() + '<span>' + esc(st.user ? st.user.name : '') + '</span>' +
       '<em>' + timeAgo(item.createdAt) + '</em></div></div>' +
@@ -798,9 +831,9 @@
     if (!root) return;
     if (S.viewer) {
       root.innerHTML = '<div class="viewer"><div class="viewer-top"><button class="glass-circle" data-act="close-viewer" aria-label="Назад">' + ICON.back + '</button></div>' +
-        (S.viewer.video
-          ? phPhoto('story-bg') + '<span class="lock-badge">Видео</span>'
-          : phPhoto('story-bg')) + '</div>';
+        (S.viewer.video && ownUrl(S.viewer.src)
+          ? '<video class="real-media story-bg" src="' + esc(S.viewer.src) + '" poster="' + esc(S.viewer.poster || '') + '" controls autoplay playsinline></video>'
+          : (realImg(S.viewer.src, 'story-bg') || phPhoto('story-bg'))) + '</div>';
       return;
     }
     var sig = S.story ? (S.story.userId + ':' + S.story.index) : '';
@@ -1348,7 +1381,7 @@
       S.me = res.me || S.me;
       closeSheet();
       toast('Опубликовано');
-      render();
+      loadFeed().then(render);
     }).catch(function (err) { toast(err.message || 'Не вышло'); });
   }
 
@@ -1422,7 +1455,7 @@
       var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        var max = 1280;
+        var max = 1080;
         var w = img.width;
         var h = img.height;
         var scale = Math.min(1, max / Math.max(w, h));
@@ -1448,7 +1481,13 @@
       video.muted = true;
       video.playsInline = true;
       video.src = url;
-      var finish = function (poster) { resolve({ url: url, poster: poster || '', type: 'video' }); };
+      var finish = function (poster) {
+        if (file.size > 1600000) { resolve({ url: url, poster: poster || '', type: 'video' }); return; }
+        var reader = new FileReader();
+        reader.onload = function () { resolve({ url: reader.result, poster: poster || '', type: 'video' }); };
+        reader.onerror = function () { resolve({ url: url, poster: poster || '', type: 'video' }); };
+        reader.readAsDataURL(file);
+      };
       video.onloadeddata = function () {
         try { video.currentTime = Math.min(0.2, (video.duration || 1) / 3); } catch (e) { finish(''); }
       };
