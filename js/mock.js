@@ -289,7 +289,7 @@
       var age = parseInt(draft.age, 10);
       if (!age || age < 18) throw new Error('Cupion только с 18 лет');
       var city = String(draft.city || '').trim();
-      if (city.length < 2) throw new Error('Укажи город');
+      if (city && city.length < 2) throw new Error('Укажи город');
       var name = String(draft.name || '').trim();
       if (name.length < 2) throw new Error('Как тебя зовут?');
       var photos = (draft.photos || []).slice(0, 6).map(function (p, i) {

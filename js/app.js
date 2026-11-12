@@ -627,7 +627,7 @@
       '<button class="brand" data-act="tab" data-tab="feed">Cupion</button>' +
       '<button class="glass-circle" data-act="more" data-id="' + esc(user.id) + '" aria-label="Ещё">' + ICON.more + '</button></div>' +
       '<div class="profile-hero"><button class="big-ava" data-act="story" data-id="' + esc(user.id) + '"><span class="ring">' + phAvatar() + '</span></button>' +
-      '<h1>' + esc(user.name) + ', ' + esc(user.age) + '</h1><div class="handle">' + esc(user.city || '') + '</div>' +
+      '<h1>' + esc(user.name) + ', ' + esc(user.age) + '</h1>' + (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
       (user.bio ? '<p class="bio">' + esc(user.bio) + '</p>' : '') + '</div>' +
       '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
       '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
@@ -647,7 +647,10 @@
       var age = parseInt(r.age, 10);
       return age >= 18 && age <= 99;
     }
-    if (S.regStep === 1) return String(r.city || '').trim().length >= 2;
+    if (S.regStep === 1) {
+      var city = String(r.city || '').trim();
+      return city.length === 0 || city.length >= 2;
+    }
     if (S.regStep === 2) return validName(r.name);
     if (S.regStep === 3) return String(r.bio || '').trim().length >= 2;
     if (S.regStep === 4) return r.photos.length >= 1 && r.photos.length <= 6;
@@ -690,10 +693,12 @@
       body = '<h1>Добавь фото</h1><p class="lead">От 1 до 6. В ленте это серые карточки, пока фото не подключены.</p><div class="pick-grid">' + tiles + add + '</div>';
     }
     var label = S.regStep === 4 ? 'Готово' : 'Дальше';
+    var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : '';
     var dir = S.regDir < 0 ? 'enter-back' : 'enter-fwd';
     return '<div class="reg ' + dir + '"><div class="reg-top">' + back + '<div class="steps">' + steps + '</div></div>' +
       '<div class="reg-body" id="reg-body">' + body + '</div><div class="reg-foot">' +
       '<button class="btn btn-primary btn-block" data-act="reg-next"' + (regValid() ? '' : ' disabled') + '>' + label + '</button>' +
+      skip +
       '<div class="sheet-error" id="reg-error"></div></div></div>';
   }
 
@@ -1511,6 +1516,15 @@
     }
     if (act === 'gender') { S.reg.gender = t.getAttribute('data-value'); if (window.TG) TG.selection(); render(); return; }
     if (act === 'look') { S.reg.lookingFor = t.getAttribute('data-value'); if (window.TG) TG.selection(); render(); return; }
+    if (act === 'skip-city') {
+      S.reg.city = '';
+      S.regDir = 1;
+      S.regStep = 2;
+      if (S.reg.username) checkUsername(S.reg.username);
+      if (window.TG) TG.impact('light');
+      render();
+      return;
+    }
     if (act === 'reg-next') { advanceReg(); return; }
     if (act === 'skip-bio') { S.reg.bio = ''; finishReg(); return; }
     if (act === 'edit') {
