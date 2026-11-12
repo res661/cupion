@@ -67,29 +67,37 @@
     });
   }
 
-  function svg(inner) {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+  function svg(inner, filled) {
+    var fill = filled ? 'currentColor' : 'none';
+    var stroke = filled ? 'none' : 'currentColor';
+    var width = filled ? '0' : '1.9';
+    return '<svg viewBox="0 0 24 24" width="24" height="24" preserveAspectRatio="xMidYMid meet" aria-hidden="true" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + width + '" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+  }
+
+  function iconPair(line, filled) {
+    return '<span class="ico ico-line">' + line + '</span><span class="ico ico-fill">' + filled + '</span>';
   }
 
   var ICON = {
-    heart: svg('<path d="M12 19.2c-.2 0-6.6-4-6.6-8.6A3.5 3.5 0 0 1 12 8.2a3.5 3.5 0 0 1 6.6 2.4c0 4.6-6.4 8.6-6.6 8.6z"/>'),
-    grid: svg('<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>'),
-    user: svg('<circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.2c1.4-2.6 3.6-3.9 6.5-3.9s5.1 1.3 6.5 3.9"/>'),
-    plus: svg('<path d="M12 5.5v13M5.5 12h13"/>'),
-    refresh: svg('<path d="M19 12a7 7 0 1 1-1.8-4.7"/><path d="M19 5.5V10h-4.5"/>'),
-    play: svg('<path d="M9 7.5v9l8-4.5-8-4.5z" fill="currentColor" stroke="none"/>'),
-    lock: svg('<rect x="6" y="10" width="12" height="9" rx="2"/><path d="M8.5 10V8a3.5 3.5 0 0 1 7 0v2"/>'),
-    mail: svg('<rect x="4" y="6" width="16" height="12" rx="2.5"/><path d="M5 8l7 5 7-5"/>'),
-    back: svg('<path d="M14.5 5.5L8 12l6.5 6.5"/>'),
-    more: svg('<circle cx="6" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.2" fill="currentColor" stroke="none"/>'),
-    star: svg('<path d="M12 4.5l1.8 4.2 4.6.5-3.4 3.1.9 4.5L12 14.6 8.1 16.8l.9-4.5L5.6 9.2l4.6-.5L12 4.5z"/>'),
-    eye: svg('<path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.4"/>'),
-    send: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
-    video: svg('<rect x="4" y="6" width="12" height="12" rx="2"/><path d="M16 10l4-2v8l-4-2"/>'),
-    spark: svg('<path d="M12 3v4M12 17v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M3 12h4M17 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>'),
-    search: svg('<circle cx="11" cy="11" r="6.2"/><path d="M16 16l4 4"/>'),
-    trophy: svg('<path d="M8 4h8v2.2a4 4 0 0 1-8 0V4z"/><path d="M8 5.2H5.6a2.4 2.4 0 0 0 2.5 3.6"/><path d="M16 5.2h2.4a2.4 2.4 0 0 1-2.5 3.6"/><path d="M12 10.8V13"/><path d="M9.2 17h5.6"/><path d="M10 13.2h4V17h-4z"/>'),
-    heartFill: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#111" d="M12 19.4c-.25 0-6.8-4.1-6.8-8.8A3.6 3.6 0 0 1 12 7.8a3.6 3.6 0 0 1 6.8 2.8c0 4.7-6.55 8.8-6.8 8.8z"/></svg>'
+    heart: svg('<path d="M12 19.6c-.35 0-7.2-4.15-7.2-8.9A3.7 3.7 0 0 1 12 7.55a3.7 3.7 0 0 1 7.2 3.15c0 4.75-6.85 8.9-7.2 8.9z"/>'),
+    heartFill: svg('<path d="M12 20.1c-.4 0-7.55-4.35-7.55-9.25A3.9 3.9 0 0 1 12 7.15a3.9 3.9 0 0 1 7.55 3.7c0 4.9-7.15 9.25-7.55 9.25z"/>', true),
+    grid: svg('<rect x="4.2" y="4.2" width="6.4" height="6.4" rx="1.7"/><rect x="13.4" y="4.2" width="6.4" height="6.4" rx="1.7"/><rect x="4.2" y="13.4" width="6.4" height="6.4" rx="1.7"/><rect x="13.4" y="13.4" width="6.4" height="6.4" rx="1.7"/>'),
+    user: svg('<circle cx="12" cy="8" r="3.15"/><path d="M5.6 19.15c.55-2.85 2.85-4.4 6.4-4.4s5.85 1.55 6.4 4.4"/>'),
+    userFill: svg('<circle cx="12" cy="8" r="3.35"/><path d="M5.15 19.35c.75-3.15 3.2-4.85 6.85-4.85s6.1 1.7 6.85 4.85c.12.45-.22.75-.68.75H5.83c-.46 0-.8-.3-.68-.75z"/>', true),
+    plus: svg('<path d="M12 5.2v13.6M5.2 12h13.6"/>'),
+    refresh: svg('<path d="M19.2 12a7.2 7.2 0 1 1-2.1-5.1"/><path d="M19.2 4.6V8.7h-4.1"/>'),
+    play: svg('<path d="M9.1 7.15v9.7l8.05-4.85L9.1 7.15z"/>', true),
+    lock: svg('<rect x="6.2" y="10.3" width="11.6" height="8.5" rx="2"/><path d="M8.7 10.3V8.15a3.3 3.3 0 0 1 6.6 0v2.15"/>'),
+    mail: svg('<rect x="3.8" y="5.8" width="16.4" height="12.4" rx="2.2"/><path d="M4.6 8l7.4 5.1L19.4 8"/>'),
+    back: svg('<path d="M14.8 5.4L8.2 12l6.6 6.6"/>'),
+    more: svg('<circle cx="6.5" cy="12" r="1.15"/><circle cx="12" cy="12" r="1.15"/><circle cx="17.5" cy="12" r="1.15"/>', true),
+    star: svg('<path d="M12 3.9l1.9 4.15 4.5.5-3.35 3.05.95 4.45L12 13.95 8 16.05l.95-4.45L5.6 8.55l4.5-.5L12 3.9z"/>'),
+    eye: svg('<path d="M2.8 12S6.1 6.8 12 6.8 21.2 12 21.2 12 17.9 17.2 12 17.2 2.8 12 2.8 12z"/><circle cx="12" cy="12" r="2.3"/>'),
+    send: svg('<path d="M4.8 12h14.2"/><path d="M13 6.4L18.6 12 13 17.6"/>'),
+    video: svg('<rect x="3.7" y="6.3" width="11.2" height="11.4" rx="2"/><path d="M15 10.15l4.6-2.4v8.5L15 13.85"/>'),
+    spark: svg('<path d="M12 3.2v3.4M12 17.4v3.4M4.6 4.6l2.4 2.4M17 17l2.4 2.4M3.2 12h3.4M17.4 12h3.4M4.6 19.4l2.4-2.4M17 7l2.4-2.4"/>'),
+    search: svg('<circle cx="11" cy="11" r="6"/><path d="M15.7 15.7L20.2 20.2"/>'),
+    trophy: svg('<path d="M8 4.1h8v2.35a4 4 0 0 1-8 0V4.1z"/><path d="M8 5.7H5.55a2.45 2.45 0 0 0 2.5 3.35"/><path d="M16 5.7h2.45a2.45 2.45 0 0 1-2.5 3.35"/><path d="M12 10.55V13.2"/><path d="M9.35 18.15h5.3"/><path d="M10.15 13.2h3.7v1.85c0 .75-.55 1.25-1.25 1.25h-1.2c-.7 0-1.25-.5-1.25-1.25V13.2z"/>')
   };
 
   var SIL = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="9" fill="#C4CAD3"/><path fill="#C4CAD3" d="M16 52c2.8-9 8.6-13.5 16-13.5S45.2 43 48 52"/></svg>';
@@ -231,6 +239,7 @@
     S.person = null;
     S.personId = null;
     S.screen = tab;
+    S.spring = 'tab';
     if (tab === 'ratings') {
       S.unseen = 0;
       CupionAPI.markRatingsSeen().catch(function () {});
@@ -1175,9 +1184,9 @@
   function tabs() {
     var onProfile = S.screen === 'profile' || S.screen === 'person';
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
-      '<button class="dock-btn left' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + ICON.user + '</button>' +
-      '<button class="dock-plus" data-act="compose" aria-label="Добавить"><span>+</span></button>' +
-      '<button class="dock-btn right heart-tab' + (S.screen === 'ratings' ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + ICON.heart +
+      '<button class="dock-btn left' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + iconPair(ICON.user, ICON.userFill) + '</button>' +
+      '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
+      '<button class="dock-btn right heart-tab' + (S.screen === 'ratings' ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + iconPair(ICON.heart, ICON.heartFill) +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
       '</div></div>';
   }
@@ -1262,6 +1271,11 @@
     captureScroll();
     S.justLiked = S.justLiked;
     stage.innerHTML = stageHTML();
+    if (S.spring) {
+      var entered = stage.firstElementChild;
+      if (entered) entered.classList.add('spring-in');
+      S.spring = '';
+    }
     nav.innerHTML = tabsVisible() ? tabs() : '';
     restoreScroll();
     renderSheet();
@@ -1814,7 +1828,7 @@
 
   /* ---------- gestures ---------- */
 
-  var SPRING = 'transform .36s cubic-bezier(0.32, 0.72, 0, 1)';
+  var SPRING = 'transform .45s cubic-bezier(0.32, 0.72, 0, 1)';
   var TABS = ['profile', 'feed', 'ratings'];
 
   function tabIndex() {
@@ -2108,7 +2122,7 @@
         g.layer.style.transition = SPRING;
         g.layer.style.transform = 'translateX(' + width + 'px)';
         swallowClick = true;
-        setTimeout(function () { finishEdge(g); }, 340);
+        setTimeout(function () { finishEdge(g); }, 420);
       } else springBack(g.layer);
       return;
     }
@@ -2122,7 +2136,7 @@
           g.layer.style.transition = 'none';
           g.layer.style.transform = '';
           goBack();
-        }, 340);
+        }, 420);
       } else springBack(g.layer);
       return;
     }
@@ -2140,7 +2154,7 @@
           g.layer.style.transition = 'none';
           g.layer.style.transform = '';
           goTab(TABS[next]);
-        }, 340);
+        }, 420);
       } else springBack(g.layer);
       return;
     }

@@ -14,7 +14,18 @@ body, #app {
     linear-gradient(180deg, #E9ECF1 0%, #D9DEE6 100%);
   color: #C4CAD3;
 }
-.ph svg { width: 58%; height: 58%; position: absolute; left: 21%; top: 22%; }
+.ph svg {
+  width: 28px;
+  height: 28px;
+  max-width: 54%;
+  max-height: 54%;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
 .ph::after {
   content: "";
   position: absolute;
@@ -60,9 +71,9 @@ body, #app {
   color: #111;
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.app-header .icon-btn:active { transform: scale(0.9); }
+.app-header .icon-btn:active { transform: scale(0.96); }
 .app-header .icon-btn::before { display: none; }
 .app-header .icon-btn svg { width: 22px; height: 22px; }
 .app-header .badge {
@@ -171,7 +182,7 @@ body, #app {
   letter-spacing: 1px;
   font-weight: 700;
 }
-.card-more:active { transform: scale(0.92); }
+.card-more:active { transform: scale(0.96); }
 .heart-fill {
   margin-left: auto;
   width: 36px;
@@ -182,8 +193,11 @@ body, #app {
   border: 0;
   box-shadow: none;
   flex: none;
+  color: #111;
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.heart-fill svg { width: 26px; height: 26px; }
+.heart-fill:active { transform: scale(0.96); }
+.heart-fill svg { width: 26px; height: 26px; flex-shrink: 0; display: block; }
 .frame { position: relative; }
 .frame-media {
   position: relative;
@@ -279,10 +293,17 @@ body, #app {
   background: none;
   border: 0;
   box-shadow: none;
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), color 0.2s ease;
 }
 .dock-btn.left { justify-self: start; }
 .dock-btn.right { justify-self: end; }
-.dock-btn.on { color: #1c1c1e; }
+.dock-btn:active { transform: scale(0.96); }
+.dock-btn.on { color: #1c1c1e; transform: scale(1.06); }
+.dock-btn.on:active { transform: scale(1.02); }
+.dock-btn .ico { display: grid; place-items: center; }
+.dock-btn .ico-fill { display: none; }
+.dock-btn.on .ico-line { display: none; }
+.dock-btn.on .ico-fill { display: grid; }
 .dock-btn.heart-tab { position: relative; }
 .dock-btn .badge {
   position: absolute;
@@ -301,7 +322,7 @@ body, #app {
   place-items: center;
   box-shadow: 0 2px 6px rgba(255, 59, 48, 0.28);
 }
-.dock-btn svg { width: 26px; height: 26px; }
+.dock-btn svg { width: 26px; height: 26px; flex-shrink: 0; display: block; }
 .dock-plus {
   width: 44px;
   height: 44px;
@@ -314,7 +335,9 @@ body, #app {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
   border: 0;
 }
-.dock-plus span { font-size: 30px; font-weight: 400; line-height: 1; margin-top: -3px; }
+.dock-plus { transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1); }
+.dock-plus:active { transform: scale(0.96); }
+.dock-plus svg { width: 22px; height: 22px; flex-shrink: 0; display: block; stroke-width: 2.2; }
 
 .page-head { padding: calc(var(--inset-top) + 8px) 20px 0; }
 .page-head.board-head { padding: calc(var(--inset-top) + 28px) 20px 0 24px; }
@@ -552,11 +575,19 @@ body, #app {
   0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
   100% { opacity: 0; transform: translate(calc(-50% + var(--tx)), var(--ty)) scale(0.7); }
 }
-.bubble.bye .bubble-swap { animation: bubbleBye 0.46s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+.bubble.bye .bubble-swap { animation: bubbleBye 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
 @keyframes bubbleBye {
   to { opacity: 0; transform: scale(0.35); }
 }
-.bubble.arrive .bubble-swap { animation: swapIn 0.55s cubic-bezier(0.32, 0.72, 0, 1); }
+.bubble.arrive .bubble-swap { animation: swapIn 0.45s cubic-bezier(0.32, 0.72, 0, 1); }
+.post { animation: cardIn 0.45s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.post:nth-child(2) { animation-delay: 0.04s; }
+.post:nth-child(3) { animation-delay: 0.08s; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.spring-in { animation: rise 0.45s cubic-bezier(0.32, 0.72, 0, 1); }
 .story-hint {
   position: absolute;
   left: 50%;
