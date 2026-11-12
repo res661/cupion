@@ -32,6 +32,8 @@
     markStorySeen: call('markStorySeen'),
     reactStory: call('reactStory'),
     getReactions: call('getReactions'),
+    getStoryInbox: call('getStoryInbox'),
+    reactBack: call('reactBack'),
     rate: call('rate'),
     sendMessage: call('sendMessage'),
     getIncoming: call('getIncoming'),

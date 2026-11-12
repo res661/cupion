@@ -480,7 +480,7 @@
         .slice()
         .sort(function (a, b) { return b.createdAt - a.createdAt; })
         .map(function (m) {
-          return { id: m.id, createdAt: m.createdAt, user: publicUser(personById(m.userId)) };
+          return { id: m.id, createdAt: m.createdAt, kind: m.kind || 'rate', user: publicUser(personById(m.userId)) };
         })
         .filter(function (m) { return m.user; });
     },
@@ -521,9 +521,81 @@
     addStory: function (payload) {
       if (!state.me) throw new Error('Сначала создай анкету');
       if (!state.me.stories) state.me.stories = [];
-      state.me.stories.push({ id: 'me_st_' + Date.now(), url: payload.url, createdAt: Date.now() });
+      var id = 'me_st_' + Date.now();
+      state.me.stories.push({ id: id, url: payload.url, createdAt: Date.now() });
+      var seeds = [
+        ['alina', '❤️', 2 * 60000],
+        ['max_k', '🔥', 6 * 60000],
+        ['sonya', '😂', 12 * 60000]
+      ];
+      seeds.forEach(function (row, i) {
+        state.reactions.unshift({
+          id: 'seed_' + id + '_' + i,
+          storyId: id,
+          to: 'me',
+          emoji: row[1],
+          from: row[0],
+          createdAt: Date.now() - row[2]
+        });
+      });
       writeStore();
-      return { ok: true };
+      return { ok: true, id: id };
+    },
+
+    getStoryInbox: function () {
+      if (!state.me) return [];
+      var live = {};
+      storyList(state.me).forEach(function (s) { live[s.id] = true; });
+      return (state.reactions || []).filter(function (r) {
+        return r.to === 'me' && r.from !== 'me' && live[r.storyId];
+      }).map(function (r) {
+        var person = personById(r.from);
+        var pub = person ? publicUser(person) : null;
+        var replied = (state.reactions || []).some(function (x) {
+          return x.from === 'me' && x.to === r.from && x.storyId === r.storyId && x.emoji === '❤️';
+        });
+        return {
+          id: r.id,
+          storyId: r.storyId,
+          emoji: r.emoji,
+          createdAt: r.createdAt,
+          replied: replied,
+          user: pub ? { id: pub.id, name: pub.name, age: pub.age, username: pub.username } : null
+        };
+      }).filter(function (r) { return r.user; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    },
+
+    reactBack: function (payload) {
+      if (!state.me) throw new Error('Сначала создай анкету');
+      var storyId = payload.storyId;
+      var toId = payload.toId;
+      var live = {};
+      storyList(state.me).forEach(function (s) { live[s.id] = true; });
+      if (!live[storyId]) throw new Error('История уже закончилась');
+      var theirs = (state.reactions || []).some(function (r) {
+        return r.to === 'me' && r.from === toId && r.storyId === storyId && r.emoji === '❤️';
+      });
+      if (!theirs) throw new Error('Ответить можно только на ❤️');
+      var already = (state.reactions || []).some(function (r) {
+        return r.from === 'me' && r.to === toId && r.storyId === storyId && r.emoji === '❤️';
+      });
+      if (!already) {
+        state.reactions.unshift({
+          id: 'rx_back_' + Date.now(),
+          storyId: storyId,
+          to: toId,
+          emoji: '❤️',
+          from: 'me',
+          createdAt: Date.now()
+        });
+      }
+      var matched = false;
+      if (!hasMatch(toId)) {
+        state.matches.unshift({ id: 'm_story_' + Date.now(), userId: toId, createdAt: Date.now(), kind: 'story' });
+        matched = true;
+      }
+      writeStore();
+      return { ok: true, match: matched, userId: toId };
     },
 
     setPremium: function (on) {

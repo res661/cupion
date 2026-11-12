@@ -237,6 +237,7 @@
       loadRatings().then(render);
     }
     if (tab === 'rating') loadBoard().then(render);
+    if (tab === 'profile') loadInbox().then(render);
     if (window.TG) TG.impact('light');
     render();
   }
@@ -294,6 +295,30 @@
       S.outgoing = res[1] || [];
       S.matches = res[2] || [];
     });
+  }
+
+  function loadInbox() {
+    return CupionAPI.getStoryInbox().then(function (rows) {
+      S.inbox = rows || [];
+    }).catch(function () { S.inbox = []; });
+  }
+
+  function inboxBlock(storyId, floating) {
+    var rows = (S.inbox || []).filter(function (r) { return !storyId || r.storyId === storyId; });
+    if (!rows.length) return '';
+    var body = rows.map(function (r) {
+      var back = '';
+      if (r.emoji === '❤️') {
+        back = r.replied
+          ? '<span class="rx-done">взаимно</span>'
+          : '<button class="rx-back" data-act="react-back" data-id="' + esc(r.user.id) + '" data-story="' + esc(r.storyId) + '">❤️ в ответ</button>';
+      }
+      return '<article class="rx-row"><button class="rx-main" data-act="person" data-id="' + esc(r.user.id) + '">' +
+        phAvatar() +
+        '<span class="who"><b>' + esc(r.user.name) + ', ' + esc(r.user.age) + '</b><small>' + timeAgo(r.createdAt) + '</small></span>' +
+        '<span class="emo">' + r.emoji + '</span></button>' + back + '</article>';
+    }).join('');
+    return '<section class="rx' + (floating ? ' story-inbox' : '') + '"><h3>Реакции</h3><p>Пока история жива</p>' + body + '</section>';
   }
 
   function refreshMe() {
@@ -467,7 +492,7 @@
       '<span class="heart">♥</span></div>' +
       '<b>Мэтч с @' + esc(m.user.username) + '</b>' +
       '<span class="sub">' + esc(mine) + ' и @' + esc(m.user.username) + '</span>' +
-      '<span class="sub">вы оценили друг друга</span>' +
+      '<span class="sub">' + (m.kind === 'story' ? 'мэтч по истории' : 'вы оценили друг друга') + '</span>' +
       '<button class="btn btn-primary" data-act="person" data-id="' + esc(m.user.id) + '">Смотреть</button></section>';
   }
 
@@ -514,7 +539,7 @@
     } else {
       body = (S.matches || []).slice(1).map(function (m) {
         return '<article class="rate-row"><div class="rate-main">' + phAvatar() +
-          '<div><b>@' + esc((S.me && S.me.username) || 'ты') + ' и @' + esc(m.user.username) + '</b><div class="sub">мэтч · ' + timeAgo(m.createdAt) + '</div></div>' +
+          '<div><b>@' + esc((S.me && S.me.username) || 'ты') + ' и @' + esc(m.user.username) + '</b><div class="sub">' + (m.kind === 'story' ? 'мэтч по истории' : 'мэтч') + ' · ' + timeAgo(m.createdAt) + '</div></div>' +
           '<button class="thumb-btn" data-act="person" data-id="' + esc(m.user.id) + '">' + phPhoto() + '</button></div>' +
           '<div class="hair"></div><div class="rate-foot"><span></span>' +
           '<button class="btn btn-primary btn-sm" data-act="person" data-id="' + esc(m.user.id) + '">Смотреть</button></div></article>';
@@ -579,6 +604,7 @@
       '<div class="profile-actions">' + primary +
       '<button class="btn btn-white" data-act="story" data-id="' + esc(user.id) + '">Истории</button></div>' +
       highlightRow(user) +
+      (own ? inboxBlock(null) : '') +
       '<div class="grid">' + (user.photos || []).map(function (p) { return photoTile(p, user); }).join('') + '</div></div></div>';
   }
 
@@ -887,6 +913,7 @@
       '<div class="story-shade"></div><div class="story-ui"><div class="bars">' + bars + '</div>' +
       '<div class="story-user">' + phAvatar() + '<span>' + esc(st.user ? st.user.name : '') + '</span>' +
       '<em>' + timeAgo(item.createdAt) + '</em></div></div>' +
+      (st.userId === 'me' ? inboxBlock(item.id, true) : '') +
       '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥', '👏'].map(function (emo) {
         var picked = S.picked && S.picked[item.id] === emo;
         return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
@@ -926,9 +953,9 @@
       if (!items.length) { toast('Пока нет истории'); return; }
       S.viewer = null;
       S.story = { userId: userId, user: res[1], items: items, index: Math.min(index || 0, items.length - 1), paused: false };
-      storySig = '';
-      renderStory();
-      syncBack();
+      var paint = function () { storySig = ''; renderStory(); syncBack(); };
+      if (userId === 'me') loadInbox().then(paint);
+      else paint();
     }).catch(function () { toast('История недоступна'); });
   }
 
@@ -975,7 +1002,7 @@
     var root = document.getElementById('story-root');
     if (root && !S.viewer) root.innerHTML = '';
     syncBack();
-    if (id) retireBubble(id);
+    if (id && id !== 'me') retireBubble(id);
   }
 
   function premiumHint() {
@@ -1019,8 +1046,9 @@
     storyRAF = 0;
   }
 
-  function showMatch(user) {
+  function showMatch(user, kind) {
     S.match = user;
+    S.matchKind = kind || 'rate';
     matchSig = '';
     renderMatch();
     syncBack();
@@ -1030,7 +1058,7 @@
   function renderMatch() {
     var root = document.getElementById('match-root');
     if (!root) return;
-    var sig = S.match ? S.match.id : '';
+    var sig = S.match ? (S.match.id + ':' + (S.matchKind || '')) : '';
     if (sig === matchSig) return;
     matchSig = sig;
     if (!S.match) { root.innerHTML = ''; return; }
@@ -1046,7 +1074,7 @@
       phAvatar('match-ava a') +
       phAvatar('match-ava b') +
       '<div class="match-heart">♥</div>' + bits + '</div>' +
-      '<h2>Вы замэтчились</h2><p class="subline">с ' + esc(u.name) + ' · вы оценили друг друга</p>' +
+      '<h2>Вы замэтчились</h2><p class="subline">с ' + esc(u.name) + ' · ' + (S.matchKind === 'story' ? 'мэтч по истории' : 'вы оценили друг друга') + '</p>' +
       '<button class="btn btn-primary" data-act="match-open" data-id="' + esc(u.id) + '">Смотреть профиль</button>' +
       '<button class="btn btn-glass" data-act="match-close">Продолжить</button></div>';
   }
@@ -1243,7 +1271,29 @@
     }
     if (act === 'person') {
       if (S.sheet) closeSheet();
+      if (S.story) closeStory();
       openPerson(t.getAttribute('data-id'));
+      return;
+    }
+    if (act === 'react-back') {
+      var toId = t.getAttribute('data-id');
+      var storyId = t.getAttribute('data-story');
+      CupionAPI.reactBack({ toId: toId, storyId: storyId }).then(function (res) {
+        if (window.TG) TG.notify('success');
+        return loadInbox().then(function () {
+          if (res && res.match) {
+            return CupionAPI.getUser(toId).then(function (user) {
+              showMatch(user, 'story');
+              return loadRatings();
+            });
+          }
+          return null;
+        });
+      }).then(function () {
+        storySig = '';
+        if (S.story) renderStory();
+        if (S.screen === 'profile' || S.screen === 'ratings') render();
+      }).catch(function (err) { toast(err.message || 'Не вышло'); });
       return;
     }
     if (act === 'search') { openSheet('search', { key: 'search' }); return; }
@@ -1483,7 +1533,7 @@
     var c = S.compose;
     if (!c || !c.photos.length) return;
     if (c.type === 'story') {
-      CupionAPI.addStory({ url: c.photos[0].url }).then(function () { return refreshMe(); }).then(function () {
+      CupionAPI.addStory({ url: c.photos[0].url }).then(function () { return refreshMe(); }).then(function () { return loadInbox(); }).then(function () {
         closeSheet();
         toast('История добавлена');
         render();

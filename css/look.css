@@ -528,6 +528,60 @@ body, #app {
   pointer-events: none;
   z-index: 4;
 }
+.rx {
+  margin: 18px 16px 0;
+  background: #fff;
+  border-radius: 24px;
+  padding: 14px 12px 8px;
+  box-shadow: 0 10px 28px rgba(20, 40, 80, 0.06);
+}
+.rx h3 { margin: 0 8px 2px; font-size: 20px; letter-spacing: -0.03em; }
+.rx > p { margin: 0 8px 10px; color: rgba(60, 60, 67, 0.5); font-size: 13px; }
+.rx-row { display: flex; align-items: center; gap: 8px; padding: 6px 4px; }
+.rx-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  background: none;
+  border: 0;
+  text-align: left;
+  padding: 0;
+}
+.rx-main .ph { width: 44px; height: 44px; }
+.rx-main .who { min-width: 0; display: flex; flex-direction: column; }
+.rx-main .who b { font-size: 16px; letter-spacing: -0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rx-main .who small { color: rgba(60, 60, 67, 0.5); font-size: 13px; }
+.rx-main .emo { font-size: 22px; }
+.rx-back {
+  flex: none;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #007AFF;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+}
+.rx-back:active { transform: scale(0.96); }
+.rx-done { flex: none; color: rgba(60, 60, 67, 0.55); font-size: 13px; font-weight: 600; }
+.story-inbox {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--inset-bottom) + 78px);
+  max-height: 210px;
+  overflow: auto;
+  margin: 0;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111;
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
 .story-hint.show { animation: hintIn 1.4s cubic-bezier(0.32, 0.72, 0, 1); }
 @keyframes hintIn {
   0% { opacity: 0; transform: translate(-50%, 10px); }
