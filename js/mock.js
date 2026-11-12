@@ -55,6 +55,19 @@
     return ((person && person.premium) ? 10 : 1) * 3600000;
   }
 
+  // Mock cycle is 5s so viewed stories can be tested again. Set cupion.storyLive=1 for the 30 minute return.
+  var STORY_RETURN_MS = 5000;
+  try {
+    if (localStorage.getItem('cupion.storyLive') === '1') STORY_RETURN_MS = 30 * 60 * 1000;
+  } catch (e) {}
+
+  function storyIsSeen(id, userId) {
+    if (userId === 'me') return true;
+    var at = state.seenStoryAt && state.seenStoryAt[id];
+    if (!at) return false;
+    return Date.now() - at < STORY_RETURN_MS;
+  }
+
   function storyList(person) {
     var ttl = storyTTL(person);
     return (person.stories || []).map(function (entry, i) {
@@ -108,6 +121,7 @@
       ],
       seenRatingIds: [],
       seenStoryIds: [],
+      seenStoryAt: {},
       reactions: [],
       servedIds: [],
       hiddenIds: [],
@@ -141,6 +155,10 @@
   if (!state.servedIds) state.servedIds = [];
   if (!state.hiddenIds) state.hiddenIds = [];
   if (!state.reports) state.reports = [];
+  if (!state.seenStoryAt) state.seenStoryAt = {};
+  (state.seenStoryIds || []).forEach(function (id) {
+    if (!state.seenStoryAt[id]) state.seenStoryAt[id] = Date.now();
+  });
   state.theme = 'light';
 
   function personById(id) {
@@ -182,7 +200,7 @@
         return {
           id: s.id, url: s.url, poster: s.poster || '', createdAt: s.createdAt,
           ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt,
-          seen: p.id === 'me' || state.seenStoryIds.indexOf(s.id) !== -1
+          seen: storyIsSeen(s.id, p.id)
         };
       }),
       avatar: avatarOf(p),
@@ -380,7 +398,7 @@
       var p = personById(userId);
       if (!p) return [];
       return storyList(p).map(function (s) {
-        s.seen = userId === 'me' || state.seenStoryIds.indexOf(s.id) !== -1;
+        s.seen = storyIsSeen(s.id, userId);
         return s;
       });
     },
@@ -406,9 +424,26 @@
     },
 
     markStorySeen: function (id) {
+      if (!id) return;
+      if (!state.seenStoryAt) state.seenStoryAt = {};
+      state.seenStoryAt[id] = Date.now();
       if (state.seenStoryIds.indexOf(id) === -1) state.seenStoryIds.push(id);
       writeStore();
     },
+
+    reviveStories: function (userId) {
+      var p = personById(userId);
+      if (!p) return false;
+      storyList(p).forEach(function (s) {
+        if (state.seenStoryAt) delete state.seenStoryAt[s.id];
+        var idx = state.seenStoryIds.indexOf(s.id);
+        if (idx !== -1) state.seenStoryIds.splice(idx, 1);
+      });
+      writeStore();
+      return true;
+    },
+
+    storyReturnMs: function () { return STORY_RETURN_MS; },
 
     rate: function (payload) {
       if (!state.me) throw new Error('Сначала создай анкету');

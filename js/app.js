@@ -390,26 +390,50 @@
     if (scroller) scroller.scrollTop = y;
   }
 
+  function storyReturnMs() {
+    return (window.CupionMock && CupionMock.storyReturnMs) ? CupionMock.storyReturnMs() : 5000;
+  }
+
+  function storyCooling(id) {
+    var at = S.seenBubbles && S.seenBubbles[id];
+    return typeof at === 'number' && Date.now() - at < storyReturnMs();
+  }
+
+  function revivePerson(user) {
+    if (!user) return;
+    (user.stories || []).forEach(function (s) { s.seen = false; });
+    if (window.CupionAPI && CupionAPI.reviveStories) CupionAPI.reviveStories(user.id).catch(function () {});
+  }
+
   function nextFreePerson() {
     var taken = {};
     (S.slots || []).forEach(function (sl) { if (sl.userId) taken[sl.userId] = true; });
     var list = storyPeople();
+    var cooling = null;
     for (var i = 0; i < list.length; i++) {
-      if (!taken[list[i].id] && !(S.seenBubbles && S.seenBubbles[list[i].id])) return list[i];
+      if (taken[list[i].id]) continue;
+      if (!storyCooling(list[i].id)) {
+        revivePerson(list[i]);
+        return list[i];
+      }
+      if (!cooling) cooling = list[i];
     }
-    return null;
+    if (!cooling) return null;
+    if (S.seenBubbles) delete S.seenBubbles[cooling.id];
+    revivePerson(cooling);
+    return cooling;
   }
 
   function retireBubble(userId) {
     if (!userId || !S.slots) return;
     S.seenBubbles = S.seenBubbles || {};
-    if (S.seenBubbles[userId]) return;
-    S.seenBubbles[userId] = true;
     var slot = null;
     S.slots.forEach(function (sl) { if (sl.userId === userId) slot = sl; });
-    if (!slot) return;
+    if (!slot || slot.bye) return;
+    S.seenBubbles[userId] = Date.now();
     slot.bye = true;
     paintOrbit();
+    var wait = storyReturnMs();
     setTimeout(function () {
       slot.bye = false;
       slot.userId = null;
@@ -420,8 +444,8 @@
         slot.userId = next.id;
         slot.arrive = true;
         paintOrbit();
-        setTimeout(function () { slot.arrive = false; }, 700);
-      }, 5000);
+        setTimeout(function () { slot.arrive = false; paintOrbit(); }, 700);
+      }, wait);
     }, 460);
   }
 

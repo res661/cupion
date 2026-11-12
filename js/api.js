@@ -30,6 +30,7 @@
     getStoryUsers: call('getStoryUsers'),
     getStories: call('getStories'),
     markStorySeen: call('markStorySeen'),
+    reviveStories: call('reviveStories'),
     reactStory: call('reactStory'),
     getReactions: call('getReactions'),
     getStoryInbox: call('getStoryInbox'),
