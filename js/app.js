@@ -1276,7 +1276,12 @@
     var t = e.target.closest('[data-act]');
     if (!t) return;
     var act = t.getAttribute('data-act');
-    if (act === 'tab') { goTab(t.getAttribute('data-tab') || 'feed'); return; }
+    if (act === 'tab') {
+      var nextTab = t.getAttribute('data-tab') || 'feed';
+      if (nextTab === 'profile' && (S.screen === 'profile' || S.screen === 'person')) nextTab = 'feed';
+      goTab(nextTab);
+      return;
+    }
     if (act === 'mode') {
       var mode = t.getAttribute('data-mode');
       if (mode && mode !== S.mode) {
