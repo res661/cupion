@@ -117,14 +117,96 @@
     return !!url && (String(url).indexOf('data:') === 0 || String(url).indexOf('blob:') === 0);
   }
 
+  var mediaCache = {};
+  var mediaDbPromise = null;
+
+  function mediaDatabase() {
+    if (!window.indexedDB) return Promise.reject(new Error('Нет хранилища для фото'));
+    if (mediaDbPromise) return mediaDbPromise;
+    mediaDbPromise = new Promise(function (resolve, reject) {
+      var req = indexedDB.open('cupion.media', 1);
+      req.onupgradeneeded = function () {
+        if (!req.result.objectStoreNames.contains('files')) req.result.createObjectStore('files');
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error || new Error('Нет хранилища для фото')); };
+    });
+    return mediaDbPromise;
+  }
+
+  function putMedia(blob) {
+    var id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    return mediaDatabase().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction('files', 'readwrite');
+        tx.objectStore('files').put(blob, id);
+        tx.oncomplete = function () { resolve(id); };
+        tx.onerror = function () { reject(tx.error || new Error('Не удалось сохранить фото')); };
+      });
+    }).then(function (id) {
+      mediaCache[id] = URL.createObjectURL(blob);
+      return 'idb:' + id;
+    });
+  }
+
+  function displayUrl(url) {
+    if (!url) return '';
+    var value = String(url);
+    if (value.indexOf('idb:') !== 0) return value;
+    return mediaCache[value.slice(4)] || '';
+  }
+
+  function resolveMedia(url) {
+    if (!url || String(url).indexOf('idb:') !== 0) return Promise.resolve(url || '');
+    var id = String(url).slice(4);
+    if (mediaCache[id]) return Promise.resolve(mediaCache[id]);
+    return mediaDatabase().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var req = db.transaction('files', 'readonly').objectStore('files').get(id);
+        req.onsuccess = function () {
+          if (!req.result) { mediaCache[id] = ''; resolve(''); return; }
+          mediaCache[id] = URL.createObjectURL(req.result);
+          resolve(mediaCache[id]);
+        };
+        req.onerror = function () { reject(req.error); };
+      });
+    }).catch(function () { return ''; });
+  }
+
+  function collectMedia(obj, bucket) {
+    if (!obj) return;
+    (obj.photos || []).forEach(function (p) {
+      if (p && p.url) bucket.push(p.url);
+      if (p && p.poster) bucket.push(p.poster);
+    });
+    (obj.stories || []).forEach(function (s) {
+      if (s && s.url) bucket.push(s.url);
+      if (s && s.poster) bucket.push(s.poster);
+    });
+  }
+
+  function unresolvedMedia() {
+    var urls = [];
+    collectMedia(S.me, urls);
+    (S.feed || []).forEach(function (p) { collectMedia(p, urls); });
+    if (S.person) collectMedia(S.person, urls);
+    return urls.some(function (u) {
+      if (!u || String(u).indexOf('idb:') !== 0) return false;
+      return !Object.prototype.hasOwnProperty.call(mediaCache, String(u).slice(4));
+    });
+  }
+
   function realImg(url, extra) {
-    if (!ownUrl(url)) return '';
-    return '<img class="real-media' + (extra ? ' ' + extra : '') + '" src="' + esc(url) + '" alt="">';
+    var src = displayUrl(url);
+    if (!ownUrl(src)) return '';
+    return '<img class="real-media' + (extra ? ' ' + extra : '') + '" src="' + esc(src) + '" alt="">';
   }
 
   function realVideo(url, poster) {
-    if (!ownUrl(url)) return '';
-    return '<video class="real-media" src="' + esc(url) + '" playsinline' + (ownUrl(poster) ? ' poster="' + esc(poster) + '"' : '') + '></video>';
+    var src = displayUrl(url);
+    var posterSrc = displayUrl(poster);
+    if (!ownUrl(src)) return '';
+    return '<video class="real-media" src="' + esc(src) + '" playsinline' + (ownUrl(posterSrc) ? ' poster="' + esc(posterSrc) + '"' : '') + '></video>';
   }
 
   function compactNum(n) {
@@ -461,20 +543,22 @@
   function mediaBlock(post, chip) {
     var photo = (post.photos || [])[0];
     var natural = photo && Number(photo.ratio) > 0 ? Number(photo.ratio) : 1;
+    var shown = photo ? displayUrl(photo.url) : '';
+    var shownPoster = photo ? displayUrl(photo.poster) : '';
+    var real = !!(photo && (ownUrl(shown) || ownUrl(shownPoster)));
     var frame = natural;
-    if (frame < 0.8) frame = 0.8;
-    if (frame > 1.91) frame = 1.91;
-    var real = !!(photo && (ownUrl(photo.url) || ownUrl(photo.poster)));
-    var contain = real && photo.type !== 'video' && (natural < 0.799 || natural > 1.911);
+    if (!real) {
+      if (frame < 0.8) frame = 0.8;
+      if (frame > 1.91) frame = 1.91;
+    }
     var style = ' style="--ratio:' + frame.toFixed(4) + '"';
-    var cls = 'frame-media' + (real ? ' is-real' : '') + (contain ? ' is-contain' : '');
+    var cls = 'frame-media' + (real ? ' is-real' : '');
     chip = chip || '';
     var mine = post.isMine || (S.me && post.id === S.me.id);
     var visual = '';
-    if (photo && photo.type === 'video' && ownUrl(photo.url)) visual = realVideo(photo.url, photo.poster);
-    else if (contain && ownUrl(photo.url)) visual = realImg(photo.url, 'blur-bg') + realImg(photo.url, 'fit');
-    else if (photo && ownUrl(photo.url)) visual = realImg(photo.url);
-    else if (photo && ownUrl(photo.poster)) visual = realImg(photo.poster);
+    if (photo && photo.type === 'video' && ownUrl(shown)) visual = realVideo(photo.url, photo.poster);
+    else if (photo && ownUrl(shown)) visual = realImg(photo.url);
+    else if (photo && ownUrl(shownPoster)) visual = realImg(photo.poster);
     else visual = phPhoto(photo && photo.type === 'video' && !mine && !(S.me && S.me.premium) ? 'is-blur' : '');
     if (photo && photo.type === 'video' && !mine && !(S.me && S.me.premium)) {
       return '<div class="' + cls + ' video-locked" data-act="premium"' + style + '>' + visual + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
@@ -589,17 +673,20 @@
 
   function photoTile(photo, user) {
     var video = photo.type === 'video';
+    var shown = displayUrl(photo.url);
+    var shownPoster = displayUrl(photo.poster);
+    var mineMedia = ownUrl(shown) || ownUrl(shownPoster);
     var locked = video && !(S.me && S.me.premium);
     var mark = '';
-    if (locked && !ownUrl(photo.url)) mark = '<span class="prem-pill">🔒 Premium</span>';
+    if (locked && !mineMedia) mark = '<span class="prem-pill">🔒 Premium</span>';
     else if (video) mark = '<span class="mark">' + ICON.play + '</span>';
-    var act = (locked && !ownUrl(photo.url)) ? 'premium' : (video ? 'play' : 'view-photo');
+    var act = (locked && !mineMedia) ? 'premium' : (video ? 'play' : 'view-photo');
     var face = '';
-    if (video && ownUrl(photo.poster)) face = realImg(photo.poster);
-    else if (video && ownUrl(photo.url)) face = realVideo(photo.url, photo.poster);
-    else if (ownUrl(photo.url)) face = realImg(photo.url);
+    if (video && ownUrl(shownPoster)) face = realImg(photo.poster);
+    else if (video && ownUrl(shown)) face = realVideo(photo.url, photo.poster);
+    else if (ownUrl(shown)) face = realImg(photo.url);
     else face = phPhoto(locked ? 'is-blur' : '');
-    return '<button class="tile' + (locked && !ownUrl(photo.url) ? ' locked' : '') + '" data-act="' + act + '" data-src="' + esc(photo.url || '') + '" data-poster="' + esc(photo.poster || '') + '" data-id="' + esc(user.id) + '">' +
+    return '<button class="tile' + (locked && !mineMedia ? ' locked' : '') + '" data-act="' + act + '" data-src="' + esc(photo.url || '') + '" data-poster="' + esc(photo.poster || '') + '" data-id="' + esc(user.id) + '">' +
       face + mark + '</button>';
   }
 
@@ -607,7 +694,7 @@
     var html = '<div class="highlights">';
     for (var i = 0; i < 6; i++) {
       var st = (user.stories || [])[i];
-      var face = st && ownUrl(st.url) ? realImg(st.url) : phAvatar();
+      var face = st && ownUrl(displayUrl(st.url)) ? realImg(st.url) : phAvatar();
       html += '<button class="hl" data-act="story" data-id="' + esc(user.id) + '" data-index="' + i + '">' + face + '</button>';
     }
     return html + '</div>';
@@ -1222,9 +1309,8 @@
   }
 
   function boardFace(row, cls) {
-    if (row.photo && row.photo.indexOf('data:') === 0) {
-      return '<img class="real-media ' + cls + '" src="' + esc(row.photo) + '" alt="">';
-    }
+    var src = displayUrl(row.photo);
+    if (ownUrl(src)) return '<img class="real-media ' + cls + '" src="' + esc(src) + '" alt="">';
     return phAvatar(cls);
   }
 
@@ -1275,6 +1361,17 @@
     if (!stage || !nav) return;
     captureScroll();
     S.justLiked = S.justLiked;
+    if (!S.hydrating && unresolvedMedia()) {
+      S.hydrating = true;
+      var pending = [];
+      collectMedia(S.me, pending);
+      (S.feed || []).forEach(function (p) { collectMedia(p, pending); });
+      if (S.person) collectMedia(S.person, pending);
+      Promise.all(pending.map(resolveMedia)).then(function () {
+        S.hydrating = false;
+        render();
+      }).catch(function () { S.hydrating = false; });
+    }
     stage.innerHTML = stageHTML();
     if (S.spring) {
       var entered = stage.firstElementChild;
@@ -1748,25 +1845,19 @@
 
   function readImage(file) {
     return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(file);
+      var peek = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        var max = 1600;
-        var nw = img.naturalWidth || img.width;
-        var nh = img.naturalHeight || img.height;
-        var ratio = nh ? nw / nh : 1;
-        var scale = Math.min(1, max / Math.max(nw, nh));
-        var w = Math.max(1, Math.round(nw * scale));
-        var h = Math.max(1, Math.round(nh * scale));
-        var canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-        resolve({ url: canvas.toDataURL('image/jpeg', 0.9), ratio: ratio, type: 'photo' });
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        var ratio = h ? w / h : 1;
+        URL.revokeObjectURL(peek);
+        putMedia(file).then(function (url) {
+          resolve({ url: url, ratio: ratio, type: 'photo', width: w, height: h });
+        }).catch(function (err) { reject(err); });
       };
-      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Не удалось прочитать фото')); };
-      img.src = url;
+      img.onerror = function () { URL.revokeObjectURL(peek); reject(new Error('Не удалось прочитать фото')); };
+      img.src = peek;
     });
   }
 
@@ -1779,22 +1870,27 @@
       video.playsInline = true;
       video.src = url;
       var finish = function (poster) {
-        if (file.size > 1600000) { resolve({ url: url, poster: poster || '', type: 'video' }); return; }
-        var reader = new FileReader();
-        reader.onload = function () { resolve({ url: reader.result, poster: poster || '', type: 'video' }); };
-        reader.onerror = function () { resolve({ url: url, poster: poster || '', type: 'video' }); };
-        reader.readAsDataURL(file);
+        var ratio = video.videoHeight ? (video.videoWidth / video.videoHeight) : 0;
+        putMedia(file).then(function (stored) {
+          URL.revokeObjectURL(url);
+          resolve({ url: stored, poster: poster || '', type: 'video', ratio: ratio });
+        }).catch(function () {
+          resolve({ url: url, poster: poster || '', type: 'video', ratio: ratio });
+        });
       };
       video.onloadeddata = function () {
         try { video.currentTime = Math.min(0.2, (video.duration || 1) / 3); } catch (e) { finish(''); }
       };
       video.onseeked = function () {
         try {
+          var vw = video.videoWidth || 480;
+          var vh = video.videoHeight || 640;
+          var scale = Math.min(1, 640 / Math.max(vw, vh));
           var canvas = document.createElement('canvas');
-          canvas.width = 480;
-          canvas.height = 600;
-          canvas.getContext('2d').drawImage(video, 0, 0, 480, 600);
-          finish(canvas.toDataURL('image/jpeg', 0.7));
+          canvas.width = Math.max(1, Math.round(vw * scale));
+          canvas.height = Math.max(1, Math.round(vh * scale));
+          canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+          finish(canvas.toDataURL('image/jpeg', 0.8));
         } catch (e) { finish(''); }
       };
       video.onerror = function () { finish(''); };
