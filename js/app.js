@@ -345,19 +345,13 @@
   function ensureStrip() {
     if (S.slots || !storyPeople().length) return;
     var people = storyPeople();
-    var ordered = BUBBLES.slice().sort(function (a, b) { return parseFloat(a.x) - parseFloat(b.x); });
-    var chosen = [];
-    var used = {};
-    for (var i = 0; i < people.length && i < ordered.length; i++) {
-      var idx = people.length === 1 ? Math.floor(ordered.length / 2) : Math.round(i * (ordered.length - 1) / (people.length - 1));
-      while (used[idx] && idx < ordered.length - 1) idx += 1;
-      used[idx] = true;
-      chosen.push(ordered[idx]);
-    }
+    var count = Math.min(people.length, BUBBLES.length);
     S.seenBubbles = S.seenBubbles || {};
-    S.slots = chosen.map(function (slot, i) {
-      return { i: i, x: slot.x, y: slot.y, s: slot.s, userId: people[i].id, bye: false, arrive: false };
-    });
+    S.slots = [];
+    for (var i = 0; i < count; i++) {
+      var slot = BUBBLES[i];
+      S.slots.push({ i: i, x: slot.x, y: slot.y, s: slot.s, userId: people[i].id, bye: false, arrive: false });
+    }
   }
 
   function findStoryUser(id) {
@@ -1172,7 +1166,7 @@
       return '<button type="button" data-act="board" data-period="' + id + '" class="' + (period === id ? 'on' : '') + '">' + label + '</button>';
     }
     var idx = period === 'today' ? 0 : period === 'week' ? 1 : 2;
-    return '<div class="screen"><div class="scroll"><div class="page-head"><button class="brand" data-act="tab" data-tab="feed">Cupion</button><h1>Рейтинг</h1><p>Лучшие анкеты</p></div>' +
+    return '<div class="screen"><div class="scroll"><div class="page-head board-head"><h1>Рейтинг</h1><p>Лучшие анкеты</p></div>' +
       '<div class="pad"><div class="seg" data-i="' + idx + '"><i class="seg-pill"></i>' +
       seg('today', 'Сегодня') + seg('week', 'Неделя') + seg('all', 'Всё время') + '</div></div>' +
       '<div class="podium">' + podium + '</div>' +

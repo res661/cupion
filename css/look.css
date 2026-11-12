@@ -80,9 +80,9 @@ body, #app {
 }
 
 .orbit {
-  height: 150px;
-  margin: 2px 8px 0;
-  overflow: hidden;
+  height: 176px;
+  margin: 0 4px;
+  overflow: visible;
 }
 .bubble .ph-ava {
   width: 100%;
@@ -275,6 +275,8 @@ body, #app {
 .dock-plus span { font-size: 30px; font-weight: 400; line-height: 1; margin-top: -3px; }
 
 .page-head { padding: calc(var(--inset-top) + 8px) 20px 0; }
+.page-head.board-head { padding: calc(var(--inset-top) + 28px) 20px 0 24px; }
+.page-head.board-head h1 { margin-top: 0; }
 .page-head h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.04em; }
 .page-head p { font-size: 17px; margin-top: 2px; }
 .seg { background: #ECECEF; border-radius: 999px; height: 40px; }
