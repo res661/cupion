@@ -693,6 +693,7 @@
           id: p.id,
           name: p.name,
           city: p.city || '',
+          premium: !!p.premium,
           rating10: p.rating10,
           ratingsCount: p.ratingsCount,
           photo: photo,

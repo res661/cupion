@@ -113,6 +113,16 @@
 
   function ph() { return phAvatar(); }
 
+  function premMark() {
+    return '<span class="prem" aria-label="Premium"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="#fff" d="M6.15 8.15 4.4 6.4 3.2 7.6l2.95 2.95 6.1-6.1-1.2-1.2z"/></svg></span>';
+  }
+
+  function avgScore(post) {
+    var n = Number(post && post.rating10);
+    if (!n) return '';
+    return n.toFixed(1);
+  }
+
   function ownUrl(url) {
     return !!url && (String(url).indexOf('data:') === 0 || String(url).indexOf('blob:') === 0);
   }
@@ -572,15 +582,19 @@
   function postCard(post) {
     if (!post) return '';
     var photo = (post.photos || [])[0] || { id: '' };
-    var city = post.city ? esc(post.city) : '';
+    var city = post.city ? ' · ' + esc(post.city) : '';
+    var count = Number(post.ratingsCount) ? ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span>' : '';
+    var score = avgScore(post);
+    var scoreHtml = '<div class="post-score"><i>★</i><b' + (score ? ' data-tick="' + esc(score) + '"' : '') + '>' + esc(score || '—') + '</b></div>';
+    var rateBtn = post.isMine ? '' : '<button class="rate-pill" data-act="rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '">Оценить</button>';
     return '<article class="post" data-post="' + esc(post.id) + '"><div class="card">' +
       '<div class="post-head"><button class="mini-ava" data-act="person" data-id="' + esc(post.id) + '">' + phAvatar() + '</button>' +
-      '<button class="post-user" data-act="person" data-id="' + esc(post.id) + '">' + esc(post.name) + '</button>' +
+      '<button class="post-user" data-act="person" data-id="' + esc(post.id) + '">' + esc(post.name) + (post.premium ? premMark() : '') + '</button>' +
       (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
-      '<button class="heart-fill' + (S.justLiked === post.id ? ' pop' : '') + '" data-act="rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '" aria-label="Оценить">' + ICON.heartFill + '</button></div>' +
-      '<div class="frame">' + mediaBlock(post, '<span class="rate-chip"><b>★</b> ' + esc(post.ratingLabel) + '</span>') + '</div>' +
-      '<div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + (city ? ' <span class="muted">· ' + city + '</span>' : '') + ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span></div>' +
-      '<p class="caption">' + esc(post.caption || post.bio || '') + '</p></div></article>';
+      '</div>' +
+      '<div class="frame">' + mediaBlock(post, '') + '</div>' +
+      '<div class="post-meta"><div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + city + count + '</div>' + scoreHtml + '</div>' +
+      '<p class="caption">' + esc(post.caption || post.bio || '') + '</p>' + rateBtn + '</div></article>';
   }
 
   function feedScreen() {
@@ -628,7 +642,7 @@
       action = '<button class="btn btn-primary btn-sm" data-act="person" data-id="' + esc(who.id) + '">Смотреть</button>';
     }
     var nameBtn = revealed
-      ? '<b data-act="person" data-id="' + esc(who.id) + '">' + esc(title) + '</b>'
+      ? '<b data-act="person" data-id="' + esc(who.id) + '">' + esc(title) + (who.premium ? premMark() : '') + '</b>'
       : '<b>' + esc(title) + '</b>';
     return '<article class="rate-row' + (revealed ? '' : ' anon') + '">' +
       '<div class="rate-main">' + phAvatar(revealed ? '' : 'anon') +
@@ -714,7 +728,7 @@
       '<button class="brand" data-act="tab" data-tab="feed">Cupion</button>' +
       '<button class="glass-circle" data-act="more" data-id="' + esc(user.id) + '" aria-label="Ещё">' + ICON.more + '</button></div>' +
       '<div class="profile-hero"><button class="big-ava" data-act="story" data-id="' + esc(user.id) + '"><span class="ring">' + phAvatar() + '</span></button>' +
-      '<h1>' + esc(user.name) + ', ' + esc(user.age) + '</h1>' + (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
+      '<h1><span>' + esc(user.name) + ', ' + esc(user.age) + '</span>' + (user.premium ? premMark() : '') + '</h1>' + (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
       (user.bio ? '<p class="bio">' + esc(user.bio) + '</p>' : '') + '</div>' +
       '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
       '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
@@ -1325,14 +1339,14 @@
       return '<button class="pod p' + medals[i] + '" data-act="person" data-id="' + esc(row.id) + '">' +
         '<span class="medal">' + medals[i] + '</span>' +
         boardFace(row, 'pod-ava') +
-        '<b>' + esc(row.name) + '</b>' +
+        '<b>' + esc(row.name) + (row.premium ? premMark() : '') + '</b>' +
         '<em>' + esc(Number(row.rating10 || 0).toFixed(1)) + '</em>' +
         '<span>' + esc(compactNum(row.ratingsCount)) + '</span></button>';
     }).join('');
     var rest = rows.slice(3).map(function (row) {
       return '<button class="board-row" data-act="person" data-id="' + esc(row.id) + '">' +
         '<span class="rk">' + row.rank + '</span>' + boardFace(row, '') +
-        '<span class="who"><b>' + esc(row.name) + '</b><small>' + esc(row.city || '') + '</small></span>' +
+        '<span class="who"><b>' + esc(row.name) + (row.premium ? premMark() : '') + '</b><small>' + esc(row.city || '') + '</small></span>' +
         '<span class="sc"><b>' + esc(Number(row.rating10 || 0).toFixed(1)) + '</b><small>' + esc(compactNum(row.ratingsCount)) + '</small></span></button>';
     }).join('');
     function seg(id, label) {
