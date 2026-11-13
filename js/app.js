@@ -408,7 +408,43 @@
   }
 
   function loadStories() {
-    return CupionAPI.getStoryUsers().then(function (rows) { S.stories = rows || []; });
+    return CupionAPI.getStoryUsers().then(function (rows) {
+      S.stories = rows || [];
+      fillOrbitSlots();
+      return CupionAPI.getMe();
+    }).then(function (me) {
+      if (me) S.me = me;
+    }).catch(function () {});
+  }
+
+  /* Expired stories free their slot: a fresh person appears there (only that bubble animates). */
+  function fillOrbitSlots() {
+    if (!S.slots) return;
+    var changed = false;
+    var taken = {};
+    S.slots.forEach(function (sl) { if (sl.userId && findStoryUser(sl.userId)) taken[sl.userId] = true; });
+    S.slots.forEach(function (slot) {
+      if (slot.userId && findStoryUser(slot.userId)) return;
+      var list = storyPeople();
+      var next = null;
+      for (var i = 0; i < list.length; i++) {
+        if (!taken[list[i].id] && !storyCooling(list[i].id)) { next = list[i]; break; }
+      }
+      slot.bye = false;
+      slot.arrive = false;
+      if (next) {
+        slot.userId = next.id;
+        slot.arrive = true;
+        taken[next.id] = true;
+        (function (sl) {
+          setTimeout(function () { sl.arrive = false; paintOrbit(); }, 700);
+        })(slot);
+      } else {
+        slot.userId = null;
+      }
+      changed = true;
+    });
+    if (changed) paintOrbit();
   }
 
   function loadRatings() {
@@ -553,10 +589,13 @@
       var extra = slot.bye ? ' bye' : (slot.arrive ? ' arrive' : '');
       return bubble(user, slot, i, extra);
     }).join('');
-    var mine = S.me && S.me.stories && S.me.stories.filter(function (st) { return !st.remain || st.remain > 0; }).length;
-    html += '<button class="bubble me" data-slot="me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
+    var myStories = (S.me && S.me.stories) ? S.me.stories.filter(function (st) { return !st.remain || st.remain > 0; }) : [];
+    var mine = myStories.length;
+    var myLimit = (S.me && S.me.premium) ? 3 : 1;
+    var canAdd = mine < myLimit;
+    html += '<button class="bubble me' + (mine ? ' has-story' : '') + '" data-slot="me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
       (mine ? timeRing(S.me, 'mine') : '<span class="ring seen">' + phAvatar() + '</span>') +
-      '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span></span></button>';
+      (canAdd ? '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span>' : '') + '</span></button>';
     return '<div class="orbit">' + html + '</div>';
   }
 
@@ -731,14 +770,8 @@
     var storyLive = hasStory && post.stories.some(function(s) { return s.remain > 0; });
     var storyPremium = !!(S.me && S.me.premium);
     var storyOpen = storyLive && !post.myScore && (storyPremium || !cardViews()[post.id]);
-
+    /* No story ring on feed avatars by design; the avatar itself still opens the story. */
     var avatarRing = '';
-    if (storyOpen) {
-      var liveStories = post.stories.filter(function(s) { return s.remain > 0; });
-      var unseenStory = liveStories.some(function(s) { return !s.seen; });
-      avatarRing = ' story-ring' + (unseenStory ? ' unseen' : ' seen');
-    }
-
     var avatarClick = storyOpen ? ' data-act="card-story" data-id="' + esc(post.id) + '"' : '';
     
     // Rating UI - inline in card
@@ -1773,17 +1806,16 @@
 
   function tabs() {
     var onProfile = S.screen === 'profile' || S.screen === 'person';
-    var onProfile = S.screen === 'profile' || S.screen === 'person';
     var onFeed = S.screen === 'feed';
     var onBoard = S.screen === 'rating';
     var onRates = S.screen === 'ratings';
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
-      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + iconPair(ICON.user, ICON.userFill) + '</button>' +
-      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Лента">' + iconPair(ICON.home, ICON.homeFill) + '</button>' +
-      '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
+      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + iconPair(ICON.home, ICON.homeFill) + '</button>' +
       '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + iconPair(ICON.trophy, ICON.trophyFill) + '</button>' +
+      '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
       '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + iconPair(ICON.heart, ICON.heartFill) +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
+      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + iconPair(ICON.user, ICON.userFill) + '</button>' +
       '</div></div>';
   }
 

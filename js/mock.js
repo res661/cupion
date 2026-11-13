@@ -7,8 +7,9 @@
   var THEME_KEY = 'cupion-theme';
   var DAY = 86400000;
   var VIDEO = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
-  /* Test story expires ~45s after the page loads, so expiry can be watched. */
-  var DEMO_EXPIRE_AT = Date.now() + 45000;
+  /* Test stories expire ~60s after the page loads, so expiry can be watched. */
+  var DEMO_EXPIRE_AT = Date.now() + 60000;
+  var DEMO_OWN_EXPIRE_AT = Date.now() + 60000;
 
   function img(id, w, h) {
     return 'https://images.unsplash.com/' + id + '?auto=format&fit=crop&w=' + (w || 900) + '&h=' + (h || 1120) + '&q=70&crop=faces';
@@ -82,22 +83,27 @@
   function storyList(person) {
     var ttl = storyTTL(person);
     return (person.stories || []).map(function (entry, i) {
+      /* Demo stories live exactly 60s so their ring counts down visibly. */
+      var demo = typeof entry === 'string' ? '' : (entry.demo || '');
+      var entryTtl = demo ? 60000 : ttl;
       var createdAt = typeof entry === 'string'
         ? (Date.now() - (i + 1) * 8 * 60000)
-        : (entry.demo === 'expiring'
-          ? (DEMO_EXPIRE_AT - ttl) /* test story: goes out ~45s after load */
-          : (entry.createdAt || Date.now()));
+        : (demo === 'expiring'
+          ? (DEMO_EXPIRE_AT - entryTtl) /* test card story: goes out ~60s after load */
+          : (demo === 'mine60'
+            ? (DEMO_OWN_EXPIRE_AT - entryTtl) /* test own story: ring counts down, then the plus returns */
+            : (entry.createdAt || Date.now())));
       var id = typeof entry === 'string' ? (person.id + '_s' + i) : entry.id;
-      var remain = Math.max(0, ttl - (Date.now() - createdAt));
+      var remain = Math.max(0, entryTtl - (Date.now() - createdAt));
       return {
         id: id,
         url: typeof entry === 'string' ? '' : (entry.url || ''),
         poster: typeof entry === 'string' ? '' : (entry.poster || ''),
         type: typeof entry === 'string' ? 'photo' : (entry.type || 'photo'),
         createdAt: createdAt,
-        ttl: ttl,
+        ttl: entryTtl,
         remain: remain,
-        expiresAt: createdAt + ttl
+        expiresAt: createdAt + entryTtl
       };
     }).filter(function (s) { return s.remain > 0; });
   }
@@ -289,7 +295,14 @@
 
   var Mock = {
     getMe: function () {
-      return state.me ? publicUser(state.me) : null;
+      if (!state.me) return null;
+      /* One demo story for the signed-in user: ring + countdown for 60s, then the plus is back. */
+      if (!state.demoOwnStory) {
+        state.demoOwnStory = true;
+        state.me.stories = (state.me.stories || []).concat([{ id: 'me_demo_story', demo: 'mine60', url: '', createdAt: Date.now() }]);
+        writeStore();
+      }
+      return publicUser(state.me);
     },
 
     isUsernameAvailable: function (name) {
