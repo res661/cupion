@@ -485,26 +485,17 @@
     var rows = (S.inbox || []).filter(function (r) { return !storyId || r.storyId === storyId; });
     if (!rows.length) return '';
     var body = rows.map(function (r) {
-      var back = '';
-      var content = '';
-      
-      if (r.type === 'comment') {
-        // Comment
-        content = '<span class="rx-comment">"' + esc(r.text) + '"</span>';
-      } else {
-        // Reaction
-        content = '<span class="emo">' + r.emoji + '</span>';
-        if (r.emoji === '❤️') {
-          back = r.replied
-            ? '<span class="rx-done">взаимно</span>'
-            : '<button class="rx-back" data-act="react-back" data-id="' + esc(r.user.id) + '" data-story="' + esc(r.storyId) + '">❤️ в ответ</button>';
-        }
-      }
-      
+      var write = (r.user && r.user.username)
+        ? '<button class="rx-write" data-act="tg" data-user="' + esc(r.user.username) + '">Написать</button>'
+        : '';
+      var content = r.type === 'comment'
+        ? '<span class="rx-comment">"' + esc(r.text) + '"</span>'
+        : '<span class="emo">' + r.emoji + '</span>';
+
       return '<article class="rx-row"><button class="rx-main" data-act="person" data-id="' + esc(r.user.id) + '">' +
         phAvatar() +
         '<span class="who"><b>' + esc(r.user.name) + ', ' + esc(r.user.age) + '</b><small>' + timeAgo(r.createdAt) + '</small></span>' +
-        content + '</button>' + back + '</article>';
+        content + '</button>' + write + '</article>';
     }).join('');
     var title = rows.some(function(r) { return r.type === 'comment'; }) ? 'Реакции и комментарии' : 'Реакции';
     return '<section class="rx' + (floating ? ' story-inbox' : '') + '"><h3>' + title + '</h3><p>На эту историю · ' + rows.length + '</p>' + body + '</section>';
@@ -760,37 +751,34 @@
   }
 
   function mediaBlock(post, chip) {
-    var photo = (post.photos || [])[0];
-    var natural = photo && Number(photo.ratio) > 0 ? Number(photo.ratio) : 1;
-    var shown = photo ? displayUrl(photo.url) : '';
-    var shownPoster = photo ? displayUrl(photo.poster) : '';
-    var file = !!(photo && (assetUrl(photo.url) || assetUrl(shown)));
-    var real = !!(photo && (ownUrl(shown) || ownUrl(shownPoster) || file));
-    var frame = natural;
-    if (!real) {
-      if (frame < 0.8) frame = 0.8;
-      if (frame > 1.91) frame = 1.91;
-    }
-    var style = ' style="--ratio:' + frame.toFixed(4) + '"';
-    var cls = 'frame-media' + (real ? ' is-real' : '');
-    chip = chip || '';
-    var mine = post.isMine || (S.me && post.id === S.me.id);
-    var visual = '';
-    if (photo && photo.type === 'video' && (ownUrl(shown) || file)) {
-      visual = '<video class="feed-video" data-feed-video playsinline muted loop src="' + esc(shown || photo.url) + '"></video>' +
-        '<button class="sound-btn" data-act="feed-sound" aria-label="Звук">' + ICON.speaker + '</button>' +
-        '<span class="vid-glyph" aria-hidden="true">' + ICON.video + '</span>';
-    }
-    else if (photo && ownUrl(shown)) visual = realImg(photo.url);
-    else if (photo && ownUrl(shownPoster)) visual = realImg(photo.poster);
-    else visual = phPhoto('');
-    if (photo && photo.type === 'video' && (file || ownUrl(shown))) {
-      return '<div class="' + cls + '"' + style + '>' + visual + chip + '</div>';
-    }
-    if (photo && photo.type === 'video') {
-      return '<div class="' + cls + '"' + style + '>' + visual + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" data-poster="' + esc(photo.poster || '') + '" aria-label="Смотреть видео">' + ICON.play + '</button>' + chip + '</div>';
-    }
-    return '<div class="' + cls + '"' + style + '>' + visual + chip + '</div>';
+    var photos = (post.photos || []).filter(function (p) { return !!p; });
+    if (!photos.length) photos = [{ id: '', type: 'photo' }];
+    var idx = Math.min(Math.max(0, S.photoIndex[post.id] || 0), photos.length - 1);
+    var slides = photos.map(function (photo) {
+      var shown = displayUrl(photo.url);
+      var shownPoster = displayUrl(photo.poster);
+      var file = !!(photo && (assetUrl(photo.url) || assetUrl(shown)));
+      var visual = '';
+      if (photo && photo.type === 'video' && (ownUrl(shown) || file)) {
+        visual = '<video class="feed-video" data-feed-video playsinline muted loop src="' + esc(shown || photo.url) + '"></video>' +
+          '<button class="sound-btn" data-act="feed-sound" aria-label="Звук">' + ICON.speaker + '</button>' +
+          '<span class="vid-glyph" aria-hidden="true">' + ICON.video + '</span>';
+      } else if (photo && ownUrl(shown)) visual = realImg(photo.url);
+      else if (photo && ownUrl(shownPoster)) visual = realImg(photo.poster);
+      else visual = phPhoto('');
+      if (photo && photo.type === 'video' && !(ownUrl(shown) || file)) {
+        visual += '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" data-poster="' + esc(photo.poster || '') + '" aria-label="Смотреть видео">' + ICON.play + '</button>';
+      }
+      return '<div class="media-slide">' + visual + '</div>';
+    }).join('');
+    var dots = photos.length > 1
+      ? '<span class="media-dots" data-dots="' + esc(post.id) + '">' + photos.map(function (_, i) {
+          return '<i class="' + (i === idx ? 'on' : '') + '"></i>';
+        }).join('') + '</span>'
+      : '';
+    return '<div class="frame"><div class="frame-clip" data-swipe="' + esc(post.id) + '">' +
+      '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
+      dots + '</div>' + (chip || '') + '</div>';
   }
 
   function postCard(post, index) {
@@ -800,20 +788,7 @@
     var count = Number(post.ratingsCount) ? ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span>' : '';
     var score = avgScore(post);
     var scoreHtml = '<div class="post-score"><i>★</i><b' + (score ? ' data-tick="' + esc(score) + '"' : '') + '>' + esc(score || '—') + '</b></div>';
-    
-    // Ring on the card avatar: Premium watches until they rate, free users once.
-    var hasStory = post.stories && post.stories.length > 0;
-    var storyLive = hasStory && post.stories.some(function(s) { return s.remain > 0; });
-    var storyPremium = !!(S.me && S.me.premium);
-    var storyOpen = storyLive && !post.myScore && (storyPremium || !cardViews()[post.id]);
-    /* Story ring on the card avatar: always visible while the person has a live story. */
-    var avatarRing = '';
-    if (storyLive) {
-      var unseenStory = post.stories.some(function(s) { return s.remain > 0 && !s.seen; });
-      avatarRing = ' story-ring' + (unseenStory ? ' unseen' : ' seen');
-    }
-    var avatarClick = storyOpen ? ' data-act="card-story" data-id="' + esc(post.id) + '"' : '';
-    
+
     // Rating UI - inline in card
     var rateUI = '';
     if (!post.isMine) {
@@ -828,11 +803,11 @@
     }
     
     return '<article class="post" data-post="' + esc(post.id) + '" style="--i:' + Math.min(index || 0, 7) + '"><div class="card">' +
-      '<div class="post-head"><button class="mini-ava' + avatarRing + '"' + avatarClick + '>' + phAvatar() + '</button>' +
+      '<div class="post-head"><button class="mini-ava">' + phAvatar() + '</button>' +
       '<div class="post-user">' + esc(post.name) + (post.premium ? premMark() : '') + '</div>' +
       (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
       '</div>' +
-      '<div class="frame">' + mediaBlock(post, '') + '</div>' +
+      mediaBlock(post, '') +
       '<div class="post-meta"><div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + city + count + '</div>' + scoreHtml + '</div>' +
       '<p class="caption">' + esc(post.caption || post.bio || '') + '</p>' + rateUI + '</div></article>';
   }
@@ -2132,8 +2107,9 @@
       
       // Find photo ID from feed
       var post = (S.feed || []).find(function(p) { return p.id === postId; });
-      if (post && post.photos && post.photos[0]) {
-        photoId = post.photos[0].id;
+      if (post && post.photos && post.photos.length) {
+        var pi = Math.min(Math.max(0, S.photoIndex[postId] || 0), post.photos.length - 1);
+        photoId = post.photos[pi].id;
       }
       
       // Comment may come from the feed card or from the long-press peek card

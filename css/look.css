@@ -287,6 +287,14 @@ body, #app {
 .frame-media.is-real { max-height: none; }
 .frame-media .ph, .frame-media .real-media { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 24px; object-fit: cover; }
 .frame-media.is-real .real-media { object-fit: contain; background: #eef1f5; }
+/* Feed media: Instagram-style 4:5 carousel */
+.frame-clip { position: relative; width: 100%; aspect-ratio: 4 / 5; max-height: 420px; border-radius: 24px; overflow: hidden; background: #E4E8EE; touch-action: pan-y; }
+.frame-track { display: flex; width: 100%; height: 100%; will-change: transform; transition: transform 0.32s var(--spring); }
+.media-slide { position: relative; flex: 0 0 100%; width: 100%; height: 100%; overflow: hidden; }
+.media-slide .ph, .media-slide .real-media, .media-slide video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.media-dots { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 5px; z-index: 3; }
+.media-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.55); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
+.media-dots i.on { background: #fff; }
 .tile .real-media { object-fit: contain; background: #eef1f5; }
 .tile .real-media, .pick .real-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #eef1f5; }
 .story-bg.real-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
@@ -1165,3 +1173,23 @@ body, #app {
 @media (prefers-reduced-motion: reduce) {
   .react-flash, .react-ring, .react-big, .react-spark, .react-rise { display: none; }
 }
+
+/* ===== story inbox sheet: Instagram-like ===== */
+.sheet-rx { background: #fff; }
+.sheet-rx .sheet-scroll { padding: 2px 16px 10px; }
+.sheet-rx .rx { margin: 0; padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
+.sheet-rx .rx h3 { margin: 0 0 2px; font-size: 18px; }
+.sheet-rx .rx > p { margin: 0 0 4px; }
+.sheet-rx .rx-row { padding: 10px 0; border-bottom: 0.5px solid rgba(0, 0, 0, 0.08); }
+.sheet-rx .rx-row:last-child { border-bottom: 0; }
+.rx-write {
+  flex: none;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #efeff4;
+  color: #0a0a0a;
+  font-size: 14px;
+  font-weight: 650;
+}
+.rx-write:active { transform: scale(0.96); }
