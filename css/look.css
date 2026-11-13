@@ -1394,3 +1394,6 @@ body, #app {
 .promo-hero span { filter: drop-shadow(0 8px 18px rgba(255, 45, 85, 0.25)); }
 .promo-card .card { overflow: hidden; }
 .promo-card .btn { margin-top: 4px; }
+/* pull-to-refresh: no visual indicator, haptics only */
+.pull-arrow, .pull-ring { display: none !important; }
+.pull-orb { visibility: hidden !important; }
