@@ -35,6 +35,8 @@
     commentStory: call('commentStory'),
     getReactions: call('getReactions'),
     getStoryInbox: call('getStoryInbox'),
+    storyUnseenCount: call('storyUnseenCount'),
+    markStoryInboxSeen: call('markStoryInboxSeen'),
     reactBack: call('reactBack'),
     rate: call('rate'),
     sendMessage: call('sendMessage'),

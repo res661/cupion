@@ -163,6 +163,25 @@ body, #app {
   place-items: center;
 }
 .plus svg { display: none; }
+/* Red counter of new reactions/comments on my story */
+.bubble-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 10px rgba(255, 59, 48, 0.35);
+  z-index: 5;
+}
 
 .new-pill {
   display: flex;

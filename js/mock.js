@@ -142,6 +142,7 @@
         { id: 'm_masha', userId: 'masha', createdAt: now - 4 * 3600000 }
       ],
       seenRatingIds: [],
+      seenStoryReactionIds: [],
       seenStoryIds: [],
       seenStoryAt: {},
       reactions: [],
@@ -178,6 +179,7 @@
   if (!state.hiddenIds) state.hiddenIds = [];
   if (!state.reports) state.reports = [];
   if (!state.seenStoryAt) state.seenStoryAt = {};
+  if (!state.seenStoryReactionIds) state.seenStoryReactionIds = [];
   (state.seenStoryIds || []).forEach(function (id) {
     if (!state.seenStoryAt[id]) state.seenStoryAt[id] = Date.now();
   });
@@ -596,6 +598,30 @@
       }).length;
     },
 
+    storyUnseenCount: function () {
+      if (!state.me) return 0;
+      var seen = state.seenStoryReactionIds || [];
+      var live = {};
+      storyList(state.me).forEach(function (s) { live[s.id] = true; });
+      return (state.reactions || []).filter(function (r) {
+        return r.to === 'me' && r.from !== 'me' && live[r.storyId] && seen.indexOf(r.id) === -1;
+      }).length;
+    },
+
+    markStoryInboxSeen: function () {
+      if (!state.me) return { ok: true };
+      var live = {};
+      storyList(state.me).forEach(function (s) { live[s.id] = true; });
+      state.seenStoryReactionIds = state.seenStoryReactionIds || [];
+      (state.reactions || []).forEach(function (r) {
+        if (r.to === 'me' && r.from !== 'me' && live[r.storyId] && state.seenStoryReactionIds.indexOf(r.id) === -1) {
+          state.seenStoryReactionIds.push(r.id);
+        }
+      });
+      writeStore();
+      return { ok: true };
+    },
+
     markRatingsSeen: function () {
       state.ratings.forEach(function (r) {
         if (r.to === 'me' && state.seenRatingIds.indexOf(r.id) === -1) state.seenRatingIds.push(r.id);
@@ -654,8 +680,7 @@
       return { ok: true, id: id };
     },
 
-    getStoryInbox: function () {
-      if (!state.me) return [];
+    getStoryInbox: function () {      if (!state.me) return [];
       var live = {};
       storyList(state.me).forEach(function (s) { live[s.id] = true; });
       return (state.reactions || []).filter(function (r) {

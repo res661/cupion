@@ -23,6 +23,7 @@
     personId: null,
     stack: [],
     unseen: 0,
+    storyUnseen: 0,
     photoIndex: {},
     loading: true,
     newPill: false,
@@ -415,6 +416,9 @@
       return CupionAPI.getMe();
     }).then(function (me) {
       if (me) S.me = me;
+      return CupionAPI.storyUnseenCount ? CupionAPI.storyUnseenCount() : 0;
+    }).then(function (n) {
+      S.storyUnseen = Number(n) || 0;
     }).catch(function () {});
   }
 
@@ -624,9 +628,10 @@
     var mine = myStories.length;
     var myLimit = (S.me && S.me.premium) ? 3 : 1;
     var canAdd = mine < myLimit;
+    var myBadge = (S.storyUnseen > 0) ? '<span class="bubble-badge">' + (S.storyUnseen > 9 ? '9+' : S.storyUnseen) + '</span>' : '';
     html += '<button class="bubble me' + (mine ? ' has-story' : '') + '" data-slot="me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
       (mine ? timeRing(S.me, 'mine') : '<span class="ring seen">' + phAvatar() + '</span>') +
-      (canAdd ? '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span>' : '') + '</span></button>';
+      (canAdd ? '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span>' : '') + myBadge + '</span></button>';
     return '<div class="orbit">' + html + '</div>';
   }
 
@@ -1596,8 +1601,17 @@
         fromCard: fromCard || false
       };
       var paint = function () { storySig = ''; renderStory(); syncBack(); if (after) after(); };
-      if (userId === 'me') loadInbox().then(paint);
-      else paint();
+      if (userId === 'me') {
+        /* Opening my own stories clears new reaction/comment notifications. */
+        if (CupionAPI.markStoryInboxSeen) {
+          CupionAPI.markStoryInboxSeen().then(function () {
+            S.storyUnseen = 0;
+            var badge = document.querySelector('.bubble.me .bubble-badge');
+            if (badge) badge.remove();
+          }).catch(function () {});
+        }
+        loadInbox().then(paint);
+      } else paint();
     }).catch(function () { toast('История недоступна'); });
   }
 
@@ -1633,7 +1647,8 @@
   function prevStory() {
     var st = S.story;
     if (!st) return;
-    if (!(S.me && S.me.premium)) {
+    var ownStory = st.userId === 'me' || !!(S.me && st.userId === S.me.id);
+    if (!ownStory && !(S.me && S.me.premium)) {
       premiumHint();
       return;
     }
@@ -2164,7 +2179,6 @@
             });
           }, 400);
         }
-        toast('Оценка отправлена');
         if (window.TG) TG.notify('success');
       }).catch(function (err) { 
         toast(err.message || 'Не вышло');
