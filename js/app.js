@@ -1355,14 +1355,15 @@
         (storyReactionCount(item.id) ? '<b>' + (storyReactionCount(item.id) > 9 ? '9+' : storyReactionCount(item.id)) + '</b>' : '') + '</button>' : '') +
       (isOwnStory ? '' : 
         '<div class="story-bottom">' +
+        '<div class="story-comment-box">' +
+        '<input type="text" class="story-comment-input" id="story-comment-' + esc(item.id) + '" placeholder="Написать комментарий..." maxlength="180" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' +
+        '<button class="story-send-btn" data-act="send-story-comment" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' + ICON.send + '</button>' +
+        '</div>' +
         '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥'].map(function (emo) {
           var picked = S.picked && S.picked[item.id] === emo;
           return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
         }).join('') + '</div>' +
-        '<div class="story-comment-box">' +
-        '<input type="text" class="story-comment-input" id="story-comment-' + esc(item.id) + '" placeholder="Написать комментарий..." maxlength="180" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' +
-        '<button class="story-send-btn" data-act="send-story-comment" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' + ICON.send + '</button>' +
-        '</div></div>') + '</div>';
+        '</div>') + '</div>';
   }
 
   function renderStory() {

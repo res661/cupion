@@ -1221,8 +1221,8 @@ body, #app { overscroll-behavior: none; }
   right: 0;
   padding: 0 12px calc(var(--inset-bottom) + 16px);
   display: flex;
-  flex-direction: column-reverse;
-  gap: 32px;
+  flex-direction: column;
+  gap: 16px;
   z-index: 10;
   pointer-events: none;
 }
