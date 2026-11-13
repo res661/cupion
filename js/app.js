@@ -2262,7 +2262,7 @@
     if (act === 'rate') { if (S.peek) closePeek(true); if (needAccount()) return; if (S.me && t.getAttribute('data-id') === S.me.id) { toast('Себе оценку поставить нельзя'); return; } if (window.TG) TG.impact('light'); openRate(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
     if (act === 'message') { if (needAccount()) return; openMessage(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
     if (act === 'premium') { openSheet('premium', { key: 'premium' }); return; }
-    if (act === 'compose') { if (needAccount()) return; openCompose('photo'); return; }
+    if (act === 'compose') { if (needAccount()) return; openCompose('story'); return; }
     if (act === 'add-story') { e.stopPropagation(); if (needAccount()) return; openCompose('story'); return; }
     if (act === 'story-file') { pickFiles('story'); return; }
     if (act === 'story-limit') { e.stopPropagation(); openSheet('premium', { key: 'storylimit' }); return; }
