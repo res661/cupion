@@ -7,6 +7,8 @@
   var THEME_KEY = 'cupion-theme';
   var DAY = 86400000;
   var VIDEO = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+  /* Test story expires ~45s after the page loads, so expiry can be watched. */
+  var DEMO_EXPIRE_AT = Date.now() + 45000;
 
   function img(id, w, h) {
     return 'https://images.unsplash.com/' + id + '?auto=format&fit=crop&w=' + (w || 900) + '&h=' + (h || 1120) + '&q=70&crop=faces';
@@ -22,6 +24,15 @@
 
   /* 20 profiles. pending:true anketas arrive after "Появились новые". */
   var PEOPLE = [
+    /* --- test profiles for stories (feed top, newest first) --- */
+    { id: 'test_story', username: 'a_story_test', name: 'Тест Истории', age: 22, gender: 'female', premium: false, rating10: 9.1, ratingsCount: 7, matchesCount: 0, bio: 'тестовая анкета: три истории с автопереходом', caption: 'тест историй в ленте', createdAt: Date.now() - 30 * 1000, photos: [ph('tst1', 'photo-1494790108377-be9c29b29330'), ph('tst2', 'photo-1531123897727-8f129e1688ce')], stories: [
+      { id: 'test_story_1', url: img('photo-1494790108377-be9c29b29330'), createdAt: Date.now() - 5 * 60000 },
+      { id: 'test_story_2', url: img('photo-1524504388940-b1c1722653e1'), createdAt: Date.now() - 3 * 60000 },
+      { id: 'test_story_3', type: 'video', url: 'assets/video/clip2.mp4', poster: img('photo-1529626455594-4ff0802cfb7e'), createdAt: Date.now() - 60000 }
+    ] },
+    { id: 'test_expire', username: 'a_story_expire', name: 'Тест Истечение', age: 24, gender: 'male', premium: false, rating10: 8.9, ratingsCount: 5, matchesCount: 0, bio: 'тестовая анкета: история истекает через ~45 секунд', caption: 'история вот-вот исчезнет', createdAt: Date.now() - 20 * 1000, photos: [ph('tex1', 'photo-1500648767791-00dcc994a43e')], stories: [
+      { id: 'test_expire_1', demo: 'expiring', url: img('photo-1517841905240-472988babdf9'), createdAt: Date.now() }
+    ] },
     { id: 'alina', username: 'alina', name: 'Алина', age: 21, gender: 'female', premium: true, rating10: 9.6, ratingsCount: 1200, matchesCount: 36, bio: 'кофе, плёнка и ночные кухни', caption: 'ищу с кем пропасть на выходные', createdAt: Date.now() - 2 * 3600000, photos: [ph('alina1', 'photo-1494790108377-be9c29b29330'), ph('alina2', 'photo-1524504388940-b1c1722653e1'), ph('alina3', 'photo-1531123897727-8f129e1688ce')], stories: ['photo-1494790108377-be9c29b29330', 'photo-1524504388940-b1c1722653e1'] },
     { id: 'masha', username: 'masha', name: 'Маша', age: 23, gender: 'female', premium: false, rating10: 9.2, ratingsCount: 86, matchesCount: 9, bio: 'танцую на кухне серьёзнее, чем в зале', caption: 'сегодня свет был слишком добрый', createdAt: Date.now() - 5 * 3600000, photos: [ph('masha1', 'photo-1534528741775-53994a69daeb'), ph('masha2', 'photo-1529626455594-4ff0802cfb7e')], stories: ['photo-1534528741775-53994a69daeb'] },
     { id: 'sonya', username: 'sonya', name: 'Соня', age: 20, gender: 'female', premium: false, rating10: 8.8, ratingsCount: 54, matchesCount: 4, bio: 'книги, дождь, поздний завтрак', caption: 'новый город, старые кеды', createdAt: Date.now() - 8 * 3600000, photos: [ph('sonya1', 'photo-1488426862026-3ee34a7d66df'), ph('sonya2', 'photo-1531746020798-e6953c6e8e04')], stories: ['photo-1488426862026-3ee34a7d66df'] },
@@ -71,7 +82,11 @@
   function storyList(person) {
     var ttl = storyTTL(person);
     return (person.stories || []).map(function (entry, i) {
-      var createdAt = typeof entry === 'string' ? (Date.now() - (i + 1) * 8 * 60000) : (entry.createdAt || Date.now());
+      var createdAt = typeof entry === 'string'
+        ? (Date.now() - (i + 1) * 8 * 60000)
+        : (entry.demo === 'expiring'
+          ? (DEMO_EXPIRE_AT - ttl) /* test story: goes out ~45s after load */
+          : (entry.createdAt || Date.now()));
       var id = typeof entry === 'string' ? (person.id + '_s' + i) : entry.id;
       var remain = Math.max(0, ttl - (Date.now() - createdAt));
       return {

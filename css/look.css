@@ -921,16 +921,17 @@ body, #app {
 .pull { --pp: 0; height: 0; overflow: hidden; display: grid; place-items: end center; }
 .pull-orb {
   position: relative;
-  width: 34px; height: 34px;
+  width: 36px; height: 36px;
   margin-bottom: 12px;
   border-radius: 50%;
-  background: #fff;
-  color: var(--accent);
+  background: rgba(255, 255, 255, 0.96);
+  color: #111;
+  border: 0.5px solid rgba(60, 60, 67, 0.16);
   display: grid; place-items: center;
-  box-shadow: 0 8px 22px rgba(0, 122, 255, 0.22);
+  box-shadow: 0 6px 18px rgba(20, 45, 90, 0.12);
   opacity: calc(var(--pp) * 1.4);
   transform: scale(calc(0.5 + var(--pp) * 0.5));
-  transition: transform 0.3s var(--bounce), opacity 0.2s;
+  transition: transform 0.3s var(--bounce), opacity 0.2s, box-shadow 0.3s var(--spring);
 }
 .pull-ring {
   position: absolute; inset: -3px;
@@ -940,13 +941,13 @@ body, #app {
   mask: radial-gradient(circle, transparent 16px, #000 17px);
 }
 .pull-arrow { width: 18px; height: 18px; transform: rotate(calc(var(--pp) * 160deg)); transition: transform 0.25s var(--bounce); }
-.pull.ready .pull-orb { transform: scale(1.18); }
+.pull.ready .pull-orb { transform: scale(1.18); border-color: rgba(60, 60, 67, 0.3); box-shadow: 0 8px 22px rgba(20, 45, 90, 0.16); }
 .pull.ready .pull-arrow { transform: rotate(180deg); }
 .pull.loading .pull-orb { opacity: 1; transform: scale(1); animation: pullPulse 0.9s ease-in-out infinite; }
 .pull.loading .pull-arrow { opacity: 0; }
-.pull.loading .pull-ring { background: conic-gradient(var(--accent) 0.3turn, transparent 0); animation: spin 0.75s linear infinite; }
+.pull.loading .pull-ring { background: conic-gradient(#111 0.3turn, transparent 0); animation: spin 0.75s linear infinite; }
 .pull.done .pull-orb { opacity: 0; transform: scale(0.3); transition: transform 0.28s var(--spring), opacity 0.28s; }
-@keyframes pullPulse { 0%, 100% { box-shadow: 0 8px 22px rgba(0, 122, 255, 0.22); } 50% { box-shadow: 0 8px 30px rgba(0, 122, 255, 0.45); } }
+@keyframes pullPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(20, 45, 90, 0.12); } 50% { box-shadow: 0 10px 26px rgba(20, 45, 90, 0.2); } }
 
 /* ===== profile story circles (Instagram style) ===== */
 .highlights { gap: 14px; padding-top: 18px; }

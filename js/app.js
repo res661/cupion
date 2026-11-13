@@ -600,7 +600,7 @@
       if (!/^\d+$/.test(raw)) return; /* the "me" bubble stays */
       var idx = Number(raw);
       var slot = slots[idx];
-      if (!slot || !slot.userId) el.remove();
+      if (!slot || !slot.userId || !findStoryUser(slot.userId)) el.remove();
     });
 
     slots.forEach(function (slot, i) {
