@@ -1222,7 +1222,7 @@ body, #app { overscroll-behavior: none; }
   padding: 0 12px calc(var(--inset-bottom) + 16px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   z-index: 10;
   pointer-events: none;
 }
@@ -1236,6 +1236,19 @@ body, #app { overscroll-behavior: none; }
   gap: 10px;
   justify-content: flex-start;
   padding: 0 4px;
+  order: 2;
+}
+
+.story-comment-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 8px 8px 8px 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  order: 3;
 }
 
 .emoji-btn {
