@@ -1550,7 +1550,8 @@
 
   /* ---------- stories / match / viewer ---------- */
 
-  function showStoryAd() {
+  function showStoryAd(resumeId) {
+    S.adResume = resumeId || '';
     S.story = {
       userId: 'ad',
       user: { id: 'ad', name: 'Cupion Premium' },
@@ -1568,8 +1569,10 @@
   function storyHTML() {
     var st = S.story;
     if (st.isAd) {
-      return '<div class="story-layer ad-story"><img class="ad-bg" src="assets/promo/cupid.jpg" alt=""><div class="ad-shade"></div>' +
-        '<div class="ad-body"><span class="ad-badge">Premium</span>' +
+      return '<div class="story-layer ad-story">' +
+        '<div class="story-ui"><div class="bars"><b><i data-bar="0" style="width:0%"></i></b></div>' +
+        '<div class="story-user ad-user"><span class="ad-ava"><img src="assets/promo/cupid.jpg" alt=""></span><b>Cupion Premium</b><em>реклама</em></div></div>' +
+        '<div class="ad-body"><span class="ad-badge">PREMIUM</span>' +
         '<h2>Больше знакомств.<br>Больше внимания.</h2>' +
         '<p>20 анкет вместо 10 · 3 истории · видео до 30 секунд</p>' +
         '<button class="btn btn-primary" data-act="premium">Узнать больше</button></div></div>';
@@ -1702,7 +1705,7 @@
   function nextStory() {
     var st = S.story;
     if (!st) return;
-    if (st.isAd) { closeStory(); return; }
+    if (st.isAd) { var resume = S.adResume; S.adResume = ''; if (resume) startStory(resume, 0); else closeStory(); return; }
     
     if (st.index < st.items.length - 1) {
       st.index += 1;
@@ -1724,7 +1727,7 @@
     if (nextId) {
       if (S.me && !S.me.premium) {
         S.adCounter = (S.adCounter || 0) + 1;
-        if (S.adCounter % 3 === 0) { retireBubble(finished); showStoryAd(); return; }
+        if (S.adCounter % 3 === 0) { retireBubble(finished); showStoryAd(nextId); return; }
       }
       retireBubble(finished);
       startStory(nextId, 0);
