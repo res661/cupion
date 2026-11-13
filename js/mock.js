@@ -91,7 +91,7 @@
         : (demo === 'expiring'
           ? (DEMO_EXPIRE_AT - entryTtl) /* test card story: goes out ~60s after load */
           : (demo === 'mine60'
-            ? (DEMO_OWN_EXPIRE_AT - entryTtl) /* test own story: ring counts down, then the plus returns */
+            ? ((entry.expiresAt || DEMO_OWN_EXPIRE_AT) - entryTtl) /* test own story: ring counts down, then the plus returns */
             : (entry.createdAt || Date.now())));
       var id = typeof entry === 'string' ? (person.id + '_s' + i) : entry.id;
       var remain = Math.max(0, entryTtl - (Date.now() - createdAt));
@@ -296,10 +296,19 @@
   var Mock = {
     getMe: function () {
       if (!state.me) return null;
-      /* One demo story for the signed-in user: ring + countdown for 60s, then the plus is back. */
-      if (!state.demoOwnStory) {
-        state.demoOwnStory = true;
-        state.me.stories = (state.me.stories || []).concat([{ id: 'me_demo_story', demo: 'mine60', url: '', createdAt: Date.now() }]);
+      var now = Date.now();
+      /* Drop expired demo stories so the plus can come back. */
+      state.me.stories = (state.me.stories || []).filter(function (st) {
+        return !(st && st.demo === 'mine60' && st.expiresAt && st.expiresAt <= now);
+      });
+      /* Demo story for the signed-in user: live for 60s, then the plus returns.
+         It re-seeds once the user has no own stories, so the flow can be tested again. */
+      var liveOwn = storyList(state.me).length;
+      var cooling = state.demoOwnAt && (now - state.demoOwnAt) < 300000;
+      if (!liveOwn && !cooling && (state.demoOwnCount || 0) < 10) {
+        state.demoOwnCount = (state.demoOwnCount || 0) + 1;
+        state.demoOwnAt = now;
+        state.me.stories.push({ id: 'me_demo_' + now, demo: 'mine60', url: '', createdAt: now, expiresAt: now + 60000 });
         writeStore();
       }
       return publicUser(state.me);
@@ -620,6 +629,9 @@
 
     addStory: function (payload) {
       if (!state.me) throw new Error('Сначала создай анкету');
+      var liveOwn = storyList(state.me).length;
+      var ownLimit = state.me.premium ? 3 : 1;
+      if (liveOwn >= ownLimit) throw new Error('Лимит историй: ' + ownLimit);
       if (!state.me.stories) state.me.stories = [];
       var id = 'me_st_' + Date.now();
       state.me.stories.push({ id: id, url: payload.url, createdAt: Date.now() });
