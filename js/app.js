@@ -397,6 +397,45 @@
     }).catch(function (err) { toast(err.message || 'Анкета не найдена'); });
   }
 
+  var PROMO = [
+    { emoji: '💗', title: 'Открой больше возможностей', text: 'Больше оценок, анкет и историй каждый день.' },
+    { emoji: '🔥', title: 'Тебя показывают чаще', text: 'Premium поднимает анкету в рекомендациях.' },
+    { emoji: '🎬', title: 'Видео в историю до 30 сек', text: 'И до 3 активных историй одновременно.' }
+  ];
+
+  function promoOf(today) {
+    return PROMO[today % PROMO.length];
+  }
+
+  function premiumPromoCard() {
+    if (S.me && S.me.premium) return '';
+    var c = promoOf(Math.floor(Date.now() / 86400000));
+    return '<article class="post promo-card" data-promo="1"><div class="card promo">' +
+      '<span class="promo-emoji">' + c.emoji + '</span>' +
+      '<b>' + esc(c.title) + '</b>' +
+      '<p>' + esc(c.text) + '</p>' +
+      '<button class="btn btn-primary btn-block" data-act="premium">Узнать больше</button>' +
+      '</div></article>';
+  }
+
+  function premiumPromoBubble() {
+    if (S.me && S.me.premium) return '';
+    var c = promoOf(Math.floor(Date.now() / 86400000) + 1);
+    return '<button class="bubble promo-bubble" data-act="premium" aria-label="Premium">' +
+      '<span class="bubble-drift"><span class="promo-ring">' + c.emoji + '</span></span></button>';
+  }
+
+  function schedulePromoHide() {
+    var cards = document.querySelectorAll('[data-promo]');
+    Array.prototype.forEach.call(cards, function (card) {
+      if (card.__timer) return;
+      card.__timer = setTimeout(function () {
+        card.classList.add('gone');
+        setTimeout(function () { if (card.parentNode) card.remove(); }, 380);
+      }, 15000);
+    });
+  }
+
   function loadFeed(next) {
     var limit = S.me && S.me.premium ? 20 : 10;
     S.loading = !next && !(S.feed && S.feed.length);
@@ -625,6 +664,7 @@
       (canAdd
         ? '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span>'
         : '<span class="plus locked" data-act="story-limit" aria-label="Лимит историй">+</span>') + myBadge + '</span></button>';
+    html += premiumPromoBubble();
     return '<div class="orbit">' + html + '</div>';
   }
 
@@ -815,9 +855,12 @@
   }
 
   function feedScreen() {
+    var cards = S.feed.length ? S.feed.map(postCard) : [];
+    var promo = premiumPromoCard();
+    if (promo && cards.length > 2) cards.splice(2, 0, promo);
     var posts = S.loading
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
-      : (S.feed.length ? S.feed.map(postCard).join('')
+      : (cards.length ? cards.join('')
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
     return '<div class="screen screen-feed">' +
       '<header class="app-header is-center"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div></header>' +
@@ -1160,17 +1203,18 @@
 
   function premiumSheet() {
     var active = S.me && S.me.premium;
-    var perks = [
-      'До 3 фото и видео в анкете',
-      'Больше анкет за одно обновление',
-      'До 3 активных историй и 10 часов',
-      'Видео в историю до 30 секунд',
-      'Значок Premium и выше видимость',
-      'Возврат к просмотренным историям'
-    ];
-    var list = perks.map(function (t) {
-      return '<li><i>' + ICON.spark + '</i><span>' + t + '</span></li>';
+    var cmp = [
+      ['Анкеты за раз', '10', '20'],
+      ['Активные истории', '1', '3'],
+      ['Видео в историю', '10 сек', '30 сек'],
+      ['Срок истории', '1 час', '10 часов'],
+      ['Видео в анкете', '—', 'да'],
+      ['Возврат к историям', '—', 'да'],
+      ['Значок Premium', '—', 'да']
+    ].map(function (r) {
+      return '<div class="cmp-row"><span>' + r[0] + '</span><b>' + r[1] + '</b><b class="prem">' + r[2] + '</b></div>';
     }).join('');
+    var table = '<div class="cmp"><div class="cmp-row cmp-head"><span>Что даёт</span><b>Free</b><b class="prem">Premium</b></div>' + cmp + '</div>';
     var plans = active ? '<p class="hint">Premium уже подключён</p>' :
       '<div class="choice-list">' +
       ['3d|3 дня|59|', '7d|7 дней|119|', '14d|14 дней|189|', '30d|30 дней|270|Выгоднее всего'].map(function (row) {
@@ -1186,7 +1230,7 @@
       '<div class="pay"><div class="pay-hero"><span class="pay-badge">PREMIUM</span></div>' +
       '<h2>Больше знакомств.<br>Больше внимания.</h2>' +
       '<p class="hint">Оценивай больше людей, публикуй больше историй и получай больше внимания в ленте.</p>' +
-      '<ul class="perks">' + list + '</ul>' + plans +
+      table + plans +
       '<p class="terms">Тестовая активация: реальная оплата через Telegram Stars подключается на бэкенде.</p></div>',
       cta
     );
@@ -1977,7 +2021,7 @@
     renderStory();
     renderMatch();
     syncBack();
-    requestAnimationFrame(function () { placePill(false); syncFloatPill(document.getElementById('feed-scroll')); bindFeedVideos(); });
+    requestAnimationFrame(function () { placePill(false); syncFloatPill(document.getElementById('feed-scroll')); bindFeedVideos(); schedulePromoHide(); });
     runCountUps(stage);
     S.justLiked = '';
   }
