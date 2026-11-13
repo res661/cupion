@@ -1406,3 +1406,6 @@ body, #app {
 .pcat { padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--hairline); }
 .pcat b { display: block; font-size: 15px; letter-spacing: -0.01em; margin-bottom: 2px; }
 .pcat span { color: var(--text-2); font-size: 13px; line-height: 1.35; }
+
+.promo-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.sheet.no-anim { transition: none !important; }

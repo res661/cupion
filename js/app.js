@@ -413,7 +413,7 @@
     return '<article class="post promo-card" data-promo="1"><div class="card">' +
       '<div class="post-head"><span class="mini-ava promo-ava"><img src="assets/promo/cupid.jpg" alt=""></span>' +
       '<div class="post-user">Cupion Premium' + premMark() + '</div></div>' +
-      '<div class="promo-hero"><img src="assets/promo/cupid.jpg" alt=""><span class="promo-hero-emoji">' + c.emoji + '</span></div>' +
+      '<div class="promo-hero"><img src="assets/promo/cupid.jpg" alt=""></div>' +
       '<div class="post-meta"><div class="post-title">' + esc(c.title) + '</div></div>' +
       '<p class="caption">' + esc(c.text) + '</p>' +
       '<button class="btn btn-primary btn-block" data-act="premium">Узнать больше</button>' +
@@ -421,11 +421,9 @@
   }
 
   function premiumPromoBubble() {
-    return '';
     if (S.me && S.me.premium) return '';
-    var c = promoOf(Math.floor(Date.now() / 86400000) + 1);
     return '<button class="bubble promo-bubble" data-act="premium" aria-label="Premium">' +
-      '<span class="bubble-drift"><span class="promo-ring">' + c.emoji + '</span></span></button>';
+      '<span class="bubble-drift"><span class="promo-ring"><img src="assets/promo/cupid.jpg" alt=""></span></span></button>';
   }
 
   function schedulePromoHide() {
@@ -1408,8 +1406,11 @@
     else if (S.sheet === 'search') html = searchSheet();
     else if (S.sheet === 'reactions') html = reactionsSheet();
     root.innerHTML = html;
+    var sameSheet = S.sheetPrev === S.sheet;
+    S.sheetPrev = S.sheet;
     requestAnimationFrame(function () {
       var sheet = root.querySelector('.sheet');
+      if (sameSheet && sheet) sheet.classList.add('no-anim');
       var bd = root.querySelector('.backdrop');
       if (sheet && S.sheet === 'reactions') {
         sheet.classList.add('sheet-rx');
