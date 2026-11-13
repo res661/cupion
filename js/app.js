@@ -54,6 +54,7 @@
   var matchSig = '';
   var scrollMem = {};
   var storyRAF = 0;
+  var driftRAF = 0;
   var storyAcc = 0;
   var storyLast = 0;
   var toastTimer = 0;
@@ -257,7 +258,8 @@
   function toast(text) {
     var root = document.getElementById('toast-root');
     if (!root) return;
-    root.innerHTML = '<div class="toast show">' + esc(text) + '</div>';
+    var overStory = !!(S.story || S.viewer);
+    root.innerHTML = '<div class="toast' + (overStory ? ' toast-story' : '') + ' show">' + esc(text) + '</div>';
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () {
       var node = root.querySelector('.toast');
@@ -538,7 +540,7 @@
     var dy = (i % 3 ? -7 : 5) + 'px';
     var dur = (8 + (i % 5) * 0.7) + 's';
     var delay = (-i * 0.35) + 's';
-    return '<button class="bubble' + (extra || '') + '" style="--x:' + slot.x + ';--y:' + slot.y + ';--s:' + slot.s + 'px;--dx:' + dx + ';--dy:' + dy + ';--dur:' + dur + ';--delay:' + delay + '" data-act="story" data-id="' + esc(user.id) + '" aria-label="' + esc(user.name) + '">' +
+    return '<button class="bubble' + (extra || '') + '" data-slot="' + i + '" style="--x:' + slot.x + ';--y:' + slot.y + ';--s:' + slot.s + 'px;--dx:' + dx + ';--dy:' + dy + ';--dur:' + dur + ';--delay:' + delay + '" data-act="story" data-id="' + esc(user.id) + '" aria-label="' + esc(user.name) + '">' +
       '<span class="bubble-swap"><span class="bubble-drift">' + timeRing(user) + '</span></span></button>';
   }
 
@@ -552,10 +554,37 @@
       return bubble(user, slot, i, extra);
     }).join('');
     var mine = S.me && S.me.stories && S.me.stories.filter(function (st) { return !st.remain || st.remain > 0; }).length;
-    html += '<button class="bubble me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
+    html += '<button class="bubble me" data-slot="me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
       (mine ? timeRing(S.me, 'mine') : '<span class="ring seen">' + phAvatar() + '</span>') +
       '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span></span></button>';
     return '<div class="orbit">' + html + '</div>';
+  }
+
+  /* Drift is time-based so a re-created bubble keeps its position, no restart. */
+  function driftTick(now) {
+    var nodes = document.querySelectorAll('.orbit .bubble-drift');
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (node.__phase == null) {
+        var host = node.parentNode;
+        var slot = host && host.getAttribute ? host.getAttribute('data-slot') : null;
+        node.__phase = (slot === 'me' ? 2.4 : (parseInt(slot, 10) || 0) * 0.85) + 0.6;
+      }
+      var p = node.__phase;
+      var x = Math.sin(now / 2400 + p) * 4;
+      var y = Math.cos(now / 3100 + p * 1.4) * 7;
+      node.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0)';
+    }
+  }
+
+  function driftLoop(now) {
+    driftTick(now);
+    driftRAF = requestAnimationFrame(driftLoop);
+  }
+
+  function startDrift() {
+    if (driftRAF || motionOff()) return;
+    driftRAF = requestAnimationFrame(driftLoop);
   }
 
   function paintOrbit() {
@@ -563,8 +592,37 @@
     if (!node) return;
     var scroller = document.getElementById('feed-scroll');
     var y = scroller ? scroller.scrollTop : 0;
-    node.outerHTML = orbit();
+    var slots = S.slots || [];
+    var me = node.querySelector('.bubble.me');
+
+    Array.prototype.forEach.call(node.querySelectorAll('.bubble[data-slot]'), function (el) {
+      var raw = el.getAttribute('data-slot');
+      if (!/^\d+$/.test(raw)) return; /* the "me" bubble stays */
+      var idx = Number(raw);
+      var slot = slots[idx];
+      if (!slot || !slot.userId) el.remove();
+    });
+
+    slots.forEach(function (slot, i) {
+      if (!slot.userId) return;
+      var user = findStoryUser(slot.userId);
+      if (!user) return;
+      var extra = slot.bye ? ' bye' : (slot.arrive ? ' arrive' : '');
+      var el = node.querySelector('.bubble[data-slot="' + i + '"]');
+      var same = el && el.getAttribute('data-id') === user.id &&
+        el.classList.contains('bye') === !!slot.bye &&
+        el.classList.contains('arrive') === !!slot.arrive;
+      if (same) return;
+      var holder = document.createElement('div');
+      holder.innerHTML = bubble(user, slot, i, extra);
+      var fresh = holder.firstElementChild;
+      if (el) node.replaceChild(fresh, el);
+      else if (me) node.insertBefore(fresh, me);
+      else node.appendChild(fresh);
+    });
+
     if (scroller) scroller.scrollTop = y;
+    driftTick(performance.now());
   }
 
   function storyReturnMs() {
@@ -711,10 +769,8 @@
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
       : (S.feed.length ? S.feed.map(postCard).join('')
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
-    var pillLabel = S.hasNew ? '↑ Появились новые' : '↑ Наверх';
     return '<div class="screen screen-feed">' +
       '<header class="app-header is-center"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div></header>' +
-      '<button class="float-pill" id="float-pill" data-act="float-pill">' + pillLabel + '</button>' +
       '<div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="pull-orb"><i class="pull-ring"></i><svg class="pull-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div></div>' +
       orbit() +
       posts + '</div></div>';
@@ -1829,6 +1885,7 @@
       }).catch(function () { S.hydrating = false; });
     }
     stage.innerHTML = stageHTML();
+    driftTick(performance.now());
     if (S.spring) {
       var entered = stage.firstElementChild;
       if (entered) entered.classList.add('spring-in');
@@ -3117,6 +3174,7 @@
       img.src = img.dataset.fallback;
     }, true);
     if (window.TG) TG.init();
+    startDrift();
     prefill();
     var start = window.TG ? String(TG.startParam() || '') : '';
     if (start.indexOf('u_') === 0) S.startUser = decodeURIComponent(start.slice(2));
