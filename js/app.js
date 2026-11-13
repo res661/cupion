@@ -43,7 +43,9 @@
     justLiked: '',
     compose: null,
     edit: null,
-    startUser: ''
+    startUser: '',
+    peek: null,
+    storyReturn: null
   };
 
   var sheetSig = '';
@@ -271,7 +273,7 @@
   }
 
   function tabsVisible() {
-    return !S.story && !S.viewer && S.screen !== 'register';
+    return !S.story && !S.viewer && !S.peek && S.screen !== 'register';
   }
 
   function needAccount() {
@@ -302,13 +304,14 @@
   }
 
   function syncBack() {
-    var needs = !!(S.sheet || S.story || S.viewer || S.match || S.screen === 'person' || (S.screen === 'register' && S.regStep > 0));
+    var needs = !!(S.sheet || S.story || S.viewer || S.match || S.peek || S.screen === 'person' || (S.screen === 'register' && S.regStep > 0));
     if (!window.TG) return;
     if (needs) TG.showBack(goBack);
     else TG.hideBack();
   }
 
   function goBack() {
+    if (S.peek) { closePeek(); return; }
     if (S.viewer) { closeViewer(); return; }
     if (S.sheet) { closeSheet(); return; }
     if (S.story) { closeStory(); return; }
@@ -326,6 +329,13 @@
       S.person = null;
       if (S.screen === 'person' && S.personId) loadPerson(S.personId);
       render();
+      var back = S.storyReturn;
+      if (back && S.stack.length < back.depth) {
+        S.storyReturn = null;
+        startStory(back.userId, back.index, function () {
+          if (back.sheet && back.sheet.name === 'reactions') openSheet('reactions', back.sheet.payload);
+        });
+      }
       return;
     }
     if (S.screen !== 'feed') {
@@ -338,6 +348,7 @@
 
   function goTab(tab) {
     S.stack = [];
+    S.storyReturn = null;
     S.person = null;
     S.personId = null;
     S.screen = tab;
@@ -353,7 +364,7 @@
     render();
   }
 
-  function openPerson(id) {
+  function openPerson(id, ret) {
     if (!id) return;
     if (S.me && (id === 'me' || id === S.me.id)) {
       goTab('profile');
@@ -361,6 +372,10 @@
     }
     if (S.screen !== 'person' || S.personId !== id) {
       S.stack.push({ screen: S.screen, personId: S.personId });
+    }
+    if (ret) {
+      ret.depth = S.stack.length;
+      S.storyReturn = ret;
     }
     S.screen = 'person';
     S.personId = id;
@@ -383,9 +398,7 @@
     S.loading = !next && !(S.feed && S.feed.length);
     return CupionAPI.getFeed({ restart: !next, limit: limit }).then(function (res) {
       var items = (res && res.items) || [];
-      if (!next && S.me && S.me.photos && S.me.photos.length) {
-        items = [Object.assign({}, S.me, { isMine: true })].concat(items);
-      }
+      if (S.me) items = items.filter(function (p) { return p && p.id !== S.me.id && p.id !== 'me'; });
       S.feed = items;
       S.feedExhausted = items.length === 0;
       S.loading = false;
@@ -415,9 +428,14 @@
   }
 
   function reactionsSheet() {
-    var html = inboxBlock(null, false);
-    if (!html) return sheetFrame('<h2>Реакции</h2><p class="hint">Пока никто не отреагировал. Список живёт, пока история на экране.</p>');
+    var storyId = (S.sheetPayload && S.sheetPayload.storyId) || null;
+    var html = inboxBlock(storyId, false);
+    if (!html) return sheetFrame('<h2>Реакции</h2><p class="hint">На эту историю пока никто не отреагировал.</p>');
     return sheetFrame(html);
+  }
+
+  function storyReactionCount(storyId) {
+    return (S.inbox || []).filter(function (r) { return r.storyId === storyId; }).length;
   }
 
   function inboxBlock(storyId, floating) {
@@ -435,7 +453,7 @@
         '<span class="who"><b>' + esc(r.user.name) + ', ' + esc(r.user.age) + '</b><small>' + timeAgo(r.createdAt) + '</small></span>' +
         '<span class="emo">' + r.emoji + '</span></button>' + back + '</article>';
     }).join('');
-    return '<section class="rx' + (floating ? ' story-inbox' : '') + '"><h3>Реакции</h3><p>Пока история жива</p>' + body + '</section>';
+    return '<section class="rx' + (floating ? ' story-inbox' : '') + '"><h3>Реакции</h3><p>На эту историю · ' + rows.length + '</p>' + body + '</section>';
   }
 
   function refreshMe() {
@@ -495,6 +513,10 @@
       var extra = slot.bye ? ' bye' : (slot.arrive ? ' arrive' : '');
       return bubble(user, slot, i, extra);
     }).join('');
+    var mine = S.me && S.me.stories && S.me.stories.filter(function (st) { return !st.remain || st.remain > 0; }).length;
+    html += '<button class="bubble me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
+      (mine ? timeRing(S.me, 'mine') : '<span class="ring seen">' + phAvatar() + '</span>') +
+      '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span></span></button>';
     return '<div class="orbit">' + html + '</div>';
   }
 
@@ -590,12 +612,9 @@
     }
     else if (photo && ownUrl(shown)) visual = realImg(photo.url);
     else if (photo && ownUrl(shownPoster)) visual = realImg(photo.poster);
-    else visual = phPhoto(photo && photo.type === 'video' && !mine && !(S.me && S.me.premium) ? 'is-blur' : '');
+    else visual = phPhoto('');
     if (photo && photo.type === 'video' && (file || ownUrl(shown))) {
       return '<div class="' + cls + '"' + style + '>' + visual + chip + '</div>';
-    }
-    if (photo && photo.type === 'video' && !mine && !(S.me && S.me.premium)) {
-      return '<div class="' + cls + ' video-locked" data-act="premium"' + style + '>' + visual + '<span class="lock-badge">🔒 Premium</span>' + chip + '</div>';
     }
     if (photo && photo.type === 'video') {
       return '<div class="' + cls + '"' + style + '>' + visual + '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" data-poster="' + esc(photo.poster || '') + '" aria-label="Смотреть видео">' + ICON.play + '</button>' + chip + '</div>';
@@ -630,7 +649,7 @@
     return '<div class="screen screen-feed">' +
       '<header class="app-header is-center"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div></header>' +
       '<button class="float-pill" id="float-pill" data-act="float-pill">' + pillLabel + '</button>' +
-      '<div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="spinner"></div></div>' +
+      '<div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="pull-orb"><i class="pull-ring"></i><svg class="pull-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div></div>' +
       orbit() +
       posts + '</div></div>';
   }
@@ -722,11 +741,9 @@
     var shown = displayUrl(photo.url);
     var shownPoster = displayUrl(photo.poster);
     var mineMedia = ownUrl(shown) || ownUrl(shownPoster);
-    var locked = video && !(S.me && S.me.premium);
-    var mark = '';
-    if (locked && !mineMedia) mark = '<span class="prem-pill">🔒 Premium</span>';
-    else if (video) mark = '<span class="mark">' + ICON.play + '</span>';
-    var act = (locked && !mineMedia) ? 'premium' : (video ? 'play' : 'view-photo');
+    var locked = false;
+    var mark = video ? '<span class="mark">' + ICON.play + '</span>' : '';
+    var act = video ? 'play' : 'view-photo';
     var face = '';
     if (video && ownUrl(shownPoster)) face = realImg(photo.poster);
     else if (video && ownUrl(shown)) face = realVideo(photo.url, photo.poster);
@@ -737,11 +754,15 @@
   }
 
   function highlightRow(user) {
+    var list = (user.stories || []);
+    if (!list.length) return '';
     var html = '<div class="highlights">';
-    for (var i = 0; i < 6; i++) {
-      var st = (user.stories || [])[i];
-      var face = st && ownUrl(displayUrl(st.url)) ? realImg(st.url) : phAvatar();
-      html += '<button class="hl" data-act="story" data-id="' + esc(user.id) + '" data-index="' + i + '">' + face + '</button>';
+    for (var i = 0; i < list.length && i < 12; i++) {
+      var st = list[i];
+      if (!st) continue;
+      var face = st.type === 'video' ? '' : realImg(st.url, 'hl-img');
+      if (!face) face = phAvatar();
+      html += '<button class="hl" data-act="story" data-id="' + esc(user.id) + '" data-index="' + i + '"><span class="hl-ring' + (st.seen ? ' seen' : '') + '"><span class="hl-face">' + face + '</span></span></button>';
     }
     return html + '</div>';
   }
@@ -752,8 +773,7 @@
         '<div class="profile-hero"><div class="big-ava"><span class="ring">' + phAvatar() + '</span></div><h1>Твоя анкета</h1><p class="bio">Создай профиль, чтобы оценивать и получать мэтчи.</p></div>' +
         '<div class="profile-actions"><button class="btn btn-primary" data-act="start-reg">Создать анкету</button></div></div></div>';
     }
-    var rxN = own && S.inbox ? S.inbox.length : 0;
-    var rxBadge = rxN ? '<span class="rx-badge">' + (rxN > 9 ? '9+' : rxN) + '</span>' : '';
+    var rxBadge = '';
     var primary = own
       ? '<button class="btn btn-primary" data-act="edit">Редактировать</button>'
       : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(user.id) + '" data-photo="' + esc(user.photos[0] ? user.photos[0].id : '') + '">Оценить</button>';
@@ -770,7 +790,6 @@
       '<div class="profile-actions">' + primary +
       '<button class="btn btn-white" data-act="story" data-id="' + esc(user.id) + '">Истории</button></div>' +
       highlightRow(user) +
-      (own ? inboxBlock(null) : '') +
       '<div class="grid">' + (user.photos || []).map(function (p) { return photoTile(p, user); }).join('') + '</div></div></div>';
   }
 
@@ -913,6 +932,7 @@
   }
 
   function closeSheet(opts) {
+    if (S.sheet === 'reactions') S.rxExpanded = false;
     var host = document.getElementById('sheet-root');
     if (host) host.classList.remove('above-story');
     var sheet = document.querySelector('.sheet');
@@ -1133,9 +1153,61 @@
     requestAnimationFrame(function () {
       var sheet = root.querySelector('.sheet');
       var bd = root.querySelector('.backdrop');
+      if (sheet && S.sheet === 'reactions') {
+        sheet.classList.add('sheet-rx');
+        if (S.rxExpanded) sheet.classList.add('expanded');
+      }
       if (sheet) sheet.classList.add('show');
       if (bd) bd.classList.add('show');
     });
+  }
+
+  var REACT_GLOW = { '❤️': '255,45,85', '😂': '255,204,0', '😍': '255,55,95', '😮': '90,200,250', '🔥': '255,149,0', '👏': '255,214,10' };
+
+  function burstReaction(layer, btn, emo) {
+    if (!layer || motionOff()) return;
+    var host = layer.getBoundingClientRect();
+    var rect = btn.getBoundingClientRect();
+    var cx = rect.left - host.left + rect.width / 2;
+    var cy = rect.top - host.top + rect.height / 2;
+    var glow = REACT_GLOW[emo] || '255,255,255';
+    var made = [];
+    function add(cls, text, style) {
+      var node = document.createElement('span');
+      node.className = cls;
+      if (text) node.textContent = text;
+      Object.keys(style || {}).forEach(function (k) { node.style.setProperty(k, style[k]); });
+      layer.appendChild(node);
+      made.push(node);
+      return node;
+    }
+    add('react-flash', '', { '--glow': glow });
+    add('react-ring', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
+    add('react-ring r2', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
+    add('react-big', emo, { '--glow': glow });
+    for (var i = 0; i < 22; i++) {
+      var ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.3;
+      var dist = 90 + Math.random() * 130;
+      add('react-spark', emo, {
+        left: cx + 'px',
+        top: cy + 'px',
+        '--tx': Math.round(Math.cos(ang) * dist) + 'px',
+        '--ty': Math.round(Math.sin(ang) * dist - 40) + 'px',
+        '--rot': Math.round((Math.random() - 0.5) * 220) + 'deg',
+        '--sz': (14 + Math.random() * 22).toFixed(0) + 'px',
+        '--d': (0.8 + Math.random() * 0.7).toFixed(2) + 's'
+      });
+    }
+    for (var j = 0; j < 14; j++) {
+      add('react-rise', emo, {
+        left: (6 + Math.random() * 88).toFixed(1) + '%',
+        '--sz': (18 + Math.random() * 26).toFixed(0) + 'px',
+        '--sway': Math.round((Math.random() - 0.5) * 80) + 'px',
+        '--d': (1.1 + Math.random() * 1.0).toFixed(2) + 's',
+        '--delay': (Math.random() * 0.35).toFixed(2) + 's'
+      });
+    }
+    setTimeout(function () { made.forEach(function (n) { if (n.parentNode) n.remove(); }); }, 2400);
   }
 
   function motionOff() {
@@ -1222,6 +1294,7 @@
   function storyHTML() {
     var st = S.story;
     var item = st.items[st.index];
+    var isOwnStory = st.userId === 'me' || !!(S.me && st.userId === S.me.id);
     var bars = st.items.map(function (_, i) {
       var w = i < st.index ? 100 : 0;
       return '<b><i data-bar="' + i + '" style="width:' + w + '%"></i></b>';
@@ -1236,12 +1309,12 @@
       '<div class="story-shade"></div><div class="story-ui"><div class="bars">' + bars + '</div>' +
       '<div class="story-user">' + phAvatar() + '<span>' + esc(st.user ? st.user.name : '') + '</span>' +
       '<em>' + timeAgo(item.createdAt) + '</em></div></div>' +
-      (st.userId === 'me' ? '<button class="rx-pill" data-act="story-reactions">Реакции' +
-        ((S.inbox && S.inbox.length) ? '<b>' + (S.inbox.length > 9 ? '9+' : S.inbox.length) + '</b>' : '') + '</button>' : '') +
-      '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥', '👏'].map(function (emo) {
+      (isOwnStory ? '<button class="rx-pill" data-act="story-reactions" data-story="' + esc(item.id) + '">Реакции' +
+        (storyReactionCount(item.id) ? '<b>' + (storyReactionCount(item.id) > 9 ? '9+' : storyReactionCount(item.id)) + '</b>' : '') + '</button>' : '') +
+      (isOwnStory ? '' : '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥', '👏'].map(function (emo) {
         var picked = S.picked && S.picked[item.id] === emo;
         return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
-      }).join('') + '</div></div>';
+      }).join('') + '</div>') + '</div>';
   }
 
   function renderStory() {
@@ -1267,7 +1340,7 @@
     restartClock();
   }
 
-  function startStory(userId, index) {
+  function startStory(userId, index, after) {
     if (userId === 'me' && (!S.me || !S.me.stories || !S.me.stories.length)) {
       openCompose('story');
       return;
@@ -1277,7 +1350,7 @@
       if (!items.length) { toast('Пока нет истории'); return; }
       S.viewer = null;
       S.story = { userId: userId, user: res[1], items: items, index: Math.min(index || 0, items.length - 1), paused: false };
-      var paint = function () { storySig = ''; renderStory(); syncBack(); };
+      var paint = function () { storySig = ''; renderStory(); syncBack(); if (after) after(); };
       if (userId === 'me') loadInbox().then(paint);
       else paint();
     }).catch(function () { toast('История недоступна'); });
@@ -1318,7 +1391,7 @@
     }
   }
 
-  function closeStory() {
+  function closeStory(opts) {
     var id = S.story && S.story.userId;
     S.story = null;
     storySig = '';
@@ -1326,7 +1399,7 @@
     var root = document.getElementById('story-root');
     if (root && !S.viewer) root.innerHTML = '';
     syncBack();
-    if (id && id !== 'me') retireBubble(id);
+    if (id && id !== 'me' && !(opts && opts.keep)) retireBubble(id);
   }
 
   function premiumHint() {
@@ -1427,6 +1500,55 @@
     var root = document.getElementById('match-root');
     if (root) root.innerHTML = '';
     syncBack();
+  }
+
+  function openPeek(id) {
+    var post = null;
+    (S.feed || []).forEach(function (p) { if (p.id === id) post = p; });
+    if (!post || S.peek) return;
+    S.peek = post;
+    renderPeek();
+    syncBack();
+    if (window.TG) TG.impact('heavy');
+  }
+
+  function renderPeek() {
+    var root = document.getElementById('peek-root');
+    if (!root) return;
+    var p = S.peek;
+    if (!p) { root.innerHTML = ''; return; }
+    var photo = (p.photos || [])[0] || {};
+    var shown = displayUrl(photo.url);
+    var ratio = Number(photo.ratio) > 0 ? Number(photo.ratio) : 0.8;
+    ratio = Math.max(0.6, Math.min(1.6, ratio));
+    var media;
+    if (photo.type === 'video' && (ownUrl(shown) || assetUrl(photo.url))) {
+      media = '<video class="peek-media" src="' + esc(shown || photo.url) + '" autoplay muted loop playsinline></video>';
+    } else {
+      media = realImg(photo.type === 'video' ? photo.poster : photo.url, 'peek-media') || phPhoto('peek-media');
+    }
+    var mine = !!(p.isMine || (S.me && p.id === S.me.id));
+    var score = avgScore(p);
+    var city = p.city ? ' · ' + esc(p.city) : '';
+    root.innerHTML = '<div class="peek" data-act="peek-close"><div class="peek-card" data-peek-card>' +
+      '<div class="peek-frame" style="--ratio:' + ratio.toFixed(3) + '">' + media + '</div>' +
+      '<div class="peek-info"><div class="peek-name"><b>' + esc(p.name) + ', ' + esc(p.age) + '</b>' + (p.premium ? premMark() : '') + '<small>' + city.replace(' · ', '') + '</small></div>' +
+      '<div class="post-score"><i>★</i><b>' + esc(score || '—') + '</b></div></div>' +
+      (p.caption || p.bio ? '<p class="peek-caption">' + esc(p.caption || p.bio) + '</p>' : '') +
+      '<div class="peek-actions">' +
+      (mine ? '' : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(p.id) + '" data-photo="' + esc(photo.id || '') + '">Оценить</button>') +
+      '<button class="btn btn-white" data-act="person" data-id="' + esc(p.id) + '">Профиль</button></div>' +
+      '</div></div>';
+  }
+
+  function closePeek(now) {
+    var root = document.getElementById('peek-root');
+    var el = root ? root.querySelector('.peek') : null;
+    S.peek = null;
+    syncBack();
+    if (!el || now === true || motionOff()) { if (root) root.innerHTML = ''; return; }
+    el.classList.add('out');
+    setTimeout(function () { if (!S.peek && root) root.innerHTML = ''; }, 280);
   }
 
   function closeViewer() {
@@ -1667,9 +1789,15 @@
       return;
     }
     if (act === 'person') {
+      var personId = t.getAttribute('data-id');
+      var ret = null;
+      if (S.story) {
+        ret = { userId: S.story.userId, index: S.story.index, sheet: S.sheet === 'reactions' ? { name: 'reactions', payload: S.sheetPayload } : null };
+      }
+      if (S.peek) closePeek(true);
       if (S.sheet) closeSheet();
-      if (S.story) closeStory();
-      openPerson(t.getAttribute('data-id'));
+      if (S.story) closeStory({ keep: true });
+      openPerson(personId, ret);
       return;
     }
     if (act === 'react-back') {
@@ -1698,7 +1826,7 @@
     if (act === 'search') { openSheet('search', { key: 'search' }); return; }
     if (act === 'start-reg') { S.screen = 'register'; S.regStep = 0; render(); return; }
     if (act === 'back') { goBack(); return; }
-    if (act === 'rate') { if (needAccount()) return; if (window.TG) TG.impact('light'); openRate(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
+    if (act === 'rate') { if (S.peek) closePeek(true); if (needAccount()) return; if (S.me && t.getAttribute('data-id') === S.me.id) { toast('Себе оценку поставить нельзя'); return; } if (window.TG) TG.impact('light'); openRate(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
     if (act === 'message') { if (needAccount()) return; openMessage(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
     if (act === 'premium') { openSheet('premium', { key: 'premium' }); return; }
     if (act === 'compose') { if (needAccount()) return; openCompose('photo'); return; }
@@ -1727,10 +1855,18 @@
       if (!feedVideo.muted) feedVideo.play().catch(function () {});
       return;
     }
-    if (act === 'story-reactions') { openSheet('reactions', { key: 'rx-' + ((S.inbox && S.inbox.length) || 0) }); return; }
+    if (act === 'story-reactions') {
+      var rxStory = t.getAttribute('data-story') || (S.story && S.story.items[S.story.index] ? S.story.items[S.story.index].id : '');
+      openSheet('reactions', { key: 'rx-' + rxStory, storyId: rxStory });
+      return;
+    }
     if (act === 'story') { startStory(t.getAttribute('data-id'), parseInt(t.getAttribute('data-index') || '0', 10)); return; }
     if (act === 'react') {
       if (needAccount()) return;
+      if (S.story && (S.story.userId === 'me' || (S.me && S.story.userId === S.me.id)) || (S.me && t.getAttribute('data-id') === S.me.id)) {
+        toast('Себе реакцию поставить нельзя');
+        return;
+      }
       var emo = t.getAttribute('data-emoji');
       var sid = t.getAttribute('data-story');
       S.picked = S.picked || {};
@@ -1742,22 +1878,7 @@
       t.classList.remove('pop');
       t.offsetWidth;
       t.classList.add('pop');
-      var layer = t.closest('.story-layer');
-      if (layer) {
-        var host = layer.getBoundingClientRect();
-        var rect = t.getBoundingClientRect();
-        for (var bi = 0; bi < 6; bi++) {
-          var bit = document.createElement('span');
-          bit.className = 'emoji-bit';
-          bit.textContent = emo;
-          bit.style.left = (rect.left - host.left + rect.width / 2) + 'px';
-          bit.style.top = (rect.top - host.top) + 'px';
-          bit.style.setProperty('--tx', ((bi - 2.5) * 16) + 'px');
-          bit.style.setProperty('--ty', (-36 - bi * 10) + 'px');
-          layer.appendChild(bit);
-          (function (node) { setTimeout(function () { if (node.parentNode) node.remove(); }, 760); })(bit);
-        }
-      }
+      burstReaction(t.closest('.story-layer'), t, emo);
       if (window.TG) TG.impact('medium');
       CupionAPI.reactStory({ toId: t.getAttribute('data-id'), storyId: sid, emoji: emo }).catch(function () {});
       return;
@@ -1773,6 +1894,7 @@
     if (act === 'play') { openViewer(t.getAttribute('data-src'), t.getAttribute('data-poster'), true); return; }
     if (act === 'view-photo') { openViewer(t.getAttribute('data-poster') || t.getAttribute('data-src'), '', false); return; }
     if (act === 'close-viewer') { closeViewer(); return; }
+    if (act === 'peek-close') { if (e.target === t) closePeek(); return; }
     if (act === 'sheet-close') {
       if (e.target.classList.contains('backdrop') || t.getAttribute('data-act') === 'sheet-close') closeSheet();
       return;
@@ -1836,7 +1958,12 @@
       return;
     }
     if (act === 'pick-story') { S.compose.type = 'story'; pickFiles('story'); return; }
-    if (act === 'pick-video') { S.compose.type = 'video'; pickFiles('video'); return; }
+    if (act === 'pick-video') {
+      if (!(S.me && S.me.premium)) { openSheet('premium', { key: 'video' }); return; }
+      S.compose.type = 'video';
+      pickFiles('video');
+      return;
+    }
     if (act === 'pick-reg') { pickFiles('reg'); return; }
     if (act === 'pick-edit') { pickFiles('edit'); return; }
     if (act === 'publish') { publishCompose(); return; }
@@ -2223,6 +2350,10 @@
   }
 
   function edgeLayer() {
+    if (S.peek) {
+      var peekCard = document.querySelector('.peek-card');
+      if (peekCard) return { mode: 'peek', layer: peekCard };
+    }
     if (S.match) {
       var match = document.querySelector('.match-layer');
       if (match) return { mode: 'match', layer: match };
@@ -2256,6 +2387,7 @@
     if (g.mode === 'sheet') closeSheet({ dragged: true });
     else if (g.mode === 'story') closeStory();
     else if (g.mode === 'viewer') closeViewer();
+    else if (g.mode === 'peek') closePeek();
     else if (g.mode === 'match') closeMatch();
     else {
       if (g.layer) {
@@ -2266,8 +2398,35 @@
     }
   }
 
+  var press = null;
+  var PULL_AT = 64;
+
+  function quietSwallow() {
+    swallowClick = true;
+    setTimeout(function () { swallowClick = false; }, 90);
+  }
+
   function onPointerDown(e) {
     if (e.button != null && e.button !== 0) return;
+    if (press) { clearTimeout(press.timer); press = null; }
+    if (!S.sheet && !S.story && !S.viewer && !S.match && !S.peek && S.screen === 'feed') {
+      var pc = e.target.closest('.post');
+      if (pc && !e.target.closest('.card-more, .rate-pill, .sound-btn, .play-badge, .post-head')) {
+        press = { x: e.clientX, y: e.clientY, id: pc.getAttribute('data-post'), fired: false };
+        press.timer = setTimeout(function () {
+          if (!press) return;
+          press.fired = true;
+          openPeek(press.id);
+        }, 380);
+      }
+    }
+    if (S.peek) {
+      var pk = e.target.closest('[data-peek-card]');
+      if (pk && !e.target.closest('button') && e.clientX > 26) {
+        gesture = { kind: 'peek', x: e.clientX, y: e.clientY, layer: pk };
+        return;
+      }
+    }
     var onField = e.target.closest('input, textarea, a');
     var onCarousel = e.target.closest('[data-swipe]');
     if (!onField && !onCarousel && e.clientX <= 26 && !e.target.closest('button')) {
@@ -2293,7 +2452,8 @@
     }
     var grab = e.target.closest('[data-grab]');
     var sheet = e.target.closest('.sheet');
-    if (sheet && (grab || !e.target.closest('input, textarea, button, a'))) {
+    var rxSheet = sheet && sheet.classList.contains('sheet-rx') && !e.target.closest('input, textarea, .rx-back');
+    if (sheet && (grab || rxSheet || !e.target.closest('input, textarea, button, a'))) {
       var sc = sheet.querySelector('.sheet-scroll');
       if (grab || !sc || sc.scrollTop <= 0) {
         gesture = { kind: 'sheet', y: e.clientY, sheet: sheet, scTop: sc ? sc.scrollTop : 0 };
@@ -2304,6 +2464,13 @@
     if (clip && !e.target.closest('button')) {
       gesture = { kind: 'photo-wait', x: e.clientX, y: e.clientY, id: clip.getAttribute('data-swipe'), clip: clip };
       return;
+    }
+    if (S.screen === 'feed' && !onField && !S.sheet && !S.story && !S.viewer && !S.match && !S.peek) {
+      var fs = document.getElementById('feed-scroll');
+      if (fs && fs.contains(e.target) && fs.scrollTop <= 0 && e.target.closest('button')) {
+        gesture = { kind: 'nav-wait', x: e.clientX, y: e.clientY, scroll: fs, fromButton: true };
+        return;
+      }
     }
     if (onField || e.target.closest('button')) return;
     if (S.screen === 'person' && !S.sheet && !S.story && !S.viewer && !S.match) {
@@ -2319,6 +2486,10 @@
   }
 
   function onPointerMove(e) {
+    if (press && !press.fired && (Math.abs(e.clientX - press.x) > 9 || Math.abs(e.clientY - press.y) > 9)) {
+      clearTimeout(press.timer);
+      press = null;
+    }
     if (!gesture) return;
     var dx = e.clientX - (gesture.x || 0);
     var dy = e.clientY - (gesture.y || 0);
@@ -2331,7 +2502,10 @@
           gesture.kind = 'story-drag';
           gesture.layer.style.transition = 'none';
         } else if (gesture.mode === 'viewer') gesture.kind = 'viewer';
-        else if (gesture.mode === 'sheet') {
+        else if (gesture.mode === 'peek') {
+          gesture.kind = 'peek';
+          gesture.layer.style.transition = 'none';
+        } else if (gesture.mode === 'sheet') {
           gesture.kind = 'sheet';
           gesture.sheet = gesture.layer;
           gesture.scTop = 0;
@@ -2367,7 +2541,8 @@
       return;
     }
     if (gesture.kind === 'nav-wait') {
-      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) && gesture.fromButton) gesture = null;
+      else if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
         gesture.kind = 'nav';
         gesture.layer = document.getElementById('stage');
         if (gesture.layer) gesture.layer.style.transition = 'none';
@@ -2392,6 +2567,12 @@
         gesture.layer.style.transition = 'none';
       }
     }
+    if (gesture.kind === 'peek') {
+      var peekDown = Math.max(0, e.clientY - gesture.y);
+      gesture.layer.style.transform = 'translateY(' + peekDown + 'px) scale(' + Math.max(0.9, 1 - peekDown / 1400).toFixed(3) + ')';
+      gesture.drag = peekDown;
+      return;
+    }
     if (gesture.kind === 'story-drag' || gesture.kind === 'viewer') {
       var down = Math.max(0, e.clientY - gesture.y);
       gesture.layer.style.transform = 'translateY(' + down + 'px)';
@@ -2400,6 +2581,15 @@
     }
     if (gesture.kind === 'sheet') {
       var pull = e.clientY - gesture.y;
+      var rx = gesture.sheet.classList.contains('sheet-rx');
+      if (rx && pull < -36 && !gesture.sheet.classList.contains('expanded')) {
+        gesture.sheet.classList.add('expanded');
+        S.rxExpanded = true;
+        if (window.TG) TG.impact('light');
+        quietSwallow();
+        gesture = null;
+        return;
+      }
       if (pull > 0 && gesture.scTop <= 0) {
         gesture.sheet.style.transition = 'none';
         gesture.sheet.style.transform = 'translateY(' + pull + 'px)';
@@ -2429,14 +2619,67 @@
       else if (Math.abs(e.clientX - gesture.x) > 8) gesture = null;
     }
     if (gesture && gesture.kind === 'pull') {
-      var dist = Math.min(96, (e.clientY - gesture.y) * 0.45);
+      var dist = Math.max(0, Math.min(120, (e.clientY - gesture.y) * 0.5));
       var indicator = document.getElementById('pull');
-      if (indicator) indicator.style.height = dist + 'px';
+      if (indicator) {
+        indicator.style.transition = 'none';
+        indicator.style.height = dist + 'px';
+        indicator.style.setProperty('--pp', Math.min(1, dist / PULL_AT).toFixed(3));
+        var ready = dist >= PULL_AT;
+        if (ready !== !!gesture.ready) {
+          gesture.ready = ready;
+          indicator.classList.toggle('ready', ready);
+          if (ready && window.TG) TG.impact('light');
+        }
+      }
       gesture.drag = dist;
     }
   }
 
+  function runPullRefresh(ind) {
+    if (S.refreshing) return;
+    S.refreshing = true;
+    if (ind) {
+      ind.style.transition = 'height .35s cubic-bezier(0.32, 0.72, 0, 1)';
+      ind.style.height = '64px';
+      ind.classList.add('loading');
+    }
+    if (window.TG) TG.impact('medium');
+    var t0 = Date.now();
+    CupionAPI.releaseNew().catch(function () {}).then(function () {
+      S.hasNew = false;
+      S.forceTop = true;
+      return loadFeed(false);
+    }).then(function () { return loadStories(); }).then(function () {
+      return new Promise(function (resolve) { setTimeout(resolve, Math.max(0, 900 - (Date.now() - t0))); });
+    }).then(function () {
+      if (ind) {
+        ind.classList.remove('loading');
+        ind.classList.add('done');
+        ind.style.height = '0px';
+      }
+      return new Promise(function (resolve) { setTimeout(resolve, 300); });
+    }).then(function () {
+      S.refreshing = false;
+      if (window.TG) TG.notify('success');
+      render();
+    }).catch(function () {
+      S.refreshing = false;
+      if (ind) { ind.classList.remove('loading'); ind.style.height = '0px'; }
+    });
+  }
+
   function onPointerUp() {
+    if (press) {
+      clearTimeout(press.timer);
+      var fired = press.fired;
+      press = null;
+      if (fired) {
+        gesture = null;
+        quietSwallow();
+        return;
+      }
+    }
     if (!gesture) return;
     clearTimeout(gesture.hold);
     var g = gesture;
@@ -2467,7 +2710,25 @@
       if (Math.abs(g.drag || 0) > 8) swallowClick = true;
       return;
     }
+    if (g.kind === 'peek') {
+      if ((g.drag || 0) > 90) {
+        quietSwallow();
+        closePeek();
+      } else if (g.layer) {
+        g.layer.style.transition = 'transform .45s cubic-bezier(0.32, 0.72, 0, 1)';
+        g.layer.style.transform = '';
+      }
+      return;
+    }
     if (g.kind === 'sheet') {
+      if (g.sheet.classList.contains('sheet-rx') && g.sheet.classList.contains('expanded') && (g.drag || 0) > 90) {
+        g.sheet.style.transition = '';
+        g.sheet.style.transform = '';
+        g.sheet.classList.remove('expanded');
+        S.rxExpanded = false;
+        quietSwallow();
+        return;
+      }
       if ((g.drag || 0) > 90) {
         g.sheet.style.transition = '';
         g.sheet.style.transform = 'translateY(110%)';
@@ -2545,15 +2806,15 @@
       return;
     }
     if (g.kind === 'pull') {
-      var indicator = document.getElementById('pull');
-      if ((g.drag || 0) > 64) {
-        if (indicator) indicator.style.height = '48px';
-        if (window.TG) TG.impact('medium');
-        loadFeed(true).then(function () {
-          if (indicator) indicator.style.height = '0px';
-          render();
-        }).catch(function () { if (indicator) indicator.style.height = '0px'; });
-      } else if (indicator) indicator.style.height = '0px';
+      var ind = document.getElementById('pull');
+      if ((g.drag || 0) > 8) quietSwallow();
+      if ((g.drag || 0) >= PULL_AT) runPullRefresh(ind);
+      else if (ind) {
+        ind.style.transition = 'height .35s cubic-bezier(0.32, 0.72, 0, 1)';
+        ind.style.height = '0px';
+        ind.style.setProperty('--pp', '0');
+        ind.classList.remove('ready');
+      }
     }
   }
 
@@ -2567,7 +2828,7 @@
   function boot() {
     var root = document.getElementById('app');
     if (!root) return;
-    root.innerHTML = '<div id="stage"></div><div id="tabs"></div><div id="sheet-root"></div><div id="story-root"></div><div id="match-root"></div><div id="toast-root"></div>' +
+    root.innerHTML = '<div id="stage"></div><div id="tabs"></div><div id="sheet-root"></div><div id="story-root"></div><div id="peek-root"></div><div id="match-root"></div><div id="toast-root"></div>' +
       '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden>';
     document.addEventListener('click', onClick);
     document.addEventListener('input', onInput);
@@ -2587,6 +2848,12 @@
       var scale = Math.max(0.965, 1 - y / 2000);
       orbit.style.transform = 'translate3d(0,' + shift.toFixed(2) + 'px,0) scale(' + scale.toFixed(3) + ')';
     }, true);
+    document.addEventListener('touchmove', function (e) {
+      if (gesture && (gesture.kind === 'pull' || gesture.kind === 'nav') && e.cancelable) e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('contextmenu', function (e) {
+      if (e.target.closest && e.target.closest('.post, .peek')) e.preventDefault();
+    });
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);

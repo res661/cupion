@@ -916,3 +916,175 @@ body, #app {
 .board-row .who small, .board-row .sc small { color: rgba(60, 60, 67, 0.5); font-size: 12px; }
 .board-row .sc { text-align: right; display: flex; flex-direction: column; }
 .board-row .sc b { font-size: 17px; letter-spacing: -0.03em; }
+
+/* ===== pull to refresh ===== */
+.pull { --pp: 0; height: 0; overflow: hidden; display: grid; place-items: end center; }
+.pull-orb {
+  position: relative;
+  width: 34px; height: 34px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--accent);
+  display: grid; place-items: center;
+  box-shadow: 0 8px 22px rgba(0, 122, 255, 0.22);
+  opacity: calc(var(--pp) * 1.4);
+  transform: scale(calc(0.5 + var(--pp) * 0.5));
+  transition: transform 0.3s var(--bounce), opacity 0.2s;
+}
+.pull-ring {
+  position: absolute; inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--pp) * 1turn), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent 16px, #000 17px);
+  mask: radial-gradient(circle, transparent 16px, #000 17px);
+}
+.pull-arrow { width: 18px; height: 18px; transform: rotate(calc(var(--pp) * 160deg)); transition: transform 0.25s var(--bounce); }
+.pull.ready .pull-orb { transform: scale(1.18); }
+.pull.ready .pull-arrow { transform: rotate(180deg); }
+.pull.loading .pull-orb { opacity: 1; transform: scale(1); animation: pullPulse 0.9s ease-in-out infinite; }
+.pull.loading .pull-arrow { opacity: 0; }
+.pull.loading .pull-ring { background: conic-gradient(var(--accent) 0.3turn, transparent 0); animation: spin 0.75s linear infinite; }
+.pull.done .pull-orb { opacity: 0; transform: scale(0.3); transition: transform 0.28s var(--spring), opacity 0.28s; }
+@keyframes pullPulse { 0%, 100% { box-shadow: 0 8px 22px rgba(0, 122, 255, 0.22); } 50% { box-shadow: 0 8px 30px rgba(0, 122, 255, 0.45); } }
+
+/* ===== profile story circles (Instagram style) ===== */
+.highlights { gap: 14px; padding-top: 18px; }
+.hl { width: 68px; flex: none; background: none; border: 0; padding: 0; text-align: center; }
+.hl-ring {
+  display: block;
+  width: 68px; height: 68px;
+  padding: 3px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: conic-gradient(#007AFF, #64D2FF, #007AFF);
+  transition: transform 0.35s var(--bounce);
+}
+.hl:active .hl-ring { transform: scale(0.94); }
+.hl-ring.seen { background: rgba(120, 120, 128, 0.35); }
+.hl-face {
+  display: block;
+  width: 100%; height: 100%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2.5px solid #fff;
+  background: #eef1f5;
+}
+.hl-face img, .hl-face .hl-img, .hl-face .ph {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 0;
+  box-shadow: none;
+}
+
+/* ===== long press: full screen card ===== */
+.post { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+#peek-root { position: absolute; inset: 0; z-index: 84; pointer-events: none; }
+.peek {
+  position: absolute; inset: 0;
+  pointer-events: auto;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(var(--inset-top) + 20px) 18px calc(var(--inset-bottom) + 20px);
+  background: rgba(12, 16, 28, 0.38);
+  -webkit-backdrop-filter: blur(26px) saturate(1.5);
+  backdrop-filter: blur(26px) saturate(1.5);
+  animation: peekBg 0.28s ease both;
+}
+.peek.out { animation: peekBgOut 0.26s ease forwards; }
+.peek-card {
+  width: 100%; max-width: 420px; max-height: 100%;
+  display: flex; flex-direction: column;
+  background: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  touch-action: none;
+  animation: peekIn 0.42s var(--bounce) both;
+}
+.peek.out .peek-card { animation: peekOut 0.26s ease forwards; }
+.peek-frame { position: relative; width: 100%; aspect-ratio: var(--ratio, 0.8); max-height: 62vh; background: #eef1f5; flex: none; }
+.peek-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.peek-frame .ph { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+.peek-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px 4px; }
+.peek-name b { font-size: 20px; letter-spacing: -0.03em; }
+.peek-name small { display: block; color: var(--text-2); font-size: 14px; }
+.peek-caption { margin: 2px 18px 0; color: #3a3a3c; font-size: 15px; }
+.peek-actions { display: flex; gap: 10px; padding: 14px 16px 16px; }
+.peek-actions .btn { flex: 1; border-radius: 999px; height: 48px; }
+@keyframes peekBg { from { opacity: 0; } to { opacity: 1; } }
+@keyframes peekBgOut { to { opacity: 0; } }
+@keyframes peekIn { from { opacity: 0; transform: scale(0.82) translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes peekOut { to { opacity: 0; transform: scale(0.9) translateY(18px); } }
+
+/* ===== reactions sheet: pull up ===== */
+.sheet-rx { height: 52%; transition: transform 0.45s var(--spring), height 0.45s var(--spring); }
+.sheet-rx.expanded { height: calc(100% - var(--inset-top) - 8px); }
+.sheet-rx:not(.expanded) .sheet-scroll { overflow: hidden; touch-action: none; }
+.sheet-rx .rx, .sheet-rx .rx h3, .sheet-rx .rx > p { touch-action: none; }
+.sheet-rx.expanded .sheet-scroll { overflow: auto; touch-action: pan-y; }
+.story-layer .rx-pill { bottom: calc(var(--inset-bottom) + 28px); }
+
+/* ===== story reactions: brighter burst ===== */
+.emoji-btn.pop { animation: emojiPop2 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes emojiPop2 {
+  0% { transform: scale(1) rotate(0); }
+  35% { transform: scale(1.8) rotate(-14deg); }
+  65% { transform: scale(0.95) rotate(7deg); }
+  100% { transform: scale(1.06) rotate(0); }
+}
+.react-flash {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: radial-gradient(circle at 50% 80%, rgba(var(--glow), 0.6), rgba(var(--glow), 0.2) 42%, transparent 72%);
+  animation: reactFlash 0.95s ease-out forwards;
+}
+@keyframes reactFlash { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+.react-ring {
+  position: absolute; z-index: 6; pointer-events: none;
+  width: 44px; height: 44px; margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  border: 3px solid rgba(var(--glow), 0.95);
+  box-shadow: 0 0 24px rgba(var(--glow), 0.8), inset 0 0 14px rgba(var(--glow), 0.5);
+  animation: reactRing 0.85s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.react-ring.r2 { border-width: 2px; animation-delay: 0.12s; opacity: 0; animation-fill-mode: both; }
+@keyframes reactRing { from { transform: scale(0.4); opacity: 1; } to { transform: scale(5.6); opacity: 0; } }
+.react-big {
+  position: absolute; z-index: 8; left: 50%; top: 44%;
+  font-size: 124px; line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 28px rgba(var(--glow), 0.95));
+  animation: reactBig 1.15s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes reactBig {
+  0% { opacity: 0; transform: translate(-50%, 60px) scale(0.2) rotate(-18deg); }
+  28% { opacity: 1; transform: translate(-50%, -50%) scale(1.35) rotate(8deg); }
+  52% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-4deg); }
+  100% { opacity: 0; transform: translate(-50%, -140px) scale(1.2) rotate(0); }
+}
+.react-spark {
+  position: absolute; z-index: 7; pointer-events: none;
+  font-size: var(--sz, 20px); line-height: 1;
+  animation: reactSpark var(--d, 1s) cubic-bezier(0.15, 0.8, 0.3, 1) forwards;
+}
+@keyframes reactSpark {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.3) rotate(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1) rotate(var(--rot)); }
+}
+.react-rise {
+  position: absolute; z-index: 6; bottom: -40px; pointer-events: none;
+  font-size: var(--sz, 24px); line-height: 1;
+  opacity: 0;
+  animation: reactRise var(--d, 1.5s) ease-out var(--delay, 0s) forwards;
+}
+@keyframes reactRise {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6) rotate(0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--sway, 0), -72vh) scale(1.1) rotate(22deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .react-flash, .react-ring, .react-big, .react-spark, .react-rise { display: none; }
+}
