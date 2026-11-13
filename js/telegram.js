@@ -159,6 +159,53 @@
         try { wa.openLink(url); return; } catch (e) {}
       }
       window.open(url, '_blank', 'noopener');
+    },
+
+    /* Telegram Stars subscription */
+    createInvoice: function (title, description, amount, callback) {
+      var wa = this.wa;
+      if (!wa || typeof wa.openInvoice !== 'function') {
+        if (callback) callback({ ok: false, error: 'Stars API not available' });
+        return;
+      }
+      
+      // Create invoice link for Telegram Stars
+      // Amount is in Stars (1 Star = 1 unit)
+      var invoiceLink = 'https://t.me/$';
+      var params = {
+        title: title,
+        description: description,
+        currency: 'XTR', // Telegram Stars currency code
+        prices: [{ label: title, amount: amount }]
+      };
+      
+      try {
+        wa.openInvoice(invoiceLink, function(status) {
+          if (callback) {
+            if (status === 'paid') {
+              callback({ ok: true, paid: true });
+            } else if (status === 'cancelled') {
+              callback({ ok: false, cancelled: true });
+            } else {
+              callback({ ok: false, status: status });
+            }
+          }
+        });
+      } catch (e) {
+        if (callback) callback({ ok: false, error: e.message || 'Payment failed' });
+      }
+    },
+
+    // Simplified subscription purchase
+    purchaseSubscription: function(plan, callback) {
+      var plans = {
+        trial: { stars: 1, title: 'Пробная подписка', description: 'Попробуй Premium на 1 день' },
+        month: { stars: 50, title: 'Premium на месяц', description: '1 месяц Premium подписки' },
+        year: { stars: 500, title: 'Premium на год', description: '1 год Premium подписки со скидкой' }
+      };
+      
+      var planData = plans[plan] || plans.trial;
+      this.createInvoice(planData.title, planData.description, planData.stars, callback);
     }
   };
 

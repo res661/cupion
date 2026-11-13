@@ -38,7 +38,7 @@
     reg: emptyReg(),
     userCheck: null,
     score: 8,
-    plan: 'year',
+    plan: 'trial',
     limits: null,
     justLiked: '',
     compose: null,
@@ -996,16 +996,19 @@
     var list = perks.map(function (item) {
       return '<li><i>' + item[0] + '</i><span>' + item[1] + '</span></li>';
     }).join('');
-    var plans = active ? '<p class="hint">Premium уже подключён. Оплата через Telegram Stars появится позже.</p>' :
-      '<button class="choice-row plan' + (S.plan === 'month' ? ' on' : '') + '" data-act="plan" data-plan="month"><span>Месяц<small>попробовать</small></span><span class="price">250 ★</span></button>' +
-      '<button class="choice-row plan' + (S.plan === 'year' ? ' on' : '') + '" data-act="plan" data-plan="year"><span>Год<small class="save">Выгодно</small></span><span class="price">1490 ★</span></button>';
+    var plans = active ? '<p class="hint">Premium уже подключён</p>' :
+      '<div class="choice-list">' +
+      '<button class="choice-row plan' + (S.plan === 'trial' ? ' on' : '') + '" data-act="plan" data-plan="trial"><span>Пробная подписка<small>1 день · попробуй все функции</small></span><span class="price">1 ★</span></button>' +
+      '<button class="choice-row plan' + (S.plan === 'month' ? ' on' : '') + '" data-act="plan" data-plan="month"><span>Месяц<small>30 дней Premium</small></span><span class="price">50 ★</span></button>' +
+      '<button class="choice-row plan' + (S.plan === 'year' ? ' on' : '') + '" data-act="plan" data-plan="year"><span>Год<small class="save">Выгодно</small></span><span class="price">500 ★</span></button>' +
+      '</div>';
     var cta = active
       ? '<button class="btn btn-primary btn-block" data-act="sheet-close">Готово</button>'
-      : '<button class="btn btn-primary btn-block" data-act="buy">Продолжить</button>';
+      : '<button class="btn btn-primary btn-block" data-act="buy">Купить Premium</button>';
     return sheetFrame(
       '<div class="pay"><div class="pay-hero"><span class="pay-badge">Premium</span></div>' +
       '<h2>Смотри больше.<br>Выделяйся.</h2><ul class="perks">' + list + '</ul>' + plans +
-      '<p class="terms">Сейчас это пробное подключение. Оплата через Telegram Stars появится позже.</p></div>',
+      '<p class="terms">Оплата через Telegram Stars. Подписка продлевается автоматически.</p></div>',
       cta
     );
   }
@@ -1935,15 +1938,40 @@
       });
       return;
     }
-    if (act === 'plan') { S.plan = t.getAttribute('data-plan') || 'year'; sheetSig = ''; renderSheet(); return; }
+    if (act === 'plan') { S.plan = t.getAttribute('data-plan') || 'trial'; sheetSig = ''; renderSheet(); return; }
     if (act === 'buy') {
-      CupionAPI.setPremium(true).then(function (me) {
-        S.me = me;
-        closeSheet();
-        toast('Premium подключён');
-        if (window.TG) TG.notify('success');
-        return loadFeed();
-      }).then(render).catch(function (err) { toast(err.message || 'Не вышло'); });
+      var plan = S.plan || 'trial';
+      if (!window.TG || !TG.purchaseSubscription) {
+        // Fallback for testing without Telegram
+        CupionAPI.purchaseSubscription(plan, { paid: true }).then(function (res) {
+          S.me = res.me;
+          closeSheet();
+          toast('Premium подключён на ' + (plan === 'trial' ? '1 день' : plan === 'month' ? '30 дней' : '365 дней'));
+          if (window.TG) TG.notify('success');
+          return loadFeed();
+        }).then(render).catch(function (err) { toast(err.message || 'Не вышло'); });
+        return;
+      }
+      
+      // Use Telegram Stars payment
+      TG.purchaseSubscription(plan, function(paymentResult) {
+        if (paymentResult.ok && paymentResult.paid) {
+          CupionAPI.purchaseSubscription(plan, paymentResult).then(function (res) {
+            S.me = res.me;
+            closeSheet();
+            var duration = plan === 'trial' ? '1 день' : plan === 'month' ? '30 дней' : '365 дней';
+            toast('Premium подключён на ' + duration);
+            if (window.TG) TG.notify('success');
+            return loadFeed();
+          }).then(render).catch(function (err) { 
+            toast(err.message || 'Не вышло'); 
+          });
+        } else if (paymentResult.cancelled) {
+          toast('Оплата отменена');
+        } else {
+          toast('Ошибка оплаты');
+        }
+      });
       return;
     }
     if (act === 'pick-post') {

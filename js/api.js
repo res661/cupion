@@ -55,7 +55,9 @@
     setTheme: call('setTheme'),
     shareLink: call('shareLink'),
     setPendingStart: call('setPendingStart'),
-    takePendingStart: call('takePendingStart')
+    takePendingStart: call('takePendingStart'),
+    purchaseSubscription: call('purchaseSubscription'),
+    getSubscriptionStatus: call('getSubscriptionStatus')
   };
 
   window.CupionAPI = api;

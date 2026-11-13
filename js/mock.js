@@ -654,8 +654,87 @@
     setPremium: function (on) {
       if (!state.me) throw new Error('Сначала создай анкету');
       state.me.premium = !!on;
+      if (on) {
+        // Set expiration date when premium is activated
+        var now = Date.now();
+        var duration = DAY; // Default to 1 day for trial
+        if (state.lastPurchasedPlan === 'month') duration = 30 * DAY;
+        if (state.lastPurchasedPlan === 'year') duration = 365 * DAY;
+        state.me.premiumUntil = now + duration;
+      }
       writeStore();
       return publicUser(state.me);
+    },
+
+    purchaseSubscription: function (plan, paymentInfo) {
+      if (!state.me) throw new Error('Сначала создай анкету');
+      
+      var plans = {
+        trial: { stars: 1, days: 1, name: 'Пробная подписка' },
+        month: { stars: 50, days: 30, name: 'Месячная подписка' },
+        year: { stars: 500, days: 365, name: 'Годовая подписка' }
+      };
+      
+      var planData = plans[plan];
+      if (!planData) throw new Error('Неизвестный план');
+      
+      // Simulate payment verification
+      if (!paymentInfo || !paymentInfo.paid) {
+        throw new Error('Оплата не прошла');
+      }
+      
+      // Activate premium
+      state.lastPurchasedPlan = plan;
+      var now = Date.now();
+      var duration = planData.days * DAY;
+      
+      state.me.premium = true;
+      state.me.premiumUntil = now + duration;
+      
+      // Save purchase history
+      if (!state.purchases) state.purchases = [];
+      state.purchases.push({
+        id: 'purchase_' + Date.now(),
+        plan: plan,
+        stars: planData.stars,
+        createdAt: now,
+        expiresAt: now + duration
+      });
+      
+      writeStore();
+      
+      return {
+        ok: true,
+        premium: true,
+        plan: planData.name,
+        expiresAt: state.me.premiumUntil,
+        me: publicUser(state.me)
+      };
+    },
+
+    getSubscriptionStatus: function () {
+      if (!state.me) return { premium: false };
+      
+      var now = Date.now();
+      var premiumUntil = state.me.premiumUntil || 0;
+      
+      // Auto-expire premium if time is up
+      if (state.me.premium && premiumUntil > 0 && now > premiumUntil) {
+        state.me.premium = false;
+        state.me.premiumUntil = 0;
+        writeStore();
+      }
+      
+      var daysLeft = state.me.premium && premiumUntil > 0 
+        ? Math.ceil((premiumUntil - now) / DAY) 
+        : 0;
+      
+      return {
+        premium: state.me.premium,
+        expiresAt: premiumUntil,
+        daysLeft: daysLeft,
+        purchases: (state.purchases || []).slice(-5) // Last 5 purchases
+      };
     },
 
     hasPendingNew: function () {
