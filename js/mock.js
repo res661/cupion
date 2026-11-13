@@ -101,6 +101,7 @@
         poster: typeof entry === 'string' ? '' : (entry.poster || ''),
         type: typeof entry === 'string' ? 'photo' : (entry.type || 'photo'),
         caption: typeof entry === 'string' ? '' : (entry.caption || ''),
+        paused: typeof entry === 'string' ? false : !!entry.pausedAt,
         createdAt: createdAt,
         ttl: entryTtl,
         remain: remain,
@@ -224,7 +225,7 @@
       stories: stories.map(function (s) {
         return {
           id: s.id, url: s.url, poster: s.poster || '', type: s.type || 'photo', createdAt: s.createdAt,
-          ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt, caption: s.caption || '',
+          ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt, caption: s.caption || '', paused: !!s.paused,
           seen: storyIsSeen(s.id, p.id)
         };
       }),
@@ -607,6 +608,23 @@
       return (state.reactions || []).filter(function (r) {
         return r.to === 'me' && r.from !== 'me' && live[r.storyId] && seen.indexOf(r.id) === -1;
       }).length;
+    },
+
+    storyPause: function (id, pause) {
+      if (!state.me) return { ok: false };
+      var st = null;
+      (state.me.stories || []).forEach(function (s) { if (s && s.id === id) st = s; });
+      if (!st) return { ok: false };
+      if (pause) {
+        if (!st.pausedAt) st.pausedAt = Date.now();
+      } else if (st.pausedAt) {
+        var d = Date.now() - st.pausedAt;
+        st.createdAt = (st.createdAt || Date.now()) + d;
+        if (st.expiresAt) st.expiresAt += d;
+        st.pausedAt = 0;
+      }
+      writeStore();
+      return { ok: true };
     },
 
     markStoryInboxSeen: function () {

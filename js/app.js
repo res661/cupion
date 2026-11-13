@@ -1141,6 +1141,7 @@
     requestAnimationFrame(function () {
       var sheet = document.querySelector('.sheet');
       var bd = document.querySelector('.backdrop');
+      if (sheet && S.sheet === 'compose' && S.compose && S.compose.type === 'story') sheet.classList.add('sheet-full');
       if (sheet) sheet.classList.add('show');
       if (bd) bd.classList.add('show');
     });
@@ -1244,16 +1245,24 @@
         return '<div class="pick">' + face + '</div>';
       }).join('');
       var emojis = ['😀','😍','🔥','💔','✨','🥰','😎','👀','🙈','💫'];
-      var storyEditor = '<textarea class="area" id="story-caption" maxlength="120" placeholder="Текст к истории">' + esc(c.caption || '') + '</textarea>' +
+      var ratio = c.ratio || '9:16';
+      var stage = '<div class="story-stage ratio-' + ratio.replace(':', '-') + '">' + tiles + '</div>' +
+        '<div class="story-ratios">' + ['9:16', '4:5', '1:1'].map(function (r) {
+          return '<button class="ratio-btn' + (r === ratio ? ' on' : '') + '" data-act="story-ratio" data-ratio="' + r + '">' + r.replace(':', ' / ') + '</button>';
+        }).join('') + '</div>';
+      var storyEditor = stage +
+        '<textarea class="area" id="story-caption" maxlength="120" placeholder="Текст к истории">' + esc(c.caption || '') + '</textarea>' +
         '<div class="story-emojis">' + emojis.map(function (e) {
           return '<button class="se-btn" data-act="story-emoji" data-emoji="' + e + '">' + e + '</button>';
         }).join('') + '</div>' +
         '<p class="hint">' + ((S.me && S.me.premium) ? 'Видео до 30 сек · история на 10 часов' : 'Видео до 10 сек · история на 1 час') + '</p>';
       return sheetFrame(
         '<h2>' + (c.type === 'story' ? 'Новая история' : 'Новая анкета') + '</h2>' +
-        '<div class="pick-grid">' + tiles + '</div>' +
+        (c.type === 'story' ? '' : '<div class="pick-grid">' + tiles + '</div>') +
         (c.type === 'story' ? storyEditor : '<textarea class="area" id="cap-text" maxlength="80" placeholder="Короткая подпись">' + esc(c.caption || '') + '</textarea>'),
-        '<button class="btn btn-primary btn-block" data-act="publish">Опубликовать</button>'
+        c.type === 'story'
+          ? '<div class="compose-actions"><button class="btn btn-glass" data-act="story-clear">Удалить</button><button class="btn btn-primary" data-act="publish">Опубликовать</button></div>'
+          : '<button class="btn btn-primary btn-block" data-act="publish">Опубликовать</button>'
       );
     }
     var premium = !!(S.me && S.me.premium);
@@ -1390,6 +1399,7 @@
         sheet.classList.add('sheet-rx');
         if (S.rxExpanded) sheet.classList.add('expanded');
       }
+      if (sheet && S.sheet === 'compose' && S.compose && S.compose.type === 'story') sheet.classList.add('sheet-full');
       if (sheet) sheet.classList.add('show');
       if (bd) bd.classList.add('show');
     });
@@ -1545,6 +1555,7 @@
       (item.caption ? '<div class="story-caption">' + esc(item.caption) + '</div>' : '') + '</div>' +
       (isOwnStory ? '<button class="rx-pill" data-act="story-reactions" data-story="' + esc(item.id) + '">Реакции' +
         (storyReactionCount(item.id) ? '<b>' + (storyReactionCount(item.id) > 9 ? '9+' : storyReactionCount(item.id)) + '</b>' : '') + '</button>' : '') +
+      (isOwnStory && S.me && S.me.premium ? '<button class="rx-pill story-pause" data-act="story-pause" data-story="' + esc(item.id) + '" data-paused="' + (item.paused ? '1' : '0') + '">' + (item.paused ? 'Показать' : 'Скрыть') + '</button>' : '') +
       (isOwnStory ? '' : 
         '<div class="story-bottom">' +
         '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥'].map(function (emo) {
@@ -2255,6 +2266,30 @@
     if (act === 'add-story') { e.stopPropagation(); if (needAccount()) return; openCompose('story'); return; }
     if (act === 'story-file') { pickFiles('story'); return; }
     if (act === 'story-limit') { e.stopPropagation(); openSheet('premium', { key: 'storylimit' }); return; }
+    if (act === 'story-clear') {
+      if (S.compose) { S.compose.photos = []; S.compose.stage = 'menu'; S.compose.caption = ''; }
+      S.sheet = 'storynew';
+      S.sheetPayload = { key: 'story' };
+      sheetSig = '';
+      renderSheet();
+      return;
+    }
+    if (act === 'story-ratio') {
+      if (S.compose) S.compose.ratio = t.getAttribute('data-ratio') || '9:16';
+      sheetSig = '';
+      renderSheet();
+      return;
+    }
+    if (act === 'story-pause') {
+      var sid = t.getAttribute('data-story');
+      var nowPaused = t.getAttribute('data-paused') === '1';
+      CupionAPI.storyPause(sid, !nowPaused).then(function () { return refreshMe(); }).then(function () {
+        storySig = '';
+        renderStory();
+        toast(nowPaused ? 'История снова видна' : 'История скрыта');
+      }).catch(function () {});
+      return;
+    }
     if (act === 'story-emoji') {
       var emo = t.getAttribute('data-emoji') || '';
       var capEl = document.getElementById('story-caption');
