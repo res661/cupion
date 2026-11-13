@@ -3191,7 +3191,7 @@
     CupionAPI.releaseNew().catch(function () {}).then(function () {
       S.hasNew = false;
       S.forceTop = true;
-      return loadFeed(false);
+      return Promise.resolve();
     }).then(function () { return loadStories(); }).then(function () {
       return new Promise(function (resolve) { setTimeout(resolve, Math.max(0, 900 - (Date.now() - t0))); });
     }).then(function () {
