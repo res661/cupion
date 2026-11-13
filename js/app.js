@@ -411,9 +411,9 @@
     if (S.me && S.me.premium) return '';
     var c = promoOf(Math.floor(Date.now() / 86400000));
     return '<article class="post promo-card" data-promo="1"><div class="card">' +
-      '<div class="post-head"><span class="mini-ava promo-ava">' + c.emoji + '</span>' +
+      '<div class="post-head"><span class="mini-ava promo-ava"><img src="assets/promo/cupid.jpg" alt=""></span>' +
       '<div class="post-user">Cupion Premium' + premMark() + '</div></div>' +
-      '<div class="promo-hero"><span>' + c.emoji + '</span></div>' +
+      '<div class="promo-hero"><img src="assets/promo/cupid.jpg" alt=""><span class="promo-hero-emoji">' + c.emoji + '</span></div>' +
       '<div class="post-meta"><div class="post-title">' + esc(c.title) + '</div></div>' +
       '<p class="caption">' + esc(c.text) + '</p>' +
       '<button class="btn btn-primary btn-block" data-act="premium">Узнать больше</button>' +
@@ -1207,18 +1207,15 @@
 
   function premiumSheet() {
     var active = S.me && S.me.premium;
-    var cmp = [
-      ['Анкеты за раз', '10', '20'],
-      ['Активные истории', '1', '3'],
-      ['Видео в историю', '10 сек', '30 сек'],
-      ['Срок истории', '1 час', '10 часов'],
-      ['Видео в анкете', '—', 'да'],
-      ['Возврат к историям', '—', 'да'],
-      ['Значок Premium', '—', 'да']
-    ].map(function (r) {
-      return '<div class="cmp-row"><span>' + r[0] + '</span><b>' + r[1] + '</b><b class="prem">' + r[2] + '</b></div>';
+    var cats = [
+      ['Знакомства', '20 анкет вместо 10 и приоритет в рекомендациях'],
+      ['Истории', '3 активные, срок 10 часов, видео до 30 секунд'],
+      ['Профиль', 'Видео в анкете, значок Premium, сброс статистики'],
+      ['Внимание', 'Полный список: кто смотрел, кто поставил реакцию']
+    ].map(function (c) {
+      return '<div class="pcat"><b>' + esc(c[0]) + '</b><span>' + esc(c[1]) + '</span></div>';
     }).join('');
-    var table = '<div class="cmp"><div class="cmp-row cmp-head"><span>Что даёт</span><b>Free</b><b class="prem">Premium</b></div>' + cmp + '</div>';
+    var table = '<div class="pcat-list">' + cats + '</div>';
     var plans = active ? '<p class="hint">Premium уже подключён</p>' :
       '<div class="choice-list">' +
       ['3d|3 дня|59|', '7d|7 дней|119|', '14d|14 дней|189|', '30d|30 дней|270|Выгоднее всего'].map(function (row) {
