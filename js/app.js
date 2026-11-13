@@ -408,6 +408,7 @@
   }
 
   function premiumPromoCard() {
+    return '';
     if (S.me && S.me.premium) return '';
     var c = promoOf(Math.floor(Date.now() / 86400000));
     return '<article class="post promo-card" data-promo="1"><div class="card promo">' +
@@ -419,6 +420,7 @@
   }
 
   function premiumPromoBubble() {
+    return '';
     if (S.me && S.me.premium) return '';
     var c = promoOf(Math.floor(Date.now() / 86400000) + 1);
     return '<button class="bubble promo-bubble" data-act="premium" aria-label="Premium">' +
