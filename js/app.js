@@ -1237,8 +1237,23 @@
     );
   }
 
+  function storyPickSheet() {
+    var lim = (S.me && S.me.premium) ? 30 : 10;
+    var photoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>';
+    var fileIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>';
+    return sheetFrame(
+      '<h2>Новая история</h2><p class="hint">Фото или видео до ' + lim + ' сек. Дальше — текст и эмодзи.</p>' +
+      '<div class="story-pick">' +
+      '<button class="sp-btn" data-act="story-file"><span class="sm-ico">' + photoIco + '</span><b>Фотографии</b><small>из галереи</small></button>' +
+      '<button class="sp-btn" data-act="story-file"><span class="sm-ico">' + fileIco + '</span><b>Файлы</b><small>видео или фото</small></button>' +
+      '</div>',
+      '<button class="btn btn-glass btn-block" data-act="sheet-close">Отмена</button>'
+    );
+  }
+
   function composeSheet() {
     var c = S.compose || { stage: 'menu', photos: [], caption: '' };
+    if (c.type === 'story' && c.stage !== 'preview') return storyPickSheet();
     if (c.stage === 'preview') {
       var tiles = c.photos.map(function (p) {
         var face = (p.type === 'video' && ownUrl(p.poster)) ? realImg(p.poster) : (realImg(p.url) || (p.type === 'video' && ownUrl(p.url) ? realVideo(p.url, p.poster) : '') || phPhoto());
@@ -2062,7 +2077,7 @@
 
   function openCompose(kind) {
     S.compose = { stage: 'menu', type: kind || 'photo', photos: [], caption: '' };
-    if (kind === 'story') { openSheet('storynew', { key: 'story' }); return; }
+    if (kind === 'story') { S.compose.stage = 'pick'; openSheet('compose', { key: 'story-pick' }); return; }
     openSheet('compose', { key: 'menu' });
   }
 
@@ -2267,9 +2282,9 @@
     if (act === 'story-file') { pickFiles('story'); return; }
     if (act === 'story-limit') { e.stopPropagation(); openSheet('premium', { key: 'storylimit' }); return; }
     if (act === 'story-clear') {
-      if (S.compose) { S.compose.photos = []; S.compose.stage = 'menu'; S.compose.caption = ''; }
-      S.sheet = 'storynew';
-      S.sheetPayload = { key: 'story' };
+      if (S.compose) { S.compose.photos = []; S.compose.stage = 'pick'; S.compose.caption = ''; }
+      S.sheet = 'compose';
+      S.sheetPayload = { key: 'story-pick' };
       sheetSig = '';
       renderSheet();
       return;
