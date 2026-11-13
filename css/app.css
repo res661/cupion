@@ -1216,16 +1216,21 @@ body, #app { overscroll-behavior: none; }
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 12px calc(var(--inset-bottom) + 12px);
+  padding: 0 12px calc(var(--inset-bottom) + 16px);
   display: flex;
   flex-direction: column-reverse;
-  gap: 12px;
+  gap: 28px;
   z-index: 10;
+  pointer-events: none;
+}
+
+.story-bottom > * {
+  pointer-events: auto;
 }
 
 .story-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-start;
   padding: 0 4px;
 }
@@ -1313,32 +1318,38 @@ body, #app { overscroll-behavior: none; }
 
 /* Story layer animation */
 .story-layer {
-  animation: storyFadeIn 0.3s var(--spring);
+  animation: storyFadeIn 0.25s ease-out;
+}
+
+.story-layer .story-bg,
+.story-layer .real-media {
+  transition: opacity 0.15s ease-out;
+}
+
+.story-layer.transitioning .story-bg,
+.story-layer.transitioning .real-media {
+  opacity: 0;
 }
 
 @keyframes storyFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
 /* Story closing animation handled by JS */
 .story-layer.closing {
-  animation: storyFadeOut 0.25s var(--spring) forwards;
+  animation: storyFadeOut 0.2s ease-out forwards;
 }
 
 @keyframes storyFadeOut {
   from {
     opacity: 1;
-    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: scale(0.95);
   }
 }

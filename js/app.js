@@ -1433,12 +1433,29 @@
   function nextStory() {
     var st = S.story;
     if (!st) return;
+    
+    // Smooth transition between stories
+    var layer = document.querySelector('.story-layer');
+    if (layer && !layer.classList.contains('transitioning')) {
+      layer.classList.add('transitioning');
+      setTimeout(function() {
+        if (layer) layer.classList.remove('transitioning');
+      }, 250);
+    }
+    
     if (st.index < st.items.length - 1) {
       st.index += 1;
       storySig = '';
-      renderStory();
+      setTimeout(function() { renderStory(); }, 100);
       return;
     }
+    
+    // If story was opened from card, close instead of going to next user
+    if (st.fromCard) {
+      closeStory();
+      return;
+    }
+    
     var finished = st.userId;
     var ids = (S.stories || []).map(function (u) { return u.id; }).filter(function (id) { return id !== 'me'; });
     var at = ids.indexOf(finished);
@@ -1458,10 +1475,20 @@
       premiumHint();
       return;
     }
+    
+    // Smooth transition between stories
+    var layer = document.querySelector('.story-layer');
+    if (layer && !layer.classList.contains('transitioning')) {
+      layer.classList.add('transitioning');
+      setTimeout(function() {
+        if (layer) layer.classList.remove('transitioning');
+      }, 250);
+    }
+    
     if (st.index > 0) {
       st.index -= 1;
       storySig = '';
-      renderStory();
+      setTimeout(function() { renderStory(); }, 100);
     }
   }
 
