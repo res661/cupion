@@ -665,7 +665,6 @@
       (canAdd
         ? '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span>'
         : '<span class="plus locked" data-act="story-limit" aria-label="Лимит историй">+</span>') + myBadge + '</span></button>';
-    html += premiumPromoBubble();
     return '<div class="orbit">' + html + '</div>';
   }
 
@@ -1551,8 +1550,30 @@
 
   /* ---------- stories / match / viewer ---------- */
 
+  function showStoryAd() {
+    S.story = {
+      userId: 'ad',
+      user: { id: 'ad', name: 'Cupion Premium' },
+      items: [{ id: 'story_ad', type: 'photo', url: '', createdAt: Date.now(), ttl: 60000, remain: 60000 }],
+      index: 0,
+      paused: false,
+      fromCard: false,
+      isAd: true
+    };
+    storySig = '';
+    renderStory();
+    syncBack();
+  }
+
   function storyHTML() {
     var st = S.story;
+    if (st.isAd) {
+      return '<div class="story-layer ad-story"><img class="ad-bg" src="assets/promo/cupid.jpg" alt=""><div class="ad-shade"></div>' +
+        '<div class="ad-body"><span class="ad-badge">Premium</span>' +
+        '<h2>Больше знакомств.<br>Больше внимания.</h2>' +
+        '<p>20 анкет вместо 10 · 3 истории · видео до 30 секунд</p>' +
+        '<button class="btn btn-primary" data-act="premium">Узнать больше</button></div></div>';
+    }
     var item = st.items[st.index];
     var isOwnStory = st.userId === 'me' || !!(S.me && st.userId === S.me.id);
     var bars = st.items.map(function (_, i) {
@@ -1681,6 +1702,7 @@
   function nextStory() {
     var st = S.story;
     if (!st) return;
+    if (st.isAd) { closeStory(); return; }
     
     if (st.index < st.items.length - 1) {
       st.index += 1;
@@ -1700,6 +1722,10 @@
     var at = ids.indexOf(finished);
     var nextId = at >= 0 ? ids[at + 1] : null;
     if (nextId) {
+      if (S.me && !S.me.premium) {
+        S.adCounter = (S.adCounter || 0) + 1;
+        if (S.adCounter % 3 === 0) { retireBubble(finished); showStoryAd(); return; }
+      }
       retireBubble(finished);
       startStory(nextId, 0);
       return;
