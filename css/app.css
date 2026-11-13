@@ -975,14 +975,7 @@ body, #app { overscroll-behavior: none; }
 .story-user img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
 .story-user span { font-weight: 650; font-size: 14px; }
 .story-user em { font-style: normal; opacity: 0.75; font-weight: 500; font-size: 13px; }
-.story-actions {
-  position: absolute;
-  left: 16px; right: 16px;
-  bottom: calc(var(--inset-bottom) + 16px);
-  display: flex;
-  gap: 10px;
-  z-index: 3;
-}
+/* .story-actions flow inside .story-bottom: reactions above, comment box below. */
 .story-actions .btn { flex: 1; background: rgba(255, 255, 255, 0.18); color: #fff; border: 1px solid rgba(255, 255, 255, 0.28); backdrop-filter: blur(16px); }
 
 .match-layer {

@@ -1386,6 +1386,11 @@
       CupionAPI.markStorySeen(item.id).catch(function () {});
     }
     root.innerHTML = storyHTML();
+    var storyInput = root.querySelector('.story-comment-input');
+    if (storyInput) {
+      storyInput.addEventListener('focus', function () { if (S.story) S.story.paused = true; });
+      storyInput.addEventListener('blur', function () { if (S.story) S.story.paused = false; });
+    }
     restartClock();
   }
 
@@ -2628,7 +2633,7 @@
       }
     }
     var story = e.target.closest('.story-layer');
-    if (story && !e.target.closest('button')) {
+    if (story && !e.target.closest('button, input, textarea')) {
       gesture = { kind: 'story', x: e.clientX, y: e.clientY, layer: story };
       gesture.hold = setTimeout(function () {
         if (S.story) S.story.paused = true;
