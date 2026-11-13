@@ -410,10 +410,12 @@
   function premiumPromoCard() {
     if (S.me && S.me.premium) return '';
     var c = promoOf(Math.floor(Date.now() / 86400000));
-    return '<article class="post promo-card" data-promo="1"><div class="card promo">' +
-      '<span class="promo-emoji">' + c.emoji + '</span>' +
-      '<b>' + esc(c.title) + '</b>' +
-      '<p>' + esc(c.text) + '</p>' +
+    return '<article class="post promo-card" data-promo="1"><div class="card">' +
+      '<div class="post-head"><span class="mini-ava promo-ava">' + c.emoji + '</span>' +
+      '<div class="post-user">Cupion Premium' + premMark() + '</div></div>' +
+      '<div class="promo-hero"><span>' + c.emoji + '</span></div>' +
+      '<div class="post-meta"><div class="post-title">' + esc(c.title) + '</div></div>' +
+      '<p class="caption">' + esc(c.text) + '</p>' +
       '<button class="btn btn-primary btn-block" data-act="premium">Узнать больше</button>' +
       '</div></article>';
   }

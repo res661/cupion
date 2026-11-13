@@ -1374,3 +1374,23 @@ body, #app {
 .pull.ready .pull-orb::after { content: 'Отпусти — обновим'; color: var(--text); }
 .pull.loading .pull-orb::after { content: 'Обновляем…'; opacity: 1; }
 .pull.done .pull-orb::after { opacity: 0; }
+/* pull-to-refresh: animation only, no text */
+.pull-orb::after { content: none !important; }
+.pull-orb { margin-bottom: 12px; }
+/* premium card styled like a real profile card */
+.promo-ava { display: grid; place-items: center; font-size: 18px; background: linear-gradient(160deg, #FF2D55, #FF9500); }
+.promo-hero {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: 190px;
+  border-radius: 24px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-size: 56px;
+  background: radial-gradient(120% 120% at 20% 10%, #FFE3EC 0%, #FFD9C7 45%, #FFF4E8 100%);
+  border: 1px solid rgba(255, 45, 85, 0.12);
+}
+.promo-hero span { filter: drop-shadow(0 8px 18px rgba(255, 45, 85, 0.25)); }
+.promo-card .card { overflow: hidden; }
+.promo-card .btn { margin-top: 4px; }
