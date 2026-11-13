@@ -807,7 +807,7 @@
         visual = '<video class="feed-video" data-feed-video playsinline muted loop src="' + esc(shown || photo.url) + '"></video>' +
           '<button class="sound-btn" data-act="feed-sound" aria-label="Звук">' + ICON.speaker + '</button>' +
           '<span class="vid-glyph" aria-hidden="true">' + ICON.video + '</span>';
-      } else if (photo && ownUrl(shown)) visual = realImg(photo.url);
+      } else if (photo && (ownUrl(shown) || assetUrl(photo.url) || assetUrl(shown))) visual = '<img class="real-media" src="' + esc(photo.url) + '" alt="">';
       else if (photo && ownUrl(shownPoster)) visual = realImg(photo.poster);
       else visual = phPhoto('');
       if (photo && photo.type === 'video' && !(ownUrl(shown) || file)) {
@@ -1562,7 +1562,7 @@
     }).join('');
     var bg = item.type === 'video' && (assetUrl(item.url) || ownUrl(displayUrl(item.url)))
       ? '<video class="story-video story-bg" playsinline muted src="' + esc(item.url) + '"></video>'
-      : (realImg(item.url, 'story-bg') || phPhoto('story-bg'));
+      : (realImg(item.url, 'story-bg') || (assetUrl(item.url) ? '<img class="real-media story-bg" src="' + esc(item.url) + '" alt="">' : phPhoto('story-bg')));
     var sound = item.type === 'video'
       ? '<button class="sound-btn story-sound' + (S.storySound ? ' on' : '') + '" data-act="story-sound" aria-label="Звук">' + (S.storySound ? ICON.speakerOn : ICON.speaker) + '</button>'
       : '';
