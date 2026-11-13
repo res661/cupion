@@ -1066,21 +1066,28 @@ body, #app { overscroll-behavior: none; }
 .toast {
   position: absolute;
   left: 50%;
-  top: calc(var(--inset-top) + 12px);
-  transform: translateX(-50%) translateY(-18px) scale(0.96);
+  top: calc(var(--inset-top) + 10px);
+  transform: translateX(-50%) translateY(-10px) scale(0.97);
   z-index: 90;
-  max-width: calc(100% - 32px);
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(18px);
-  box-shadow: var(--shadow);
-  font-size: 14px;
+  max-width: calc(100% - 48px);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(28, 28, 30, 0.78);
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.26);
+  color: #fff;
+  font-size: 13px;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.45s var(--spring), transform 0.45s var(--spring);
+  transition: opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1), transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
@@ -1212,10 +1219,10 @@ body, #app { overscroll-behavior: none; }
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 12px calc(var(--inset-bottom) + 16px);
+  padding: 0 12px calc(var(--inset-bottom) + 14px);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   z-index: 10;
   pointer-events: none;
 }
@@ -1234,28 +1241,32 @@ body, #app { overscroll-behavior: none; }
 
 .story-comment-box {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 8px 8px 8px 18px;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  height: 44px;
+  padding: 0 5px 0 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   order: 3;
 }
 
 .emoji-btn {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
-  font-size: 22px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s var(--spring);
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 0.5px solid rgba(255, 255, 255, 0.26);
 }
 
 .emoji-btn:active {
@@ -1275,18 +1286,20 @@ body, #app { overscroll-behavior: none; }
   outline: none;
   color: #fff;
   font-size: 15px;
-  padding: 4px 0;
+  letter-spacing: -0.01em;
+  padding: 0;
+  line-height: 1.2;
 }
 
 .story-comment-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .story-send-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1314,8 +1327,8 @@ body, #app { overscroll-behavior: none; }
   font-style: italic;
 }
 
-/* Story layer animation */
-.story-layer {
+/* Entry animation only when the viewer opens, not on every story switch */
+.story-layer.enter {
   animation: storyFadeIn 0.2s ease-out;
 }
 

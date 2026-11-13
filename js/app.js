@@ -473,6 +473,33 @@
 
   /* ---------- feed ---------- */
 
+  var CARD_VIEWS_KEY = 'cupion.cardStoryViews';
+
+  function cardViews() {
+    if (!S.cardStoryViews) {
+      try { S.cardStoryViews = JSON.parse(localStorage.getItem(CARD_VIEWS_KEY) || '{}') || {}; }
+      catch (e) { S.cardStoryViews = {}; }
+    }
+    return S.cardStoryViews;
+  }
+
+  function markCardStoryViewed(userId) {
+    try {
+      var views = cardViews();
+      views[userId] = Date.now();
+      localStorage.setItem(CARD_VIEWS_KEY, JSON.stringify(views));
+    } catch (e) {}
+  }
+
+  /* Free users lose the ring after one look; Premium keeps it until they rate. */
+  function dropCardStoryRing(userId) {
+    var ava = document.querySelector('.post[data-post="' + userId + '"] .mini-ava');
+    if (!ava) return;
+    ava.classList.remove('story-ring', 'seen', 'unseen');
+    ava.removeAttribute('data-act');
+    ava.removeAttribute('data-id');
+  }
+
   function timeRing(user, extra) {
     var stories = (user && user.stories) || [];
     var live = stories.filter(function (s) { return s.remain > 0; });
@@ -641,20 +668,20 @@
     var score = avgScore(post);
     var scoreHtml = '<div class="post-score"><i>★</i><b' + (score ? ' data-tick="' + esc(score) + '"' : '') + '>' + esc(score || '—') + '</b></div>';
     
-    // Check if user has stories
+    // Ring on the card avatar: Premium watches until they rate, free users once.
     var hasStory = post.stories && post.stories.length > 0;
     var storyLive = hasStory && post.stories.some(function(s) { return s.remain > 0; });
-    
-    // Story ring for avatar if has active story
+    var storyPremium = !!(S.me && S.me.premium);
+    var storyOpen = storyLive && !post.myScore && (storyPremium || !cardViews()[post.id]);
+
     var avatarRing = '';
-    if (storyLive) {
+    if (storyOpen) {
       var liveStories = post.stories.filter(function(s) { return s.remain > 0; });
       var unseenStory = liveStories.some(function(s) { return !s.seen; });
       avatarRing = ' story-ring' + (unseenStory ? ' unseen' : ' seen');
     }
-    
-    // Make avatar clickable for story
-    var avatarClick = storyLive ? ' data-act="card-story" data-id="' + esc(post.id) + '"' : '';
+
+    var avatarClick = storyOpen ? ' data-act="card-story" data-id="' + esc(post.id) + '"' : '';
     
     // Rating UI - inline in card
     var rateUI = '';
@@ -1360,7 +1387,7 @@
           return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
         }).join('') + '</div>' +
         '<div class="story-comment-box">' +
-        '<input type="text" class="story-comment-input" id="story-comment-' + esc(item.id) + '" placeholder="Написать комментарий..." maxlength="180" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' +
+        '<input type="text" class="story-comment-input" id="story-comment-' + esc(item.id) + '" placeholder="Комментарий" maxlength="180" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' +
         '<button class="story-send-btn" data-act="send-story-comment" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' + ICON.send + '</button>' +
         '</div>' +
         '</div>') + '</div>';
@@ -1385,7 +1412,21 @@
       item.seen = true;
       CupionAPI.markStorySeen(item.id).catch(function () {});
     }
-    root.innerHTML = storyHTML();
+    var holder = document.createElement('div');
+    holder.innerHTML = storyHTML();
+    var fresh = holder.firstElementChild;
+    var layer = root.querySelector('.story-layer');
+    if (fresh && layer) {
+      /* Swap inside the existing layer so the entry animation never replays
+         (replaying it flashed the feed through the transparent layer). */
+      while (layer.firstChild) layer.removeChild(layer.firstChild);
+      while (fresh.firstChild) layer.appendChild(fresh.firstChild);
+      layer.className = 'story-layer';
+    } else if (fresh) {
+      root.innerHTML = '';
+      root.appendChild(fresh);
+      fresh.classList.add('enter');
+    }
     var storyInput = root.querySelector('.story-comment-input');
     if (storyInput) {
       storyInput.addEventListener('focus', function () { if (S.story) S.story.paused = true; });
@@ -1400,21 +1441,21 @@
       return;
     }
     
-    // Check if viewing from card (feed)
+    // Stories opened from a card avatar.
     if (fromCard && userId !== 'me') {
-      // Check if already seen from card
-      if (!S.cardStoryViews) S.cardStoryViews = {};
-      var premium = S.me && S.me.premium;
-      
-      if (!premium && S.cardStoryViews[userId]) {
-        toast('Без Premium можно смотреть историю только 1 раз');
+      var cardPremium = !!(S.me && S.me.premium);
+      var cardRated = (S.feed || []).some(function (p) { return p.id === userId && p.myScore; });
+      if (cardRated) {
+        dropCardStoryRing(userId);
+        toast('История исчезла после оценки');
         return;
       }
-      
-      // Mark as viewed from card
-      if (!premium) {
-        S.cardStoryViews[userId] = Date.now();
+      if (!cardPremium && cardViews()[userId]) {
+        dropCardStoryRing(userId);
+        toast('Эту историю уже посмотрели');
+        return;
       }
+      if (!cardPremium) markCardStoryViewed(userId);
     }
     
     Promise.all([CupionAPI.getStories(userId), CupionAPI.getUser(userId)]).then(function (res) {
@@ -1481,6 +1522,7 @@
 
   function closeStory(opts) {
     var id = S.story && S.story.userId;
+    var fromCard = !!(S.story && S.story.fromCard);
     var layer = document.querySelector('.story-layer');
     if (layer) {
       layer.classList.add('closing');
@@ -1502,6 +1544,7 @@
       syncBack();
       if (id && id !== 'me' && !(opts && opts.keep)) retireBubble(id);
     }
+    if (fromCard && id && id !== 'me' && !(opts && opts.keep) && !(S.me && S.me.premium)) dropCardStoryRing(id);
   }
 
   function premiumHint() {
