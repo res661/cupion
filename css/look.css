@@ -1341,3 +1341,8 @@ body, #app {
 .sp-btn .sm-ico { width: 44px; height: 44px; border-radius: 12px; background: rgba(0, 122, 255, 0.1); color: var(--accent); display: grid; place-items: center; }
 .sp-btn .sm-ico svg { width: 24px; height: 24px; }
 .sp-btn:active { transform: scale(0.985); }
+.compose-top { display: flex; align-items: center; justify-content: space-between; padding: 2px 0 8px; }
+.compose-top b { font-size: 17px; font-weight: 650; }
+.compose-x { width: 34px; height: 34px; border-radius: 50%; background: var(--input); color: var(--text-2); font-size: 20px; line-height: 1; display: grid; place-items: center; }
+.compose-gap { width: 34px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

@@ -1273,8 +1273,9 @@
           return '<button class="se-btn" data-act="story-emoji" data-emoji="' + e + '">' + e + '</button>';
         }).join('') + '</div>' +
         '<p class="hint">' + ((S.me && S.me.premium) ? 'Видео до 30 сек · история на 10 часов' : 'Видео до 10 сек · история на 1 час') + '</p>';
+      var topBar = c.type === 'story' ? '<div class="compose-top"><button class="compose-x" data-act="story-clear" aria-label="Назад">×</button><b>Новая история</b><span class="compose-gap"></span></div>' : '';
       return sheetFrame(
-        '<h2>' + (c.type === 'story' ? 'Новая история' : 'Новая анкета') + '</h2>' +
+        topBar + '<h2' + (c.type === 'story' ? ' class="sr-only"' : '') + '>' + (c.type === 'story' ? 'Новая история' : 'Новая анкета') + '</h2>' +
         (c.type === 'story' ? '' : '<div class="pick-grid">' + tiles + '</div>') +
         (c.type === 'story' ? storyEditor : '<textarea class="area" id="cap-text" maxlength="80" placeholder="Короткая подпись">' + esc(c.caption || '') + '</textarea>'),
         c.type === 'story'
