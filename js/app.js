@@ -55,6 +55,7 @@
   var scrollMem = {};
   var storyRAF = 0;
   var driftRAF = 0;
+  var ringRefreshAt = 0;
   var storyAcc = 0;
   var storyLast = 0;
   var toastTimer = 0;
@@ -544,7 +545,37 @@
     var sample = live[0];
     var p = sample ? Math.max(0.04, Math.min(1, sample.remain / (sample.ttl || 3600000))) : 0;
     var seen = !live.length || live.every(function (s) { return s.seen; });
-    return '<span class="time-ring' + (seen ? ' seen' : ' live') + (extra ? ' ' + extra : '') + '" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
+    var exp = sample && sample.expiresAt ? ' data-exp="' + sample.expiresAt + '" data-ttl="' + (sample.ttl || 3600000) + '"' : '';
+    return '<span class="time-ring' + (seen ? ' seen' : ' live') + (extra ? ' ' + extra : '') + '" style="--p:' + p.toFixed(3) + '"' + exp + '>' + phAvatar() + '</span>';
+  }
+
+  /* The story ring counts down live: arc length = time left / ttl. */
+  function tickStoryRings() {
+    var nodes = document.querySelectorAll('.time-ring[data-exp]');
+    if (!nodes.length) return;
+    var now = Date.now();
+    var expired = false;
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      var exp = Number(node.getAttribute('data-exp'));
+      if (!exp) continue;
+      var ttl = Number(node.getAttribute('data-ttl')) || 3600000;
+      var left = exp - now;
+      if (left <= 0) { expired = true; node.style.setProperty('--p', '0'); continue; }
+      var p = Math.max(0, Math.min(1, left / ttl));
+      node.style.setProperty('--p', p.toFixed(3));
+    }
+    if (expired) scheduleRingRefresh();
+  }
+
+  function scheduleRingRefresh() {
+    if (Date.now() - ringRefreshAt < 8000) return;
+    if (S.story || S.viewer || S.sheet) return;
+    ringRefreshAt = Date.now();
+    Promise.all([loadStories(), loadFeed()]).then(function () {
+      paintOrbit();
+      render();
+    }).catch(function () {});
   }
 
   function storyPeople() {
@@ -1926,6 +1957,7 @@
     }
     stage.innerHTML = stageHTML();
     driftTick(performance.now());
+    tickStoryRings();
     if (S.spring) {
       var entered = stage.firstElementChild;
       if (entered) entered.classList.add('spring-in');
@@ -3230,6 +3262,7 @@
     }, true);
     if (window.TG) TG.init();
     startDrift();
+    setInterval(tickStoryRings, 250);
     prefill();
     var start = window.TG ? String(TG.startParam() || '') : '';
     if (start.indexOf('u_') === 0) S.startUser = decodeURIComponent(start.slice(2));
