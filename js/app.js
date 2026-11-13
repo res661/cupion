@@ -544,7 +544,9 @@
     var sample = live[0];
     var p = sample ? Math.max(0.04, Math.min(1, sample.remain / (sample.ttl || 3600000))) : 0;
     var seen = !live.length || live.every(function (s) { return s.seen; });
-    return '<span class="time-ring' + (seen ? ' seen' : ' live') + (extra ? ' ' + extra : '') + '" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
+    /* Story rings stay only on our own bubble (countdown); other avatars are clean. */
+    if (extra !== 'mine') return '<span class="bubble-ava">' + phAvatar() + '</span>';
+    return '<span class="time-ring live" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
   }
 
   function storyPeople() {
@@ -1769,9 +1771,12 @@
       '<div class="peek-info"><div class="peek-name"><b>' + esc(p.name) + ', ' + esc(p.age) + '</b>' + (p.premium ? premMark() : '') + '<small>' + city.replace(' · ', '') + '</small></div>' +
       '<div class="post-score"><i>★</i><b>' + esc(score || '—') + '</b></div></div>' +
       (p.caption || p.bio ? '<p class="peek-caption">' + esc(p.caption || p.bio) + '</p>' : '') +
-      '<div class="peek-actions">' +
-      (mine ? '' : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(p.id) + '" data-photo="' + esc(photo.id || '') + '">Оценить</button>') +
-      '<button class="btn btn-white" data-act="person" data-id="' + esc(p.id) + '">Профиль</button></div>' +
+      (mine ? '' : '<div class="card-rate peek-rate">' +
+        '<textarea class="rate-comment" id="peek-comment-' + esc(p.id) + '" placeholder="Комментарий (необязательно)" maxlength="180"></textarea>' +
+        '<div class="star-grid">' +
+        [1,2,3,4,5,6,7,8,9,10].map(function (n) {
+          return '<button class="star-btn" data-act="rate-star" data-post="' + esc(p.id) + '" data-score="' + n + '" aria-label="' + n + ' звезд">' + n + '</button>';
+        }).join('') + '</div></div>') +
       '</div></div>';
   }
 
@@ -2080,12 +2085,13 @@
         photoId = post.photos[0].id;
       }
       
-      // Get comment text before card disappears
-      var commentArea = document.getElementById('comment-' + postId);
+      // Comment may come from the feed card or from the long-press peek card
+      var peekArea = S.peek ? document.getElementById('peek-comment-' + postId) : null;
+      var commentArea = peekArea || document.getElementById('comment-' + postId);
       var commentText = commentArea ? commentArea.value.trim() : '';
       
       // Immediately hide card with animation
-      var card = document.querySelector('.post[data-post="' + postId + '"]');
+      var card = S.peek ? document.querySelector('.peek-card') : document.querySelector('.post[data-post="' + postId + '"]');
       if (card) {
         card.style.opacity = '0';
         card.style.transform = 'translateY(-20px)';
@@ -2093,6 +2099,7 @@
       
       // Send rating
       CupionAPI.rate({ toId: postId, photoId: photoId, score: scoreVal, text: commentText }).then(function (res) {
+        if (S.peek) closePeek(true);
         setTimeout(function() {
           S.feed = S.feed.filter(function(p) { return p.id !== postId; });
           if (S.feed.length === 0) {

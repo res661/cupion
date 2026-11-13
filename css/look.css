@@ -134,6 +134,13 @@ body, #app {
   border: 2px solid #fff;
   box-shadow: 0 6px 16px rgba(20, 40, 80, 0.1);
 }
+/* Clean avatar for other people's stories (no ring): fills the bubble. */
+.bubble-ava {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
 .bubble.me {
   width: 64px;
   height: 64px;
@@ -955,14 +962,14 @@ body, #app {
 .hl-ring {
   display: block;
   width: 68px; height: 68px;
-  padding: 3px;
+  padding: 0;
   box-sizing: border-box;
   border-radius: 50%;
-  background: conic-gradient(#007AFF, #64D2FF, #007AFF);
+  background: none;
   transition: transform 0.35s var(--bounce);
 }
 .hl:active .hl-ring { transform: scale(0.94); }
-.hl-ring.seen { background: rgba(120, 120, 128, 0.35); }
+.hl-ring.seen { background: none; }
 .hl-face {
   display: block;
   width: 100%; height: 100%;
@@ -1000,7 +1007,7 @@ body, #app {
   display: flex; flex-direction: column;
   background: #fff;
   border-radius: 30px;
-  overflow: hidden;
+  overflow-y: auto;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
   touch-action: none;
   animation: peekIn 0.42s var(--bounce) both;
@@ -1015,6 +1022,11 @@ body, #app {
 .peek-caption { margin: 2px 18px 0; color: #3a3a3c; font-size: 15px; }
 .peek-actions { display: flex; gap: 10px; padding: 14px 16px 16px; }
 .peek-actions .btn { flex: 1; border-radius: 999px; height: 48px; }
+/* Inline rating inside the long-press peek card (same flow as the feed card) */
+.peek-rate { border-top: 0; margin-top: 4px; padding: 10px 16px 16px; }
+.peek .rate-comment { min-height: 44px; font-size: 14px; padding: 10px 12px; }
+.peek .star-grid { grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.peek .star-btn { aspect-ratio: auto; height: 32px; font-size: 12px; border-radius: 8px; }
 @keyframes peekBg { from { opacity: 0; } to { opacity: 1; } }
 @keyframes peekBgOut { to { opacity: 0; } }
 @keyframes peekIn { from { opacity: 0; transform: scale(0.82) translateY(24px); } to { opacity: 1; transform: none; } }
