@@ -1008,7 +1008,7 @@
     return sheetFrame(
       '<div class="pay"><div class="pay-hero"><span class="pay-badge">Premium</span></div>' +
       '<h2>Смотри больше.<br>Выделяйся.</h2><ul class="perks">' + list + '</ul>' + plans +
-      '<p class="terms">Оплата через Telegram Stars. Подписка продлевается автоматически.</p></div>',
+      '<p class="terms">🎁 Для теста подписка активируется бесплатно. Реальная оплата через Stars будет подключена позже.</p></div>',
       cta
     );
   }
@@ -1941,37 +1941,22 @@
     if (act === 'plan') { S.plan = t.getAttribute('data-plan') || 'trial'; sheetSig = ''; renderSheet(); return; }
     if (act === 'buy') {
       var plan = S.plan || 'trial';
-      if (!window.TG || !TG.purchaseSubscription) {
-        // Fallback for testing without Telegram
-        CupionAPI.purchaseSubscription(plan, { paid: true }).then(function (res) {
-          S.me = res.me;
-          closeSheet();
-          toast('Premium подключён на ' + (plan === 'trial' ? '1 день' : plan === 'month' ? '30 дней' : '365 дней'));
-          if (window.TG) TG.notify('success');
-          return loadFeed();
-        }).then(render).catch(function (err) { toast(err.message || 'Не вышло'); });
-        return;
-      }
       
-      // Use Telegram Stars payment
-      TG.purchaseSubscription(plan, function(paymentResult) {
-        if (paymentResult.ok && paymentResult.paid) {
-          CupionAPI.purchaseSubscription(plan, paymentResult).then(function (res) {
-            S.me = res.me;
-            closeSheet();
-            var duration = plan === 'trial' ? '1 день' : plan === 'month' ? '30 дней' : '365 дней';
-            toast('Premium подключён на ' + duration);
-            if (window.TG) TG.notify('success');
-            return loadFeed();
-          }).then(render).catch(function (err) { 
-            toast(err.message || 'Не вышло'); 
-          });
-        } else if (paymentResult.cancelled) {
-          toast('Оплата отменена');
-        } else {
-          toast('Ошибка оплаты');
-        }
+      // Для тестирования - просто активируем Premium без реальной оплаты
+      // В продакшене здесь будет реальная оплата через Telegram Stars
+      toast('Активация Premium...');
+      
+      CupionAPI.purchaseSubscription(plan, { paid: true }).then(function (res) {
+        S.me = res.me;
+        closeSheet();
+        var duration = plan === 'trial' ? '1 день' : plan === 'month' ? '30 дней' : '365 дней';
+        toast('✨ Premium подключён на ' + duration);
+        if (window.TG) TG.notify('success');
+        return loadFeed();
+      }).then(render).catch(function (err) { 
+        toast(err.message || 'Не вышло'); 
       });
+      
       return;
     }
     if (act === 'pick-post') {
