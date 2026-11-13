@@ -544,9 +544,7 @@
     var sample = live[0];
     var p = sample ? Math.max(0.04, Math.min(1, sample.remain / (sample.ttl || 3600000))) : 0;
     var seen = !live.length || live.every(function (s) { return s.seen; });
-    /* Story rings stay only on our own bubble (countdown); other avatars are clean. */
-    if (extra !== 'mine') return '<span class="bubble-ava">' + phAvatar() + '</span>';
-    return '<span class="time-ring live" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
+    return '<span class="time-ring' + (seen ? ' seen' : ' live') + (extra ? ' ' + extra : '') + '" style="--p:' + p.toFixed(3) + '">' + phAvatar() + '</span>';
   }
 
   function storyPeople() {
@@ -772,8 +770,13 @@
     var storyLive = hasStory && post.stories.some(function(s) { return s.remain > 0; });
     var storyPremium = !!(S.me && S.me.premium);
     var storyOpen = storyLive && !post.myScore && (storyPremium || !cardViews()[post.id]);
-    /* No story ring on feed avatars by design; the avatar itself still opens the story. */
+    /* Blue story ring on the card avatar (unseen = live gradient, seen = muted). */
     var avatarRing = '';
+    if (storyOpen) {
+      var liveStories = post.stories.filter(function(s) { return s.remain > 0; });
+      var unseenStory = liveStories.some(function(s) { return !s.seen; });
+      avatarRing = ' story-ring' + (unseenStory ? ' unseen' : ' seen');
+    }
     var avatarClick = storyOpen ? ' data-act="card-story" data-id="' + esc(post.id) + '"' : '';
     
     // Rating UI - inline in card
@@ -2090,11 +2093,24 @@
       var commentArea = peekArea || document.getElementById('comment-' + postId);
       var commentText = commentArea ? commentArea.value.trim() : '';
       
-      // Immediately hide card with animation
+      // Show the chosen score on the card itself, then let it leave
       var card = S.peek ? document.querySelector('.peek-card') : document.querySelector('.post[data-post="' + postId + '"]');
       if (card) {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(-20px)';
+        var grid = card.querySelector('.star-grid');
+        if (grid) Array.prototype.forEach.call(grid.children, function (btn, i) {
+          btn.classList.toggle('active', i < scoreVal);
+        });
+        var pop = card.querySelector('.card-rate-pop');
+        if (!pop) { pop = document.createElement('div'); pop.className = 'card-rate-pop'; card.appendChild(pop); }
+        pop.textContent = '\u2605 ' + scoreVal;
+        pop.classList.remove('show');
+        void pop.offsetWidth;
+        pop.classList.add('show');
+        if (window.TG) TG.impact('medium');
+        setTimeout(function () {
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(-20px)';
+        }, 420);
       }
       
       // Send rating

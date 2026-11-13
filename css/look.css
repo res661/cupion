@@ -201,7 +201,8 @@ body, #app {
   height: 40px;
   padding: 0;
   border-radius: 50%;
-  overflow: hidden;
+  overflow: visible; /* the story ring is drawn outside the avatar */
+  isolation: isolate; /* keeps the ::before ring above the card background */
   flex: none;
 }
 .mini-ava .ph { width: 40px; height: 40px; }
@@ -728,6 +729,12 @@ body, #app {
   box-shadow: 0 6px 14px rgba(20, 40, 80, 0.1);
 }
 .time-ring.seen { opacity: 0.48; }
+/* My own story: same countdown ring, but black/grey instead of blue */
+.time-ring.mine {
+  padding: 2px;
+  opacity: 1;
+  background: conic-gradient(#111 calc(var(--p, 1) * 1turn), rgba(17, 17, 17, 0.16) 0);
+}
 .bubble-swap { display: block; width: 100%; height: 100%; }
 .bubble.cycle .bubble-swap { animation: swapIn 0.55s cubic-bezier(0.32, 0.72, 0, 1); }
 @keyframes swapIn {
@@ -962,14 +969,14 @@ body, #app {
 .hl-ring {
   display: block;
   width: 68px; height: 68px;
-  padding: 0;
+  padding: 3px;
   box-sizing: border-box;
   border-radius: 50%;
-  background: none;
+  background: conic-gradient(#007AFF, #64D2FF, #007AFF);
   transition: transform 0.35s var(--bounce);
 }
 .hl:active .hl-ring { transform: scale(0.94); }
-.hl-ring.seen { background: none; }
+.hl-ring.seen { background: rgba(120, 120, 128, 0.35); }
 .hl-face {
   display: block;
   width: 100%; height: 100%;
@@ -1008,6 +1015,7 @@ body, #app {
   background: #fff;
   border-radius: 30px;
   overflow-y: auto;
+  position: relative;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
   touch-action: none;
   animation: peekIn 0.42s var(--bounce) both;
@@ -1020,13 +1028,35 @@ body, #app {
 .peek-name b { font-size: 20px; letter-spacing: -0.03em; }
 .peek-name small { display: block; color: var(--text-2); font-size: 14px; }
 .peek-caption { margin: 2px 18px 0; color: #3a3a3c; font-size: 15px; }
-.peek-actions { display: flex; gap: 10px; padding: 14px 16px 16px; }
-.peek-actions .btn { flex: 1; border-radius: 999px; height: 48px; }
+.peek-actions { display: flex; gap: 10px; padding: 14px 16px 16px; }.peek-actions .btn { flex: 1; border-radius: 999px; height: 48px; }
 /* Inline rating inside the long-press peek card (same flow as the feed card) */
 .peek-rate { border-top: 0; margin-top: 4px; padding: 10px 16px 16px; }
 .peek .rate-comment { min-height: 44px; font-size: 14px; padding: 10px 12px; }
 .peek .star-grid { grid-template-columns: repeat(10, 1fr); gap: 3px; }
 .peek .star-btn { aspect-ratio: auto; height: 32px; font-size: 12px; border-radius: 8px; }
+
+/* Chosen score flashes on the card itself before it leaves the feed */
+.post .card { position: relative; }
+.card-rate-pop {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%) scale(0.6);
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(10, 10, 12, 0.86);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.18s ease, transform 0.3s var(--bounce);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.card-rate-pop.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 @keyframes peekBg { from { opacity: 0; } to { opacity: 1; } }
 @keyframes peekBgOut { to { opacity: 0; } }
 @keyframes peekIn { from { opacity: 0; transform: scale(0.82) translateY(24px); } to { opacity: 1; transform: none; } }
