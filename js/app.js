@@ -629,15 +629,44 @@
     var count = Number(post.ratingsCount) ? ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span>' : '';
     var score = avgScore(post);
     var scoreHtml = '<div class="post-score"><i>★</i><b' + (score ? ' data-tick="' + esc(score) + '"' : '') + '>' + esc(score || '—') + '</b></div>';
-    var rateBtn = post.isMine ? '' : '<button class="rate-pill" data-act="rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '">Оценить</button>';
+    
+    // Check if user has stories
+    var hasStory = post.stories && post.stories.length > 0;
+    var storyLive = hasStory && post.stories.some(function(s) { return s.remain > 0; });
+    
+    // Story ring for avatar if has active story
+    var avatarRing = '';
+    if (storyLive) {
+      var liveStories = post.stories.filter(function(s) { return s.remain > 0; });
+      var unseenStory = liveStories.some(function(s) { return !s.seen; });
+      avatarRing = ' story-ring' + (unseenStory ? ' unseen' : ' seen');
+    }
+    
+    // Make avatar clickable for story
+    var avatarClick = storyLive ? ' data-act="card-story" data-id="' + esc(post.id) + '"' : '';
+    
+    // Rating UI - inline in card
+    var rateUI = '';
+    if (!post.isMine) {
+      var stars = '';
+      for (var i = 1; i <= 10; i++) {
+        stars += '<button class="star-btn" data-act="rate-star" data-post="' + esc(post.id) + '" data-score="' + i + '" aria-label="' + i + ' звезд">' + i + '</button>';
+      }
+      rateUI = '<div class="card-rate">' +
+        '<div class="star-grid">' + stars + '</div>' +
+        '<textarea class="rate-comment" id="comment-' + esc(post.id) + '" placeholder="Комментарий (необязательно)" maxlength="180"></textarea>' +
+        '<button class="btn btn-primary btn-sm btn-send-rate" data-act="send-card-rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '" style="display:none">Отправить оценку</button>' +
+        '</div>';
+    }
+    
     return '<article class="post" data-post="' + esc(post.id) + '" style="--i:' + Math.min(index || 0, 7) + '"><div class="card">' +
-      '<div class="post-head"><button class="mini-ava" data-act="person" data-id="' + esc(post.id) + '">' + phAvatar() + '</button>' +
-      '<button class="post-user" data-act="person" data-id="' + esc(post.id) + '">' + esc(post.name) + (post.premium ? premMark() : '') + '</button>' +
+      '<div class="post-head"><button class="mini-ava' + avatarRing + '"' + avatarClick + '>' + phAvatar() + '</button>' +
+      '<div class="post-user">' + esc(post.name) + (post.premium ? premMark() : '') + '</div>' +
       (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
       '</div>' +
       '<div class="frame">' + mediaBlock(post, '') + '</div>' +
       '<div class="post-meta"><div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + city + count + '</div>' + scoreHtml + '</div>' +
-      '<p class="caption">' + esc(post.caption || post.bio || '') + '</p>' + rateBtn + '</div></article>';
+      '<p class="caption">' + esc(post.caption || post.bio || '') + '</p>' + rateUI + '</div></article>';
   }
 
   function feedScreen() {
@@ -1343,16 +1372,41 @@
     restartClock();
   }
 
-  function startStory(userId, index, after) {
+  function startStory(userId, index, after, fromCard) {
     if (userId === 'me' && (!S.me || !S.me.stories || !S.me.stories.length)) {
       openCompose('story');
       return;
     }
+    
+    // Check if viewing from card (feed)
+    if (fromCard && userId !== 'me') {
+      // Check if already seen from card
+      if (!S.cardStoryViews) S.cardStoryViews = {};
+      var premium = S.me && S.me.premium;
+      
+      if (!premium && S.cardStoryViews[userId]) {
+        toast('Без Premium можно смотреть историю только 1 раз');
+        return;
+      }
+      
+      // Mark as viewed from card
+      if (!premium) {
+        S.cardStoryViews[userId] = Date.now();
+      }
+    }
+    
     Promise.all([CupionAPI.getStories(userId), CupionAPI.getUser(userId)]).then(function (res) {
       var items = res[0] || [];
       if (!items.length) { toast('Пока нет истории'); return; }
       S.viewer = null;
-      S.story = { userId: userId, user: res[1], items: items, index: Math.min(index || 0, items.length - 1), paused: false };
+      S.story = { 
+        userId: userId, 
+        user: res[1], 
+        items: items, 
+        index: Math.min(index || 0, items.length - 1), 
+        paused: false,
+        fromCard: fromCard || false
+      };
       var paint = function () { storySig = ''; renderStory(); syncBack(); if (after) after(); };
       if (userId === 'me') loadInbox().then(paint);
       else paint();
@@ -1829,6 +1883,65 @@
     if (act === 'search') { openSheet('search', { key: 'search' }); return; }
     if (act === 'start-reg') { S.screen = 'register'; S.regStep = 0; render(); return; }
     if (act === 'back') { goBack(); return; }
+    if (act === 'card-story') {
+      var userId = t.getAttribute('data-id');
+      if (!userId) return;
+      e.stopPropagation();
+      e.preventDefault();
+      startStory(userId, 0, null, true);
+      return;
+    }
+    if (act === 'rate-star') {
+      if (needAccount()) return;
+      var postId = t.getAttribute('data-post');
+      var scoreVal = parseInt(t.getAttribute('data-score'), 10);
+      var card = document.querySelector('.post[data-post="' + postId + '"]');
+      if (!card) return;
+      card.setAttribute('data-selected-score', scoreVal);
+      var stars = card.querySelectorAll('.star-btn');
+      stars.forEach(function(btn) {
+        var val = parseInt(btn.getAttribute('data-score'), 10);
+        btn.classList.toggle('active', val <= scoreVal);
+      });
+      var sendBtn = card.querySelector('.btn-send-rate');
+      if (sendBtn) sendBtn.style.display = 'block';
+      if (window.TG) TG.selection();
+      return;
+    }
+    if (act === 'send-card-rate') {
+      var userId = t.getAttribute('data-id');
+      var photoId = t.getAttribute('data-photo');
+      var card = document.querySelector('.post[data-post="' + userId + '"]');
+      if (!card) return;
+      var selectedScore = parseInt(card.getAttribute('data-selected-score') || '0', 10);
+      if (!selectedScore) { toast('Выбери оценку'); return; }
+      var commentArea = document.getElementById('comment-' + userId);
+      var commentText = commentArea ? commentArea.value.trim() : '';
+      CupionAPI.rate({ toId: userId, photoId: photoId, score: selectedScore, text: commentText }).then(function (res) {
+        if (card) {
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(-20px)';
+          setTimeout(function() {
+            S.feed = S.feed.filter(function(p) { return p.id !== userId; });
+            if (S.feed.length === 0) {
+              loadFeed(true).then(render);
+            } else {
+              render();
+            }
+          }, 300);
+        }
+        if (res.match) {
+          setTimeout(function() {
+            Promise.all([CupionAPI.getUser(userId), loadRatings(), refreshMe()]).then(function (out) {
+              showMatch(out[0]);
+            });
+          }, 400);
+        }
+        toast('Оценка отправлена');
+        if (window.TG) TG.notify('success');
+      }).catch(function (err) { toast(err.message || 'Не вышло'); });
+      return;
+    }
     if (act === 'rate') { if (S.peek) closePeek(true); if (needAccount()) return; if (S.me && t.getAttribute('data-id') === S.me.id) { toast('Себе оценку поставить нельзя'); return; } if (window.TG) TG.impact('light'); openRate(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
     if (act === 'message') { if (needAccount()) return; openMessage(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
     if (act === 'premium') { openSheet('premium', { key: 'premium' }); return; }
