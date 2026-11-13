@@ -1193,3 +1193,66 @@ body, #app {
   font-weight: 650;
 }
 .rx-write:active { transform: scale(0.96); }
+/* ===== story "+" menu: centered iOS sheet ===== */
+.story-menu-wrap { padding: 8px 16px 14px; }
+.story-menu {
+  background: rgba(28, 28, 30, 0.96);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sm-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 58px;
+  padding: 0 18px;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.12);
+}
+.sm-item:last-child { border-bottom: 0; }
+.sm-item:active { background: rgba(255, 255, 255, 0.08); }
+.sm-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.14);
+}
+.sm-ico svg { width: 20px; height: 20px; }
+.sm-cancel {
+  margin-top: 10px;
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 650;
+}
+/* story editor */
+.story-emojis { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 2px; margin-top: 8px; scrollbar-width: none; }
+.story-emojis::-webkit-scrollbar { display: none; }
+.se-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--input);
+  font-size: 20px;
+  display: grid;
+  place-items: center;
+}
+.se-btn:active { transform: scale(0.92); }
+.plus.locked { background: #c7c7cc; color: #fff; }
+.story-caption {
+  margin-top: 10px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}

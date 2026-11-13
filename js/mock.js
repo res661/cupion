@@ -100,6 +100,7 @@
         url: typeof entry === 'string' ? '' : (entry.url || ''),
         poster: typeof entry === 'string' ? '' : (entry.poster || ''),
         type: typeof entry === 'string' ? 'photo' : (entry.type || 'photo'),
+        caption: typeof entry === 'string' ? '' : (entry.caption || ''),
         createdAt: createdAt,
         ttl: entryTtl,
         remain: remain,
@@ -223,7 +224,7 @@
       stories: stories.map(function (s) {
         return {
           id: s.id, url: s.url, poster: s.poster || '', type: s.type || 'photo', createdAt: s.createdAt,
-          ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt,
+          ttl: s.ttl, remain: s.remain, expiresAt: s.expiresAt, caption: s.caption || '',
           seen: storyIsSeen(s.id, p.id)
         };
       }),
@@ -660,7 +661,7 @@
       if (liveOwn >= ownLimit) throw new Error('Лимит историй: ' + ownLimit);
       if (!state.me.stories) state.me.stories = [];
       var id = 'me_st_' + Date.now();
-      state.me.stories.push({ id: id, url: payload.url, createdAt: Date.now() });
+      state.me.stories.push({ id: id, url: payload.url, createdAt: Date.now(), caption: payload.caption || '', type: payload.type || 'photo', poster: payload.poster || '' });
       var seeds = [
         ['alina', '❤️', 2 * 60000],
         ['max_k', '🔥', 6 * 60000],
@@ -756,6 +757,10 @@
       if (!state.me) throw new Error('Сначала создай анкету');
       
       var plans = {
+      '3d': { stars: 59, days: 3 },
+      '7d': { stars: 119, days: 7 },
+      '14d': { stars: 189, days: 14 },
+      '30d': { stars: 270, days: 30 },
         trial: { stars: 1, days: 1, name: 'Пробная подписка' },
         month: { stars: 50, days: 30, name: 'Месячная подписка' },
         year: { stars: 500, days: 365, name: 'Годовая подписка' }

@@ -622,7 +622,9 @@
     var myBadge = (S.storyUnseen > 0) ? '<span class="bubble-badge">' + (S.storyUnseen > 9 ? '9+' : S.storyUnseen) + '</span>' : '';
     html += '<button class="bubble me' + (mine ? ' has-story' : '') + '" data-slot="me" data-act="my-story" aria-label="Моя история"><span class="bubble-drift">' +
       (mine ? timeRing(S.me, 'mine') : '<span class="ring seen">' + phAvatar() + '</span>') +
-      (canAdd ? '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span>' : '') + myBadge + '</span></button>';
+      (canAdd
+        ? '<span class="plus" data-act="add-story" aria-label="Добавить историю">+</span>'
+        : '<span class="plus locked" data-act="story-limit" aria-label="Лимит историй">+</span>') + myBadge + '</span></button>';
     return '<div class="orbit">' + html + '</div>';
   }
 
@@ -1159,26 +1161,33 @@
   function premiumSheet() {
     var active = S.me && S.me.premium;
     var perks = [
-      [ICON.grid, 'Больше анкет за одно обновление'],
-      [ICON.spark, 'Истории живут до 10 часов'],
-      [ICON.video, 'Смотреть и выкладывать видео']
+      'До 3 фото и видео в анкете',
+      'Больше анкет за одно обновление',
+      'До 3 активных историй и 10 часов',
+      'Видео в историю до 30 секунд',
+      'Значок Premium и выше видимость',
+      'Возврат к просмотренным историям'
     ];
-    var list = perks.map(function (item) {
-      return '<li><i>' + item[0] + '</i><span>' + item[1] + '</span></li>';
+    var list = perks.map(function (t) {
+      return '<li><i>' + ICON.spark + '</i><span>' + t + '</span></li>';
     }).join('');
     var plans = active ? '<p class="hint">Premium уже подключён</p>' :
       '<div class="choice-list">' +
-      '<button class="choice-row plan' + (S.plan === 'trial' ? ' on' : '') + '" data-act="plan" data-plan="trial"><span>Пробная подписка<small>1 день · попробуй все функции</small></span><span class="price">1 ★</span></button>' +
-      '<button class="choice-row plan' + (S.plan === 'month' ? ' on' : '') + '" data-act="plan" data-plan="month"><span>Месяц<small>30 дней Premium</small></span><span class="price">50 ★</span></button>' +
-      '<button class="choice-row plan' + (S.plan === 'year' ? ' on' : '') + '" data-act="plan" data-plan="year"><span>Год<small class="save">Выгодно</small></span><span class="price">500 ★</span></button>' +
-      '</div>';
+      ['3d|3 дня|59|', '7d|7 дней|119|', '14d|14 дней|189|', '30d|30 дней|270|Выгоднее всего'].map(function (row) {
+        var p = row.split('|');
+        return '<button class="choice-row plan' + (S.plan === p[0] ? ' on' : '') + '" data-act="plan" data-plan="' + p[0] + '">' +
+          '<span>' + p[1] + (p[3] ? '<small class="save">' + p[3] + '</small>' : '') + '</span>' +
+          '<span class="price">' + p[2] + ' ★</span></button>';
+      }).join('') + '</div>';
     var cta = active
       ? '<button class="btn btn-primary btn-block" data-act="sheet-close">Готово</button>'
-      : '<button class="btn btn-primary btn-block" data-act="buy">Купить Premium</button>';
+      : '<button class="btn btn-primary btn-block" data-act="buy">Получить Premium</button>';
     return sheetFrame(
-      '<div class="pay"><div class="pay-hero"><span class="pay-badge">Premium</span></div>' +
-      '<h2>Смотри больше.<br>Выделяйся.</h2><ul class="perks">' + list + '</ul>' + plans +
-      '<p class="terms">🎁 Для теста подписка активируется бесплатно. Реальная оплата через Stars будет подключена позже.</p></div>',
+      '<div class="pay"><div class="pay-hero"><span class="pay-badge">PREMIUM</span></div>' +
+      '<h2>Больше знакомств.<br>Больше внимания.</h2>' +
+      '<p class="hint">Оценивай больше людей, публикуй больше историй и получай больше внимания в ленте.</p>' +
+      '<ul class="perks">' + list + '</ul>' + plans +
+      '<p class="terms">Тестовая активация: реальная оплата через Telegram Stars подключается на бэкенде.</p></div>',
       cta
     );
   }
@@ -1190,10 +1199,16 @@
         var face = (p.type === 'video' && ownUrl(p.poster)) ? realImg(p.poster) : (realImg(p.url) || (p.type === 'video' && ownUrl(p.url) ? realVideo(p.url, p.poster) : '') || phPhoto());
         return '<div class="pick">' + face + '</div>';
       }).join('');
+      var emojis = ['😀','😍','🔥','💔','✨','🥰','😎','👀','🙈','💫'];
+      var storyEditor = '<textarea class="area" id="story-caption" maxlength="120" placeholder="Текст к истории">' + esc(c.caption || '') + '</textarea>' +
+        '<div class="story-emojis">' + emojis.map(function (e) {
+          return '<button class="se-btn" data-act="story-emoji" data-emoji="' + e + '">' + e + '</button>';
+        }).join('') + '</div>' +
+        '<p class="hint">' + ((S.me && S.me.premium) ? 'Видео до 30 сек · история на 10 часов' : 'Видео до 10 сек · история на 1 час') + '</p>';
       return sheetFrame(
         '<h2>' + (c.type === 'story' ? 'Новая история' : 'Новая анкета') + '</h2>' +
         '<div class="pick-grid">' + tiles + '</div>' +
-        (c.type === 'story' ? '' : '<textarea class="area" id="cap-text" maxlength="80" placeholder="Короткая подпись">' + esc(c.caption || '') + '</textarea>'),
+        (c.type === 'story' ? storyEditor : '<textarea class="area" id="cap-text" maxlength="80" placeholder="Короткая подпись">' + esc(c.caption || '') + '</textarea>'),
         '<button class="btn btn-primary btn-block" data-act="publish">Опубликовать</button>'
       );
     }
@@ -1316,6 +1331,7 @@
     else if (S.sheet === 'message') html = messageSheet(S.sheetPayload || {});
     else if (S.sheet === 'premium') html = premiumSheet();
     else if (S.sheet === 'compose') html = composeSheet();
+    else if (S.sheet === 'storynew') html = storyNewSheet();
     else if (S.sheet === 'edit') html = editSheet();
     else if (S.sheet === 'more') html = moreSheet(S.sheetPayload || {});
     else if (S.sheet === 'actions') html = actionsSheet(S.sheetPayload || {});
@@ -1481,7 +1497,8 @@
     return '<div class="story-layer">' + bg + sound +
       '<div class="story-shade"></div><div class="story-ui"><div class="bars">' + bars + '</div>' +
       '<div class="story-user">' + phAvatar() + '<span>' + esc(st.user ? st.user.name : '') + '</span>' +
-      '<em>' + timeAgo(item.createdAt) + '</em></div></div>' +
+      '<em>' + timeAgo(item.createdAt) + '</em></div>' +
+      (item.caption ? '<div class="story-caption">' + esc(item.caption) + '</div>' : '') + '</div>' +
       (isOwnStory ? '<button class="rx-pill" data-act="story-reactions" data-story="' + esc(item.id) + '">Реакции' +
         (storyReactionCount(item.id) ? '<b>' + (storyReactionCount(item.id) > 9 ? '9+' : storyReactionCount(item.id)) + '</b>' : '') + '</button>' : '') +
       (isOwnStory ? '' : 
@@ -1990,7 +2007,21 @@
 
   function openCompose(kind) {
     S.compose = { stage: 'menu', type: kind || 'photo', photos: [], caption: '' };
+    if (kind === 'story') { openSheet('storynew', { key: 'story' }); return; }
     openSheet('compose', { key: 'menu' });
+  }
+
+  /* Centered iOS-style menu for the story "+" (upload only, no camera capture). */
+  function storyNewSheet() {
+    var photoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>';
+    var fileIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>';
+    return sheetFrame(
+      '<div class="story-menu-wrap"><div class="story-menu">' +
+      '<button class="sm-item" data-act="story-file"><span class="sm-ico">' + photoIco + '</span><b>Фотографии</b></button>' +
+      '<button class="sm-item" data-act="story-file"><span class="sm-ico">' + fileIco + '</span><b>Файлы</b></button>' +
+      '</div>' +
+      '<button class="sm-cancel" data-act="sheet-close">Отмена</button></div>'
+    );
   }
 
   function onClick(e) {
@@ -2178,6 +2209,17 @@
     if (act === 'premium') { openSheet('premium', { key: 'premium' }); return; }
     if (act === 'compose') { if (needAccount()) return; openCompose('photo'); return; }
     if (act === 'add-story') { e.stopPropagation(); if (needAccount()) return; openCompose('story'); return; }
+    if (act === 'story-file') { pickFiles('story'); return; }
+    if (act === 'story-limit') { e.stopPropagation(); openSheet('premium', { key: 'storylimit' }); return; }
+    if (act === 'story-emoji') {
+      var emo = t.getAttribute('data-emoji') || '';
+      var capEl = document.getElementById('story-caption');
+      if (capEl) {
+        capEl.value = (capEl.value ? capEl.value + ' ' : '') + emo;
+        if (S.compose) S.compose.caption = capEl.value;
+      }
+      return;
+    }
     if (act === 'my-story') {
       if (!S.me) { S.screen = 'register'; render(); return; }
       if (S.me.stories && S.me.stories.length) startStory('me', 0);
@@ -2310,7 +2352,8 @@
       CupionAPI.purchaseSubscription(plan, { paid: true }).then(function (res) {
         S.me = res.me;
         closeSheet();
-        var duration = plan === 'trial' ? '1 день' : plan === 'month' ? '30 дней' : '365 дней';
+        var durMap = { '3d': '3 дня', '7d': '7 дней', '14d': '14 дней', '30d': '30 дней', trial: '1 день', month: '30 дней', year: '365 дней' };
+      var duration = durMap[plan] || '30 дней';
         toast('✨ Premium подключён на ' + duration);
         if (window.TG) TG.notify('success');
         return loadFeed();
@@ -2521,7 +2564,9 @@
     var c = S.compose;
     if (!c || !c.photos.length) return;
     if (c.type === 'story') {
-      CupionAPI.addStory({ url: c.photos[0].url }).then(function () { return refreshMe(); }).then(function () { return loadInbox(); }).then(function () { return loadStories(); }).then(function () {
+      var sc = document.getElementById('story-caption');
+      var capText = sc ? sc.value.trim() : (c.caption || '');
+      CupionAPI.addStory({ url: c.photos[0].url, caption: capText, type: c.photos[0].type || 'photo', poster: c.photos[0].poster || '' }).then(function () { return refreshMe(); }).then(function () { return loadInbox(); }).then(function () { return loadStories(); }).then(function () {
         closeSheet();
         toast('История добавлена');
         render();
@@ -2597,7 +2642,8 @@
 
   function pickFiles(purpose) {
     S.pickPurpose = purpose;
-    var input = document.getElementById(purpose === 'video' ? 'pick-video' : 'pick-images');
+    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : 'pick-images');
+    var input = document.getElementById(id);
     if (!input) return;
     input.value = '';
     input.click();
@@ -2633,9 +2679,9 @@
         var ratio = video.videoHeight ? (video.videoWidth / video.videoHeight) : 0;
         putMedia(file).then(function (stored) {
           URL.revokeObjectURL(url);
-          resolve({ url: stored, poster: poster || '', type: 'video', ratio: ratio });
+          resolve({ url: stored, poster: poster || '', type: 'video', ratio: ratio, duration: video.duration || 0 });
         }).catch(function () {
-          resolve({ url: url, poster: poster || '', type: 'video', ratio: ratio });
+          resolve({ url: url, poster: poster || '', type: 'video', ratio: ratio, duration: video.duration || 0 });
         });
       };
       video.onloadeddata = function () {
@@ -2661,6 +2707,29 @@
     var files = Array.prototype.slice.call(e.target.files || []);
     if (!files.length) return;
     var purpose = S.pickPurpose;
+    if (purpose === 'story') {
+      var sf = files[0];
+      var isVid = sf && /^video\//.test(String(sf.type || ''));
+      var storyLimit = (S.me && S.me.premium) ? 30 : 10;
+      if (isVid) {
+        readVideo(sf).then(function (vid) {
+          if (vid.duration && vid.duration > storyLimit + 0.5) {
+            toast('Видео в историю — до ' + storyLimit + ' сек');
+            if (!(S.me && S.me.premium)) openSheet('premium', { key: 'storyvideo' });
+            return;
+          }
+          S.compose = S.compose || { stage: 'preview', photos: [], caption: '' };
+          S.compose.type = 'story';
+          S.compose.photos = [vid];
+          S.compose.stage = 'preview';
+          S.sheet = 'compose';
+          S.sheetPayload = { key: 'story-edit' };
+          sheetSig = '';
+          renderSheet();
+        });
+        return;
+      }
+    }
     if (purpose === 'video') {
       readVideo(files[0]).then(function (vid) {
         S.compose.type = 'video';
@@ -2701,6 +2770,8 @@
         S.compose.type = 'story';
         S.compose.photos = pics.slice(0, 1);
         S.compose.stage = 'preview';
+        S.sheet = 'compose';
+        S.sheetPayload = { key: 'story-edit' };
         sheetSig = '';
         renderSheet();
       } else {
@@ -3203,7 +3274,7 @@
     var root = document.getElementById('app');
     if (!root) return;
     root.innerHTML = '<div id="stage"></div><div id="tabs"></div><div id="sheet-root"></div><div id="story-root"></div><div id="peek-root"></div><div id="match-root"></div><div id="toast-root"></div>' +
-      '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden>';
+      '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden><input id="pick-story" type="file" accept="image/*,video/*" hidden>';
     document.addEventListener('click', onClick);
     document.addEventListener('input', onInput);
     document.addEventListener('change', function (e) {
