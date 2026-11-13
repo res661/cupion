@@ -1126,13 +1126,33 @@ body, #app { overscroll-behavior: none; }
   padding: 12px 0 0;
   border-top: 1px solid var(--hairline);
   margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rate-comment {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--input);
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.4;
+  order: 1;
+}
+
+.rate-comment:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .star-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
-  margin-bottom: 10px;
+  order: 2;
 }
 
 .star-btn {
@@ -1155,23 +1175,6 @@ body, #app { overscroll-behavior: none; }
   color: #fff;
   border-color: var(--accent);
   transform: scale(1.05);
-}
-
-.rate-comment {
-  width: 100%;
-  min-height: 60px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--input);
-  resize: vertical;
-  font-size: 14px;
-  line-height: 1.4;
-  margin-bottom: 10px;
-}
-
-.rate-comment:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
 }
 
 .btn-send-rate {
@@ -1219,7 +1222,7 @@ body, #app { overscroll-behavior: none; }
   padding: 0 12px calc(var(--inset-bottom) + 16px);
   display: flex;
   flex-direction: column-reverse;
-  gap: 28px;
+  gap: 32px;
   z-index: 10;
   pointer-events: none;
 }
@@ -1318,17 +1321,7 @@ body, #app { overscroll-behavior: none; }
 
 /* Story layer animation */
 .story-layer {
-  animation: storyFadeIn 0.25s ease-out;
-}
-
-.story-layer .story-bg,
-.story-layer .real-media {
-  transition: opacity 0.15s ease-out;
-}
-
-.story-layer.transitioning .story-bg,
-.story-layer.transitioning .real-media {
-  opacity: 0;
+  animation: storyFadeIn 0.2s ease-out;
 }
 
 @keyframes storyFadeIn {
@@ -1342,7 +1335,7 @@ body, #app { overscroll-behavior: none; }
 
 /* Story closing animation handled by JS */
 .story-layer.closing {
-  animation: storyFadeOut 0.2s ease-out forwards;
+  animation: storyFadeOut 0.15s ease-out forwards;
 }
 
 @keyframes storyFadeOut {

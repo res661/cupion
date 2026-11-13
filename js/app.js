@@ -664,9 +664,8 @@
         stars += '<button class="star-btn" data-act="rate-star" data-post="' + esc(post.id) + '" data-score="' + i + '" aria-label="' + i + ' звезд">' + i + '</button>';
       }
       rateUI = '<div class="card-rate">' +
-        '<div class="star-grid">' + stars + '</div>' +
         '<textarea class="rate-comment" id="comment-' + esc(post.id) + '" placeholder="Комментарий (необязательно)" maxlength="180"></textarea>' +
-        '<button class="btn btn-primary btn-sm btn-send-rate" data-act="send-card-rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '" style="display:none">Отправить оценку</button>' +
+        '<div class="star-grid">' + stars + '</div>' +
         '</div>';
     }
     
@@ -1434,19 +1433,10 @@
     var st = S.story;
     if (!st) return;
     
-    // Smooth transition between stories
-    var layer = document.querySelector('.story-layer');
-    if (layer && !layer.classList.contains('transitioning')) {
-      layer.classList.add('transitioning');
-      setTimeout(function() {
-        if (layer) layer.classList.remove('transitioning');
-      }, 250);
-    }
-    
     if (st.index < st.items.length - 1) {
       st.index += 1;
       storySig = '';
-      setTimeout(function() { renderStory(); }, 100);
+      renderStory();
       return;
     }
     
@@ -1476,19 +1466,10 @@
       return;
     }
     
-    // Smooth transition between stories
-    var layer = document.querySelector('.story-layer');
-    if (layer && !layer.classList.contains('transitioning')) {
-      layer.classList.add('transitioning');
-      setTimeout(function() {
-        if (layer) layer.classList.remove('transitioning');
-      }, 250);
-    }
-    
     if (st.index > 0) {
       st.index -= 1;
       storySig = '';
-      setTimeout(function() { renderStory(); }, 100);
+      renderStory();
     }
   }
 
@@ -1953,51 +1934,59 @@
       if (needAccount()) return;
       var postId = t.getAttribute('data-post');
       var scoreVal = parseInt(t.getAttribute('data-score'), 10);
-      var card = document.querySelector('.post[data-post="' + postId + '"]');
-      if (!card) return;
-      card.setAttribute('data-selected-score', scoreVal);
-      var stars = card.querySelectorAll('.star-btn');
-      stars.forEach(function(btn) {
-        var val = parseInt(btn.getAttribute('data-score'), 10);
-        btn.classList.toggle('active', val <= scoreVal);
-      });
-      var sendBtn = card.querySelector('.btn-send-rate');
-      if (sendBtn) sendBtn.style.display = 'block';
-      if (window.TG) TG.selection();
-      return;
-    }
-    if (act === 'send-card-rate') {
-      var userId = t.getAttribute('data-id');
-      var photoId = t.getAttribute('data-photo');
-      var card = document.querySelector('.post[data-post="' + userId + '"]');
-      if (!card) return;
-      var selectedScore = parseInt(card.getAttribute('data-selected-score') || '0', 10);
-      if (!selectedScore) { toast('Выбери оценку'); return; }
-      var commentArea = document.getElementById('comment-' + userId);
+      var photoId = '';
+      
+      // Find photo ID from feed
+      var post = (S.feed || []).find(function(p) { return p.id === postId; });
+      if (post && post.photos && post.photos[0]) {
+        photoId = post.photos[0].id;
+      }
+      
+      // Get comment text before card disappears
+      var commentArea = document.getElementById('comment-' + postId);
       var commentText = commentArea ? commentArea.value.trim() : '';
-      CupionAPI.rate({ toId: userId, photoId: photoId, score: selectedScore, text: commentText }).then(function (res) {
-        if (card) {
-          card.style.opacity = '0';
-          card.style.transform = 'translateY(-20px)';
-          setTimeout(function() {
-            S.feed = S.feed.filter(function(p) { return p.id !== userId; });
-            if (S.feed.length === 0) {
-              loadFeed(true).then(render);
-            } else {
-              render();
-            }
-          }, 300);
-        }
+      
+      // Immediately hide card with animation
+      var card = document.querySelector('.post[data-post="' + postId + '"]');
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-20px)';
+      }
+      
+      // Send rating
+      CupionAPI.rate({ toId: postId, photoId: photoId, score: scoreVal, text: commentText }).then(function (res) {
+        setTimeout(function() {
+          S.feed = S.feed.filter(function(p) { return p.id !== postId; });
+          if (S.feed.length === 0) {
+            loadFeed(true).then(render);
+          } else {
+            render();
+          }
+        }, 300);
+        
         if (res.match) {
           setTimeout(function() {
-            Promise.all([CupionAPI.getUser(userId), loadRatings(), refreshMe()]).then(function (out) {
+            Promise.all([CupionAPI.getUser(postId), loadRatings(), refreshMe()]).then(function (out) {
               showMatch(out[0]);
             });
           }, 400);
         }
         toast('Оценка отправлена');
         if (window.TG) TG.notify('success');
-      }).catch(function (err) { toast(err.message || 'Не вышло'); });
+      }).catch(function (err) { 
+        toast(err.message || 'Не вышло');
+        // Restore card if error
+        if (card) {
+          card.style.opacity = '1';
+          card.style.transform = 'none';
+        }
+      });
+      
+      if (window.TG) TG.selection();
+      return;
+    }
+    if (act === 'send-card-rate') {
+      // This action is now unused - rating happens on star click
       return;
     }
     if (act === 'rate') { if (S.peek) closePeek(true); if (needAccount()) return; if (S.me && t.getAttribute('data-id') === S.me.id) { toast('Себе оценку поставить нельзя'); return; } if (window.TG) TG.impact('light'); openRate(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
