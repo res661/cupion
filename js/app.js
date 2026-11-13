@@ -865,7 +865,6 @@
       : (cards.length ? cards.join('')
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
     return '<div class="screen screen-feed">' +
-      '<header class="app-header is-center"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div></header>' +
       '<div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="pull-orb"><i class="pull-ring"></i><svg class="pull-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div></div>' +
       orbit() +
       posts + '</div></div>';
