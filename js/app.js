@@ -408,7 +408,6 @@
   }
 
   function premiumPromoCard() {
-    return '';
     if (S.me && S.me.premium) return '';
     var c = promoOf(Math.floor(Date.now() / 86400000));
     return '<article class="post promo-card" data-promo="1"><div class="card promo">' +

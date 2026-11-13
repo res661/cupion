@@ -1354,3 +1354,23 @@ body, #app {
 .star-grid { gap: 5px; }
 .star-btn { aspect-ratio: auto; height: 36px; font-size: 14px; border-radius: 9px; }
 .card-rate { padding-top: 10px; }
+
+/* ===== cleaner pull-to-refresh indicator ===== */
+.pull { position: relative; }
+.pull-orb { width: 40px; height: 40px; margin-bottom: 26px; }
+.pull-orb::after {
+  content: 'Обновить истории';
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-2);
+  opacity: calc(var(--pp) * 1.2);
+}
+.pull.ready .pull-orb::after { content: 'Отпусти — обновим'; color: var(--text); }
+.pull.loading .pull-orb::after { content: 'Обновляем…'; opacity: 1; }
+.pull.done .pull-orb::after { opacity: 0; }
