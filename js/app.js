@@ -806,11 +806,10 @@
     var storyLive = hasStory && post.stories.some(function(s) { return s.remain > 0; });
     var storyPremium = !!(S.me && S.me.premium);
     var storyOpen = storyLive && !post.myScore && (storyPremium || !cardViews()[post.id]);
-    /* Blue story ring on the card avatar (unseen = live gradient, seen = muted). */
+    /* Story ring on the card avatar: always visible while the person has a live story. */
     var avatarRing = '';
-    if (storyOpen) {
-      var liveStories = post.stories.filter(function(s) { return s.remain > 0; });
-      var unseenStory = liveStories.some(function(s) { return !s.seen; });
+    if (storyLive) {
+      var unseenStory = post.stories.some(function(s) { return s.remain > 0 && !s.seen; });
       avatarRing = ' story-ring' + (unseenStory ? ' unseen' : ' seen');
     }
     var avatarClick = storyOpen ? ' data-act="card-story" data-id="' + esc(post.id) + '"' : '';
@@ -1688,6 +1687,8 @@
   }
 
   function premiumHint() {
+    /* Never nudge Premium on our own stories — we manage them. */
+    if (S.story && (S.story.userId === 'me' || (S.me && S.story.userId === S.me.id))) return;
     var layer = document.querySelector('.story-layer');
     if (!layer) return;
     var hint = layer.querySelector('.story-hint');

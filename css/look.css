@@ -227,9 +227,10 @@ body, #app {
 .mini-ava .ph { width: 40px; height: 40px; }
 /* Ring drawn as the button's own background+padding: always visible, no clipping tricks */
 .mini-ava.story-ring {
-  padding: 2px;
+  padding: 3px;
   background: conic-gradient(from 0deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
 }
 .mini-ava.story-ring.seen { background: rgba(120, 120, 128, 0.35); }
 .mini-ava.story-ring::before { display: none; }
