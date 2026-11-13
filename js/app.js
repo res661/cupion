@@ -2544,7 +2544,7 @@
     var c = S.compose;
     if (!c || !c.photos.length) return;
     if (c.type === 'story') {
-      CupionAPI.addStory({ url: c.photos[0].url }).then(function () { return refreshMe(); }).then(function () { return loadInbox(); }).then(function () {
+      CupionAPI.addStory({ url: c.photos[0].url }).then(function () { return refreshMe(); }).then(function () { return loadInbox(); }).then(function () { return loadStories(); }).then(function () {
         closeSheet();
         toast('История добавлена');
         render();
