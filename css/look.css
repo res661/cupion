@@ -1346,3 +1346,6 @@ body, #app {
 .compose-x { width: 34px; height: 34px; border-radius: 50%; background: var(--input); color: var(--text-2); font-size: 20px; line-height: 1; display: grid; place-items: center; }
 .compose-gap { width: 34px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.feed-head { transition: transform 0.3s var(--spring), margin-bottom 0.3s var(--spring), opacity 0.25s ease; }
+.feed-head.head-hidden { transform: translateY(-100%); margin-bottom: calc(-1 * var(--head-h, 52px)); opacity: 0; }

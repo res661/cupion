@@ -865,6 +865,7 @@
       : (cards.length ? cards.join('')
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
     return '<div class="screen screen-feed">' +
+      '<header class="app-header is-center feed-head" id="feed-head"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div></header>' +
       '<div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="pull-orb"><i class="pull-ring"></i><svg class="pull-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div></div>' +
       orbit() +
       posts + '</div></div>';
@@ -3381,6 +3382,16 @@
       var scroller = e.target;
       if (!scroller || scroller.id !== 'feed-scroll') return;
       syncFloatPill(scroller);
+      var headEl = document.getElementById('feed-head');
+      if (headEl) {
+        headEl.style.setProperty('--head-h', headEl.offsetHeight + 'px');
+        var prevY = scroller.__lastY || 0;
+        var dyH = y - prevY;
+        scroller.__lastY = y;
+        if (y < 8) headEl.classList.remove('head-hidden');
+        else if (dyH > 6) headEl.classList.add('head-hidden');
+        else if (dyH < -6) headEl.classList.remove('head-hidden');
+      }
       if (motionOff()) return;
       var orbit = scroller.querySelector('.orbit');
       if (!orbit) return;
