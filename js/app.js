@@ -3372,7 +3372,7 @@
     document.addEventListener('click', onClick);
     document.addEventListener('input', onInput);
     document.addEventListener('change', function (e) {
-      if (e.target && (e.target.id === 'pick-images' || e.target.id === 'pick-video')) onFiles(e);
+      if (e.target && (e.target.id === 'pick-images' || e.target.id === 'pick-video' || e.target.id === 'pick-story')) onFiles(e);
     });
     document.addEventListener('input', onRange);
     document.addEventListener('scroll', function (e) {
