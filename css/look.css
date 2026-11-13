@@ -1349,3 +1349,8 @@ body, #app {
 
 .feed-head { transition: transform 0.3s var(--spring), margin-bottom 0.3s var(--spring), opacity 0.25s ease; }
 .feed-head.head-hidden { transform: translateY(-100%); margin-bottom: calc(-1 * var(--head-h, 52px)); opacity: 0; }
+
+/* slightly smaller rating stars in feed cards */
+.star-grid { gap: 5px; }
+.star-btn { aspect-ratio: auto; height: 36px; font-size: 14px; border-radius: 9px; }
+.card-rate { padding-top: 10px; }
