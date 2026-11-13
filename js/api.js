@@ -32,6 +32,7 @@
     markStorySeen: call('markStorySeen'),
     reviveStories: call('reviveStories'),
     reactStory: call('reactStory'),
+    commentStory: call('commentStory'),
     getReactions: call('getReactions'),
     getStoryInbox: call('getStoryInbox'),
     reactBack: call('reactBack'),

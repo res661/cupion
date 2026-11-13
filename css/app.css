@@ -1208,3 +1208,136 @@ body, #app { overscroll-behavior: none; }
 .post .card {
   transition: opacity 0.3s var(--spring), transform 0.3s var(--spring);
 }
+
+
+/* Story comments and reactions */
+.story-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 12px calc(var(--inset-bottom) + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+.story-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.emoji-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s var(--spring);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.emoji-btn:active {
+  transform: scale(0.9);
+}
+
+.emoji-btn.on {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.1);
+  border-color: #fff;
+}
+
+.story-comment-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 6px 6px 6px 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+}
+
+.story-comment-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 15px;
+  padding: 6px 0;
+}
+
+.story-comment-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.story-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s var(--spring);
+  flex-shrink: 0;
+}
+
+.story-send-btn svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+
+.story-send-btn:active {
+  transform: scale(0.9);
+}
+
+/* Comment in inbox */
+.rx-comment {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.4;
+  padding-right: 8px;
+  font-style: italic;
+}
+
+/* Story layer animation */
+.story-layer {
+  animation: storyFadeIn 0.3s var(--spring);
+}
+
+@keyframes storyFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Story closing animation handled by JS */
+.story-layer.closing {
+  animation: storyFadeOut 0.25s var(--spring) forwards;
+}
+
+@keyframes storyFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}

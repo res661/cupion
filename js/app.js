@@ -443,17 +443,28 @@
     if (!rows.length) return '';
     var body = rows.map(function (r) {
       var back = '';
-      if (r.emoji === '❤️') {
-        back = r.replied
-          ? '<span class="rx-done">взаимно</span>'
-          : '<button class="rx-back" data-act="react-back" data-id="' + esc(r.user.id) + '" data-story="' + esc(r.storyId) + '">❤️ в ответ</button>';
+      var content = '';
+      
+      if (r.type === 'comment') {
+        // Comment
+        content = '<span class="rx-comment">"' + esc(r.text) + '"</span>';
+      } else {
+        // Reaction
+        content = '<span class="emo">' + r.emoji + '</span>';
+        if (r.emoji === '❤️') {
+          back = r.replied
+            ? '<span class="rx-done">взаимно</span>'
+            : '<button class="rx-back" data-act="react-back" data-id="' + esc(r.user.id) + '" data-story="' + esc(r.storyId) + '">❤️ в ответ</button>';
+        }
       }
+      
       return '<article class="rx-row"><button class="rx-main" data-act="person" data-id="' + esc(r.user.id) + '">' +
         phAvatar() +
         '<span class="who"><b>' + esc(r.user.name) + ', ' + esc(r.user.age) + '</b><small>' + timeAgo(r.createdAt) + '</small></span>' +
-        '<span class="emo">' + r.emoji + '</span></button>' + back + '</article>';
+        content + '</button>' + back + '</article>';
     }).join('');
-    return '<section class="rx' + (floating ? ' story-inbox' : '') + '"><h3>Реакции</h3><p>На эту историю · ' + rows.length + '</p>' + body + '</section>';
+    var title = rows.some(function(r) { return r.type === 'comment'; }) ? 'Реакции и комментарии' : 'Реакции';
+    return '<section class="rx' + (floating ? ' story-inbox' : '') + '"><h3>' + title + '</h3><p>На эту историю · ' + rows.length + '</p>' + body + '</section>';
   }
 
   function refreshMe() {
@@ -1343,10 +1354,16 @@
       '<em>' + timeAgo(item.createdAt) + '</em></div></div>' +
       (isOwnStory ? '<button class="rx-pill" data-act="story-reactions" data-story="' + esc(item.id) + '">Реакции' +
         (storyReactionCount(item.id) ? '<b>' + (storyReactionCount(item.id) > 9 ? '9+' : storyReactionCount(item.id)) + '</b>' : '') + '</button>' : '') +
-      (isOwnStory ? '' : '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥', '👏'].map(function (emo) {
-        var picked = S.picked && S.picked[item.id] === emo;
-        return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
-      }).join('') + '</div>') + '</div>';
+      (isOwnStory ? '' : 
+        '<div class="story-bottom">' +
+        '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥'].map(function (emo) {
+          var picked = S.picked && S.picked[item.id] === emo;
+          return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
+        }).join('') + '</div>' +
+        '<div class="story-comment-box">' +
+        '<input type="text" class="story-comment-input" id="story-comment-' + esc(item.id) + '" placeholder="Написать комментарий..." maxlength="180" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' +
+        '<button class="story-send-btn" data-act="send-story-comment" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' + ICON.send + '</button>' +
+        '</div></div>') + '</div>';
   }
 
   function renderStory() {
@@ -1450,13 +1467,27 @@
 
   function closeStory(opts) {
     var id = S.story && S.story.userId;
-    S.story = null;
-    storySig = '';
-    stopClock();
-    var root = document.getElementById('story-root');
-    if (root && !S.viewer) root.innerHTML = '';
-    syncBack();
-    if (id && id !== 'me' && !(opts && opts.keep)) retireBubble(id);
+    var layer = document.querySelector('.story-layer');
+    if (layer) {
+      layer.classList.add('closing');
+      setTimeout(function() {
+        S.story = null;
+        storySig = '';
+        stopClock();
+        var root = document.getElementById('story-root');
+        if (root && !S.viewer) root.innerHTML = '';
+        syncBack();
+        if (id && id !== 'me' && !(opts && opts.keep)) retireBubble(id);
+      }, 250);
+    } else {
+      S.story = null;
+      storySig = '';
+      stopClock();
+      var root = document.getElementById('story-root');
+      if (root && !S.viewer) root.innerHTML = '';
+      syncBack();
+      if (id && id !== 'me' && !(opts && opts.keep)) retireBubble(id);
+    }
   }
 
   function premiumHint() {
@@ -1997,6 +2028,23 @@
       burstReaction(t.closest('.story-layer'), t, emo);
       if (window.TG) TG.impact('medium');
       CupionAPI.reactStory({ toId: t.getAttribute('data-id'), storyId: sid, emoji: emo }).catch(function () {});
+      return;
+    }
+    if (act === 'send-story-comment') {
+      if (needAccount()) return;
+      var storyId = t.getAttribute('data-story');
+      var userId = t.getAttribute('data-user');
+      var input = document.getElementById('story-comment-' + storyId);
+      if (!input) return;
+      var text = input.value.trim();
+      if (!text) { toast('Напиши комментарий'); return; }
+      CupionAPI.commentStory({ toId: userId, storyId: storyId, text: text }).then(function() {
+        input.value = '';
+        toast('Комментарий отправлен');
+        if (window.TG) TG.notify('success');
+      }).catch(function(err) {
+        toast(err.message || 'Не вышло');
+      });
       return;
     }
     if (act === 'tg') {

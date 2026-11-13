@@ -424,7 +424,26 @@
         to: payload.toId,
         emoji: emoji,
         from: 'me',
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        type: 'reaction'
+      });
+      writeStore();
+      return { ok: true };
+    },
+
+    commentStory: function (payload) {
+      if (!state.me) throw new Error('Сначала создай анкету');
+      var text = String(payload.text || '').trim();
+      if (!text) throw new Error('Напиши комментарий');
+      if (text.length > 180) throw new Error('Слишком длинный комментарий');
+      state.reactions.unshift({
+        id: 'cmt_' + Date.now(),
+        storyId: payload.storyId || '',
+        to: payload.toId,
+        text: text,
+        from: 'me',
+        createdAt: Date.now(),
+        type: 'comment'
       });
       writeStore();
       return { ok: true };
@@ -610,7 +629,9 @@
         return {
           id: r.id,
           storyId: r.storyId,
-          emoji: r.emoji,
+          emoji: r.emoji || '',
+          text: r.text || '',
+          type: r.type || 'reaction',
           createdAt: r.createdAt,
           replied: replied,
           user: pub ? { id: pub.id, name: pub.name, age: pub.age, username: pub.username } : null
