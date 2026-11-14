@@ -140,10 +140,7 @@
     for (i = 0; i < badges.length; i++) {
       try { premAnims.push(window.lottie.loadAnimation({ container: badges[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/prem.json' })); } catch (e) {}
     }
-    var fires = document.querySelectorAll('[data-heart]');
-    for (i = 0; i < fires.length; i++) {
-      try { fireAnims.push(window.lottie.loadAnimation({ container: fires[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heartfire.json' })); } catch (e) {}
-    }
+
   }
 
   function avgScore(post) {
@@ -1482,28 +1479,7 @@
     add('react-flash', '', { '--glow': glow });
     add('react-ring', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
     add('react-ring r2', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
-    if (emo === '❤️' && !reactBigBusy) {
-      reactBigBusy = true;
-      var heartHost = document.createElement('span');
-      heartHost.className = 'react-lottie';
-      layer.appendChild(heartHost);
-      made.push(heartHost);
-      if (window.lottie) {
-        var heartAnim = null;
-        try {
-          heartAnim = window.lottie.loadAnimation({ container: heartHost, renderer: 'svg', loop: false, autoplay: true, path: 'assets/lottie/heartfire.json' });
-        } catch (e) {}
-        setTimeout(function () {
-          if (heartAnim) { try { heartAnim.destroy(); } catch (e) {} }
-          if (heartHost.parentNode) heartHost.remove();
-          reactBigBusy = false;
-        }, 1900);
-      } else {
-        setTimeout(function () { reactBigBusy = false; }, 1900);
-      }
-    } else if (emo !== '❤️') {
-      add('react-big', emo, { '--glow': glow });
-    }
+    add('react-big', emo, { '--glow': glow });
     for (var i = 0; i < 22; i++) {
       var ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.3;
       var dist = 90 + Math.random() * 130;
@@ -1661,9 +1637,7 @@
         '<div class="story-bottom">' +
         '<div class="story-actions">' + ['😂', '😍', '❤️', '😮', '🔥'].map(function (emo) {
           var picked = S.picked && S.picked[item.id] === emo;
-          if (emo === '❤️') {
-        return '<button class="emoji-btn lottie-emoji' + (picked ? ' on' : '') + '" data-act="react" data-emoji="❤️" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="❤️"><span class="heart-reaction" data-heart></span></button>';
-      }
+    
       return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
         }).join('') + '</div>' +
         '<div class="story-comment-box">' +
