@@ -994,15 +994,17 @@
       : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(user.id) + '" data-photo="' + esc(user.photos[0] ? user.photos[0].id : '') + '">Оценить</button>';
     if (own) {
       return '<div class="screen screen-profile"><div class="scroll">' +
-        '<div class="profile-bar"><span></span><button class="brand" data-act="tab" data-tab="feed">Cupion</button><span></span></div>' +
-        '<div class="profile-hero"><h1><span>' + esc(user.name) + ', ' + esc(user.age) + '</span>' + (user.premium ? premMark() : '') + '</h1>' +
-        (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
-        (user.bio ? '<p class="bio">' + esc(user.bio) + '</p>' : '') + '</div>' +
+        '<div class="profile-bar"><span></span><span class="brand">Моя анкета</span><span></span></div>' +
+        '<article class="post own-card" data-post="me"><div class="card">' +
+        '<div class="post-head"><span class="mini-ava">' + phAvatar() + '</span>' +
+        '<div class="post-user">' + esc(user.name) + (user.premium ? premMark() : '') + '</div></div>' +
+        mediaBlock(user, '') +
+        '<div class="post-meta"><div class="post-title">' + esc(user.name) + ', ' + esc(user.age) + (user.city ? ' · ' + esc(user.city) : '') + '</div></div>' +
+        '<p class="caption">' + esc(user.caption || user.bio || '') + '</p>' +
+        '</div></article>' +
         '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
         '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
         '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div></div>' +
-        mediaBlock(user, '') +
-        (user.caption ? '<p class="caption">' + esc(user.caption) + '</p>' : '') +
         '<div class="profile-actions">' + primary + '</div>' +
         '<div class="set-card"><div class="label">Настройки</div>' +
         '<button class="choice-row" data-act="premium"><span>Premium<small>Больше анкет, историй и видео</small></span><span class="prem-tag">PRO</span></button>' +

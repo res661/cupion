@@ -1521,3 +1521,7 @@ body, #app {
   border-top: 0.5px solid var(--hairline);
 }
 .screen-profile .set-card .choice-row:first-of-type { border-top: 0; }
+.screen-profile .own-card { margin: 6px 0 14px; }
+.screen-profile .own-card .card { margin: 0 16px; }
+.screen-profile .own-card .post-head { padding: 2px 2px 10px; }
+.screen-profile .own-card .post-user { font-size: 17px; font-weight: 650; }
