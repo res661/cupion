@@ -1146,7 +1146,7 @@
       '<button class="rm" data-act="' + rmAct + '" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
   }
 
-  var REG_CITIES = ['Москва', 'Санкт-Петербург', 'Казань', 'Новосибирск', 'Екатеринбург', 'Сочи', 'Краснодар', 'Нижний Новгород', 'Самара', 'Ростов-на-Дону'];
+  var REG_CITIES = ['Прага', 'Берлин', 'Париж', 'Варшава', 'Вена', 'Лиссабон', 'Дубай', 'Барселона', 'Амстердам', 'Милан'];
   var REG_BIOS = ['кофе, кино и поздние прогулки', 'музыка, огни города, хорошие разговоры', 'книги, дождь и медленные утра', 'дизайн, скейт и плохие шутки'];
   function regCityHint() { return REG_CITIES[Math.floor(Math.random() * REG_CITIES.length)]; }
   function regBioHint() { return REG_BIOS[Math.floor(Math.random() * REG_BIOS.length)]; }
