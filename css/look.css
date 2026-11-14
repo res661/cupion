@@ -2666,3 +2666,48 @@ body, #app {
 @media (min-width: 520px) {
   .post { margin-left: 14px; margin-right: 14px; }
 }
+/* ===== Instagram-style feed: edge-to-edge media, no card chrome ===== */
+.post {
+  margin: 0 0 10px;
+  padding: 0;
+}
+.post .card {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  border: 0;
+}
+.post + .post { border-top: 0.5px solid var(--hairline); padding-top: 4px; }
+.post .post-head {
+  padding: 12px 14px 10px;
+  margin: 0;
+  gap: 10px;
+}
+.post .post-head .mini-ava { width: 36px; height: 36px; }
+.post .post-head .mini-ava .ph { width: 36px; height: 36px; }
+.post .post-user { font-size: 14px; font-weight: 650; }
+.post .frame { margin: 0; }
+.post .frame-clip {
+  border-radius: 0;
+  max-height: none;
+  box-shadow: none;
+}
+.post .post-meta { padding: 10px 14px 0; margin: 0; }
+.post .caption { padding: 6px 14px 0; margin: 0; font-size: 14px; line-height: 1.4; }
+.post .card-rate { padding: 8px 14px 12px; margin: 0; }
+.post .post-score { font-size: 15px; }
+.post .card-more { margin-right: 2px; }
+:root[data-theme="dark"] .post .card { background: transparent; box-shadow: none; }
+/* keep profile card boxed (it is an anketa, not a feed post) */
+.screen-profile .own-card .card {
+  background: var(--card);
+  border-radius: 30px;
+  padding: 12px;
+  box-shadow: 0 10px 28px rgba(20, 45, 90, 0.08);
+}
+.screen-profile .own-card .frame-clip { border-radius: 26px; max-height: 540px; }
+@media (min-width: 520px) {
+  .post .frame-clip { border-radius: 20px; }
+  .post .card { max-width: 520px; margin: 0 auto; }
+}
