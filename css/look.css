@@ -1550,3 +1550,23 @@ body, #app {
 /* premium badge: sticker only, no blue pill */
 .prem { background: transparent !important; box-shadow: none !important; width: 18px; height: 18px; }
 .prem-lottie { width: 18px; height: 18px; }
+
+/* heart burst: the sticker itself flies out instead of an emoji */
+.react-lottie {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 170px;
+  height: 170px;
+  transform: translate(-50%, -50%);
+  z-index: 7;
+  pointer-events: none;
+  animation: reactLottiePop 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.react-lottie svg { width: 100%; height: 100%; }
+@keyframes reactLottiePop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.12); }
+}

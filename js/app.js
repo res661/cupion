@@ -1476,7 +1476,21 @@
     add('react-flash', '', { '--glow': glow });
     add('react-ring', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
     add('react-ring r2', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
-    add('react-big', emo, { '--glow': glow });
+    if (emo === '❤️') {
+      var heartHost = document.createElement('span');
+      heartHost.className = 'react-lottie';
+      layer.appendChild(heartHost);
+      made.push(heartHost);
+      if (window.lottie) {
+        var heartAnim = null;
+        try {
+          heartAnim = window.lottie.loadAnimation({ container: heartHost, renderer: 'svg', loop: false, autoplay: true, path: 'assets/lottie/heartfire.json' });
+        } catch (e) {}
+        if (heartAnim) setTimeout(function () { try { heartAnim.destroy(); } catch (e) {} }, 1900);
+      }
+    } else {
+      add('react-big', emo, { '--glow': glow });
+    }
     for (var i = 0; i < 22; i++) {
       var ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.3;
       var dist = 90 + Math.random() * 130;
