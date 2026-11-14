@@ -334,7 +334,7 @@
         S.storyReturn = null;
         startStory(back.userId, back.index, function () {
           if (back.sheet && back.sheet.name === 'reactions') openSheet('reactions', back.sheet.payload);
-        });
+        }, { single: back.single });
       }
       return;
     }
@@ -622,6 +622,53 @@
     return '<div class="' + cls + '"' + style + '>' + visual + chip + '</div>';
   }
 
+  function dropPost(id) {
+    S.feed = (S.feed || []).filter(function (p) { return p.id !== id; });
+    var el = S.screen === 'feed' ? document.querySelector('.post[data-post="' + id + '"]') : null;
+    if (!el || motionOff()) return Promise.resolve();
+    el.style.height = el.offsetHeight + 'px';
+    el.classList.add('post-out');
+    return new Promise(function (resolve) { setTimeout(resolve, 380); });
+  }
+
+  function cardSeen() {
+    if (!S.cardSeen) {
+      try { S.cardSeen = JSON.parse(localStorage.getItem('cupion.cardStories') || '{}') || {}; } catch (e) { S.cardSeen = {}; }
+    }
+    return S.cardSeen;
+  }
+
+  function markCardSeen(id) {
+    cardSeen()[id] = true;
+    try { localStorage.setItem('cupion.cardStories', JSON.stringify(S.cardSeen)); } catch (e) {}
+  }
+
+  function cardStoryAllowed(id) {
+    return !!(S.me && S.me.premium) || !cardSeen()[id];
+  }
+
+  function cardAvatar(post) {
+    var plain = '<button class="mini-ava" data-act="person" data-id="' + esc(post.id) + '">' + phAvatar() + '</button>';
+    if (!post || post.isMine) return plain;
+    var su = findStoryUser(post.id);
+    var live = su ? (su.stories || []).filter(function (st) { return st.remain > 0; }) : [];
+    if (!live.length || !cardStoryAllowed(post.id)) return plain;
+    var first = live[0];
+    var pr = Math.max(0.04, Math.min(1, first.remain / (first.ttl || 3600000)));
+    return '<button class="mini-ava has-story" data-act="card-story" data-id="' + esc(post.id) + '" aria-label="История">' +
+      '<span class="story-ring" style="--p:' + pr.toFixed(3) + '">' + phAvatar() + '</span></button>';
+  }
+
+  function refreshCardAvatar(id) {
+    var post = null;
+    (S.feed || []).forEach(function (p) { if (p.id === id) post = p; });
+    var card = document.querySelector('.post[data-post="' + id + '"] .mini-ava');
+    if (!post || !card) return;
+    var tmp = document.createElement('div');
+    tmp.innerHTML = cardAvatar(post);
+    if (tmp.firstChild) card.replaceWith(tmp.firstChild);
+  }
+
   function postCard(post, index) {
     if (!post) return '';
     var photo = (post.photos || [])[0] || { id: '' };
@@ -631,7 +678,7 @@
     var scoreHtml = '<div class="post-score"><i>★</i><b' + (score ? ' data-tick="' + esc(score) + '"' : '') + '>' + esc(score || '—') + '</b></div>';
     var rateBtn = post.isMine ? '' : '<button class="rate-pill" data-act="rate" data-id="' + esc(post.id) + '" data-photo="' + esc(photo.id) + '">Оценить</button>';
     return '<article class="post" data-post="' + esc(post.id) + '" style="--i:' + Math.min(index || 0, 7) + '"><div class="card">' +
-      '<div class="post-head"><button class="mini-ava" data-act="person" data-id="' + esc(post.id) + '">' + phAvatar() + '</button>' +
+      '<div class="post-head">' + cardAvatar(post) +
       '<button class="post-user" data-act="person" data-id="' + esc(post.id) + '">' + esc(post.name) + (post.premium ? premMark() : '') + '</button>' +
       (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
       '</div>' +
@@ -1338,9 +1385,14 @@
     }
     root.innerHTML = storyHTML();
     restartClock();
+    [S.story.items[S.story.index + 1], S.story.items[S.story.index - 1]].forEach(function (n) {
+      if (!n || n.type === 'video') return;
+      var src = displayUrl(n.url) || n.url;
+      if (src) { var im = new Image(); im.src = src; }
+    });
   }
 
-  function startStory(userId, index, after) {
+  function startStory(userId, index, after, opts) {
     if (userId === 'me' && (!S.me || !S.me.stories || !S.me.stories.length)) {
       openCompose('story');
       return;
@@ -1349,7 +1401,7 @@
       var items = res[0] || [];
       if (!items.length) { toast('Пока нет истории'); return; }
       S.viewer = null;
-      S.story = { userId: userId, user: res[1], items: items, index: Math.min(index || 0, items.length - 1), paused: false };
+      S.story = { userId: userId, user: res[1], items: items, index: Math.min(index || 0, items.length - 1), paused: false, single: !!(opts && opts.single) };
       var paint = function () { storySig = ''; renderStory(); syncBack(); if (after) after(); };
       if (userId === 'me') loadInbox().then(paint);
       else paint();
@@ -1365,6 +1417,7 @@
       renderStory();
       return;
     }
+    if (st.single) { closeStory(); return; }
     var finished = st.userId;
     var ids = (S.stories || []).map(function (u) { return u.id; }).filter(function (id) { return id !== 'me'; });
     var at = ids.indexOf(finished);
@@ -1527,7 +1580,6 @@
     } else {
       media = realImg(photo.type === 'video' ? photo.poster : photo.url, 'peek-media') || phPhoto('peek-media');
     }
-    var mine = !!(p.isMine || (S.me && p.id === S.me.id));
     var score = avgScore(p);
     var city = p.city ? ' · ' + esc(p.city) : '';
     root.innerHTML = '<div class="peek" data-act="peek-close"><div class="peek-card" data-peek-card>' +
@@ -1535,9 +1587,6 @@
       '<div class="peek-info"><div class="peek-name"><b>' + esc(p.name) + ', ' + esc(p.age) + '</b>' + (p.premium ? premMark() : '') + '<small>' + city.replace(' · ', '') + '</small></div>' +
       '<div class="post-score"><i>★</i><b>' + esc(score || '—') + '</b></div></div>' +
       (p.caption || p.bio ? '<p class="peek-caption">' + esc(p.caption || p.bio) + '</p>' : '') +
-      '<div class="peek-actions">' +
-      (mine ? '' : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(p.id) + '" data-photo="' + esc(photo.id || '') + '">Оценить</button>') +
-      '<button class="btn btn-white" data-act="person" data-id="' + esc(p.id) + '">Профиль</button></div>' +
       '</div></div>';
   }
 
@@ -1788,11 +1837,18 @@
       loadBoard().then(render);
       return;
     }
+    if (act === 'card-story') {
+      var cid = t.getAttribute('data-id');
+      if (!cardStoryAllowed(cid)) { refreshCardAvatar(cid); return; }
+      if (!(S.me && S.me.premium)) markCardSeen(cid);
+      startStory(cid, 0, function () { refreshCardAvatar(cid); }, { single: true });
+      return;
+    }
     if (act === 'person') {
       var personId = t.getAttribute('data-id');
       var ret = null;
       if (S.story) {
-        ret = { userId: S.story.userId, index: S.story.index, sheet: S.sheet === 'reactions' ? { name: 'reactions', payload: S.sheetPayload } : null };
+        ret = { userId: S.story.userId, index: S.story.index, single: !!S.story.single, sheet: S.sheet === 'reactions' ? { name: 'reactions', payload: S.sheetPayload } : null };
       }
       if (S.peek) closePeek(true);
       if (S.sheet) closeSheet();
@@ -1909,14 +1965,16 @@
         if (S.person && S.person.id === id) S.person.myScore = res.score;
         S.justLiked = id;
         closeSheet();
-        if (res.match) {
-          return Promise.all([CupionAPI.getUser(id), loadRatings(), refreshMe()]).then(function (out) {
-            showMatch(out[0]);
-            render();
-          });
-        }
-        if (window.TG) TG.impact('light');
-        return loadRatings().then(render);
+        return dropPost(id).then(function () {
+          if (res.match) {
+            return Promise.all([CupionAPI.getUser(id), loadRatings(), refreshMe()]).then(function (out) {
+              showMatch(out[0]);
+              render();
+            });
+          }
+          if (window.TG) TG.impact('light');
+          return loadRatings().then(render);
+        });
       }).catch(function (err) { toast(err.message || 'Не вышло'); });
       return;
     }

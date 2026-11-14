@@ -1088,3 +1088,38 @@ body, #app {
 @media (prefers-reduced-motion: reduce) {
   .react-flash, .react-ring, .react-big, .react-spark, .react-rise { display: none; }
 }
+
+/* ===== story ring on feed cards ===== */
+.mini-ava.has-story { overflow: visible; position: relative; }
+.mini-ava .story-ring {
+  display: block;
+  width: 100%; height: 100%;
+  box-sizing: border-box;
+  padding: 2.5px;
+  border-radius: 50%;
+  background: conic-gradient(#007AFF calc(var(--p, 1) * 1turn), rgba(0, 122, 255, 0.2) 0);
+}
+.mini-ava .story-ring .ph { width: 100%; height: 100%; border: 2px solid #fff; border-radius: 50%; box-shadow: none; }
+.mini-ava.has-story:active .story-ring { transform: scale(0.94); }
+
+/* ===== instant switching between stories ===== */
+.story-layer .story-bg, .story-layer .story-shade, .story-layer .story-ui, .story-layer .story-ui * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ===== bigger long-press card, no buttons ===== */
+.peek-card { max-width: 480px; padding-bottom: 18px; }
+.peek-frame { max-height: 74vh; }
+
+/* rated card leaves the feed */
+.post.post-out {
+  overflow: hidden;
+  animation: postOut 0.38s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  pointer-events: none;
+}
+@keyframes postOut {
+  0% { opacity: 1; transform: none; }
+  45% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 0; transform: scale(0.95); height: 0; margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; }
+}
