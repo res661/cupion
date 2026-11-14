@@ -1241,7 +1241,11 @@
     CupionAPI.register(S.reg).then(function (me) {
       S.me = me;
       S.screen = 'feed';
-      CupionAPI.getMe().then(function (fresh) { if (fresh) { S.me = fresh; render(); } }).catch(function () {});
+      CupionAPI.getMe().then(function (fresh) {
+        if (!fresh) return;
+        S.me = fresh;
+        return Promise.all((fresh.photos || []).map(function (p) { return resolveMedia(p.url); }));
+      }).then(function () { render(); }).catch(function () { render(); });
       S.regStep = 0;
       return Promise.all([loadFeed(), loadStories(), CupionAPI.unseenCount()]);
     }).then(function (res) {
@@ -2255,7 +2259,10 @@
     if (act === 'tab') {
       var __tab = t.getAttribute('data-tab');
       if (__tab === 'profile' && S.me) {
-        CupionAPI.getMe().then(function (me) { if (me) { S.me = me; } render(); }).catch(function () {});
+        CupionAPI.getMe().then(function (me) {
+          if (me) S.me = me;
+          return Promise.all(((S.me && S.me.photos) || []).map(function (p) { return resolveMedia(p.url); }));
+        }).then(function () { render(); }).catch(function () { render(); });
       }
       var nextTab = t.getAttribute('data-tab') || 'feed';
       var here = (nextTab === 'profile' && (S.screen === 'profile' || S.screen === 'person')) || S.screen === nextTab;
