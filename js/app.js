@@ -423,10 +423,11 @@
   }
 
   function setAvatarPreview(src) {
-    var ap = document.querySelector('.avatar-pick');
-    if (!ap) return;
-    ap.innerHTML = '<img src="' + esc(src) + '" alt="">';
-    ap.classList.add('has');
+    var nodes = document.querySelectorAll('.avatar-pick, .reg-card .mini-ava, .avatar-row .avatar-pick');
+    Array.prototype.forEach.call(nodes, function (ap) {
+      ap.innerHTML = '<img src="' + esc(src) + '" alt="">';
+      ap.classList.add('has');
+    });
   }
 
   function openPerson(id, ret) {
@@ -1145,6 +1146,11 @@
       '<button class="rm" data-act="' + rmAct + '" data-index="' + idx + '" aria-label="Убрать">−</button></div>';
   }
 
+  var REG_CITIES = ['Prague', 'Berlin', 'Paris', 'Warsaw', 'Vienna', 'Lisbon', 'Dubai', 'Barcelona', 'Amsterdam', 'Milan'];
+  var REG_BIOS = ['coffee, film and late walks', 'music, city lights, good talks', 'books, rain and slow mornings', 'design, skate and bad jokes'];
+  function regCityHint() { return REG_CITIES[Math.floor(Math.random() * REG_CITIES.length)]; }
+  function regBioHint() { return REG_BIOS[Math.floor(Math.random() * REG_BIOS.length)]; }
+
   function validName(s) {
     var t = String(s || '').trim();
     return t.length >= 2 && t.length <= 32 && /[A-Za-zА-Яа-яЁё]/.test(t);
@@ -1165,13 +1171,13 @@
         '<input class="big-input" data-reg="age" inputmode="numeric" maxlength="2" placeholder="21" value="' + esc(r.age) + '" autocomplete="off">' + ageMsg;
     } else if (S.regStep === 1) {
       body = '<h1>Откуда ты?</h1><p class="lead">Город увидят в анкете.</p>' +
-        '<input class="big-input" data-reg="city" maxlength="32" placeholder="Москва" value="' + esc(r.city) + '" autocomplete="address-level2">';
+        '<input class="big-input" data-reg="city" maxlength="32" placeholder="' + regCityHint() + '" value="' + esc(r.city) + '" autocomplete="address-level2">';
     } else if (S.regStep === 2) {
       body = '<h1>Как тебя зовут?</h1><p class="lead">Так имя увидят в ленте.</p>' +
         '<input class="big-input" data-reg="name" maxlength="32" placeholder="Алина" value="' + esc(r.name) + '" autocomplete="name">';
     } else if (S.regStep === 3) {
       body = '<h1>Расскажи о себе</h1><p class="lead">Короткое описание профиля.</p>' +
-        '<textarea class="area" data-reg="bio" maxlength="80" placeholder="кофе, кино и поздние прогулки">' + esc(r.bio) + '</textarea>' +
+        '<textarea class="area" data-reg="bio" maxlength="80" placeholder="' + regBioHint() + '">' + esc(r.bio) + '</textarea>' +
         '<div class="count" data-count>' + r.bio.length + '/80</div>';
     } else {
       var tiles = r.photos.map(function (p, idx) {
@@ -1194,7 +1200,7 @@
         '<div class="reg-hero-wrap">' +
         '<button class="reg-hero' + (first ? ' filled' : '') + '" data-act="pick-reg" aria-label="Выбрать фото">' + face + '</button>' +
         (first ? '<button class="reg-rm" data-act="rm-reg-main" aria-label="Удалить фото">−</button>' : '') +
-        (first ? '<button class="reg-count">' + r.photos.length + ' / ' + regCap + '</button>' : '') +
+
         (r.photos.length > 1 ? '<button class="reg-nav prev" data-act="reg-main-move" data-dir="-1" aria-label="Назад">‹</button><button class="reg-nav next" data-act="reg-main-move" data-dir="1" aria-label="Вперёд">›</button>' : '') +
         ((r.photos.length && r.photos.length < regCap) ? '<button class="reg-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '') +
         '</div>' +
@@ -1204,7 +1210,7 @@
         '';
     }
     var label = S.regStep === 4 ? 'Готово' : 'Дальше';
-    var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : '';
+    var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : (S.regStep === 3 ? '<button class="text-btn" data-act="skip-bio">Пропустить</button>' : '');
     var dir = S.regDir < 0 ? 'enter-back' : 'enter-fwd';
     return '<div class="reg ' + dir + '"><div class="reg-top">' + back + '<div class="steps">' + steps + '</div></div>' +
       '<div class="reg-body" id="reg-body">' + body + '</div><div class="reg-foot">' +
