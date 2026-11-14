@@ -982,9 +982,37 @@
       '<button class="btn btn-primary" data-act="person" data-id="' + esc(m.user.id) + '">Смотреть</button></section>';
   }
 
+  function incomingCard(row, index) {
+    var who = row.user;
+    var photo = (who.photos || [])[0] || {};
+    var shown = realImg(photo.url) || realImg(photo.poster);
+    var media = shown || letterArt(who, 'rate-media');
+    var city = who.city ? ' · ' + esc(who.city) : '';
+    var chips = '';
+    for (var k = 1; k <= 10; k++) chips += '<button type="button" class="mini-star" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
+    var mine = row.repliedScore
+      ? '<div class="rc-done">ты ★ ' + esc(row.repliedScore) + '</div>'
+      : '<div class="reply-stars-row rc-stars"><span class="quick-stars">' + chips + '</span></div>';
+    var write = row.score > 5
+      ? '<button class="btn btn-primary rc-write" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>'
+      : '';
+    var fresh = S.freshRatingId && S.freshRatingId === who.id ? ' fresh' : '';
+    return '<article class="rate-card' + fresh + '" style="--i:' + Math.min(index || 0, 7) + '">' +
+      '<button class="rc-media" data-act="person" data-id="' + esc(who.id) + '">' + media +
+      '<span class="rc-score">оценил' + (who.gender === 'female' ? 'а' : '') + ' на ' + esc(row.score) + ' ★</span>' +
+      '<span class="rc-name"><b>' + esc(who.name) + ', ' + esc(who.age) + '</b>' + (who.premium ? premMark() : '') + '<small>' + city.replace(' · ', '') + '</small></span>' +
+      '</button>' +
+      (row.text ? '<p class="rc-quote">«' + esc(row.text) + '»</p>' : (who.bio || who.caption ? '<p class="rc-quote">' + esc(who.bio || who.caption) + '</p>' : '')) +
+      mine +
+      '<div class="rc-foot">' +
+      (row.repliedScore ? (row.score > 5 ? write : '<span class="rate-hint">написать нельзя — оценка ниже 6</span>') : '<span class="rate-hint">оцени в ответ</span>') +
+      '</div></article>';
+  }
+
   function ratingRow(row, incoming, index) {
     if (!row || !row.user) return '';
     var who = row.user;
+    if (incoming && (row.revealed || row.score > 5)) return incomingCard(row, index);
     var revealed = !incoming || row.revealed || row.score > 5;
     var line = incoming
       ? ((revealed ? verb(who.gender) : 'оценили') + ' твоё фото · ' + timeAgo(row.createdAt))
