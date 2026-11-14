@@ -882,7 +882,9 @@
       '</div>' +
       mediaBlock(post, '') +
       '<div class="post-meta"><div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + city + count + '</div>' + scoreHtml + '</div>' +
-      '<p class="caption">' + esc(post.caption || post.bio || '') + '</p>' + rateUI + '</div></article>';
+      '<p class="caption">' + esc(post.caption || post.bio || '') + '</p>' +
+      (post.isMine ? '<div class="card-stats"><b>' + esc(avgScore(post) || '—') + '</b><i>★</i><span>' + esc(compactNum(post.ratingsCount)) + ' оценок</span><span>' + esc(compactNum(post.matchesCount)) + ' мэтчей</span></div>' +
+        '<button class="btn btn-white card-edit" data-act="edit">Редактировать</button>' : '') + rateUI + '</div></article>';
   }
 
   function feedScreen() {
@@ -1034,7 +1036,6 @@
         '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div>' +
         '<div><b>' + (S.myRank ? '#' + esc(S.myRank) : '—') + '</b><span>в топе</span></div>' +
         '</div></div>' +
-        '<div class="profile-actions">' + primary + '</div>' +
         '<div class="set-card"><div class="label">Настройки</div>' +
         '<button class="choice-row" data-act="premium"><span>Premium<small>Больше анкет, историй и видео</small></span><span class="prem-tag">PRO</span></button>' +
         '<button class="choice-row" data-act="theme-open"><span>Тема<small>' + (S.theme === 'dark' ? 'Тёмная' : S.theme === 'light' ? 'Светлая' : 'Как в телефоне') + '</small></span></button>' +
@@ -1368,6 +1369,7 @@
       '<div style="height:10px"></div><textarea class="area" id="edit-bio" maxlength="80" placeholder="О себе">' + esc(e.bio) + '</textarea>' +
       '<div class="count">' + e.bio.length + '/80</div>' +
       '<div style="height:8px"></div><input class="field" id="edit-city" maxlength="32" value="' + esc(e.city || '') + '" placeholder="Город (необязательно)">' +
+      '<div class="edit-preview">' + mediaBlock({ id: 'edit-preview', photos: e.photos }, '') + '</div>' +
       '<p class="hint">' + (S.me && S.me.premium ? 'До 5 фото. Нажми на фото, чтобы заменить.' : 'До 2 фото. Больше — в Premium.') + '</p><div class="pick-grid">' + tiles + add + '</div>' +
       '<div class="sheet-error" id="sheet-error"></div>',
       '<button class="btn btn-primary btn-block" data-act="save-edit">Сохранить</button>'
