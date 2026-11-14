@@ -2765,6 +2765,7 @@
       CupionAPI.updateMe({ avatar: use }).then(function (me) { S.me = me; render(); toast(tgPhoto ? 'Аватарка из Telegram' : 'Поставили аватарку'); }).catch(function () {});
       return;
     }
+    if (act === 'me-add-photo') { S.pickPurpose = 'photo-me'; pickFiles('photo-me'); return; }
     if (act === 'me-rm-photo') {
       var rest = ((S.me && S.me.photos) || []).slice(1);
       CupionAPI.updateMe({ photos: rest }).then(function (me) { S.me = me; render(); toast(rest.length ? 'Фото удалено' : 'Добавь новое фото'); }).catch(function (err) { toast(err && err.message ? err.message : 'Не получилось'); });
