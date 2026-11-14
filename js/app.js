@@ -1093,7 +1093,7 @@
         '<div class="profile-bar"><span></span><span class="brand">Моя анкета</span><span></span></div>' +
         '<div class="own-card">' + postCard(Object.assign({}, user, { isMine: true }), 0) + '</div>' +
         '<div class="stats-hero">' +
-        '<div class="sh-main"><span class="sh-label">средняя оценка</span><b>' + esc(user.ratingLabel || '—') + '</b></div>' +
+        '<div class="sh-main"><span class="sh-label">средняя оценка</span><b>' + esc(user.ratingLabel || '—') + '</b><i>★</i></div>' +
         '<div class="sh-row">' +
         '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
         '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div>' +
