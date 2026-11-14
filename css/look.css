@@ -1437,3 +1437,8 @@ body, #app {
 
 .dock-lottie { display: block; width: 26px; height: 26px; }
 .dock-lottie svg { width: 100%; height: 100%; }
+
+/* subtle selected state for dock buttons */
+.dock-btn { border-radius: 16px; transition: background 0.25s var(--spring), box-shadow 0.25s var(--spring), transform 0.2s var(--spring); }
+.dock-btn.on { background: rgba(0, 122, 255, 0.10); box-shadow: inset 0 0 0 1.5px rgba(0, 122, 255, 0.22); }
+.dock-btn.on:active { transform: scale(0.96); }
