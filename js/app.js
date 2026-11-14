@@ -1004,6 +1004,10 @@
       '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div></div>' +
       '<div class="profile-actions">' + primary +
       '<button class="btn btn-white" data-act="story" data-id="' + esc(user.id) + '">Истории</button></div>' +
+      (own ? '<div class="set-card"><div class="label">Настройки</div>' +
+        '<button class="choice-row" data-act="premium"><span>Premium<small>Больше возможностей</small></span><span class="prem-tag">PRO</span></button>' +
+        '<button class="choice-row" data-act="more" data-id="' + esc(user.id) + '"><span>Профиль и выход<small>Поделиться, выйти из анкеты</small></span></button>' +
+        '</div>' : '') +
       highlightRow(user) +
       '<div class="grid">' + (user.photos || []).map(function (p) { return photoTile(p, user); }).join('') + '</div></div></div>';
   }
@@ -2258,7 +2262,9 @@
       if (S.peek) closePeek(true);
       if (S.sheet) closeSheet();
       if (S.story) closeStory({ keep: true });
-      openPerson(personId, ret);
+      var ownId = S.me && (personId === S.me.id || personId === 'me');
+      if (ownId) { openPerson(personId, ret); return; }
+      openPeek(personId);
       return;
     }
     if (act === 'react-back') {
