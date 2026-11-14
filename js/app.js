@@ -1012,7 +1012,8 @@
       ? '<b data-act="person" data-id="' + esc(who.id) + '">' + esc(title) + (who.premium ? premMark() : '') + '</b>'
       : '<b>' + esc(title) + '</b>';
     var open = revealed ? ' data-act="person" data-id="' + esc(who.id) + '"' : '';
-    return '<article class="rate-row' + (revealed ? '' : ' anon') + '"' + open + ' style="--i:' + Math.min(index || 0, 7) + '">' +
+    var fresh = S.freshRatingId && S.freshRatingId === who.id ? ' fresh' : '';
+    return '<article class="rate-row' + (revealed ? '' : ' anon') + fresh + '"' + open + ' style="--i:' + Math.min(index || 0, 7) + '">' +
       '<div class="rate-main">' + phAvatar(revealed ? '' : 'anon') +
       '<div>' + nameBtn + '<div class="sub">' + esc(line) + '</div></div>' +
       (revealed ? '<button class="thumb-btn" data-act="person" data-id="' + esc(who.id) + '">' + phPhoto() + '</button>' : '<span class="thumb-btn">' + phPhoto() + '</span>') +
@@ -2523,8 +2524,10 @@
       var rid = t.getAttribute('data-id');
       var rn = parseInt(t.getAttribute('data-n'), 10) || 0;
       S.replyRateId = null;
+      S.freshRatingId = rid;
+      setTimeout(function () { S.freshRatingId = null; }, 900);
       CupionAPI.rate({ toId: rid, score: rn }).then(function () {
-        loadRatings().then(function () { render(); toast('Оценка отправлена'); });
+        loadRatings().then(function () { render(); if (window.TG) TG.impact('light'); toast('Оценка отправлена'); });
       }).catch(function (err) { toast(err && err.message ? err.message : 'Не получилось'); render(); });
       return;
     }
