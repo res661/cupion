@@ -378,6 +378,7 @@
       }
       if (patch.city != null) state.me.city = String(patch.city).trim();
       if (patch.lookingFor) state.me.lookingFor = patch.lookingFor;
+      if (patch.gender) state.me.gender = String(patch.gender);
       if (patch.photos) {
         var cap = state.me.premium ? 6 : 3;
         var kept = [];

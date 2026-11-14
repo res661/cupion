@@ -1525,3 +1525,9 @@ body, #app {
 .screen-profile .own-card .card { margin: 0 16px; }
 .screen-profile .own-card .post-head { padding: 2px 2px 10px; }
 .screen-profile .own-card .post-user { font-size: 17px; font-weight: 650; }
+
+/* photo picker: plus centered, rounded thumbs */
+.pick-add { display: grid; place-items: center; }
+.pick { border-radius: 18px; overflow: hidden; }
+.pick img { border-radius: 18px; }
+.pick-add { border-radius: 18px; }

@@ -1008,6 +1008,7 @@
         '<div class="profile-actions">' + primary + '</div>' +
         '<div class="set-card"><div class="label">Настройки</div>' +
         '<button class="choice-row" data-act="premium"><span>Premium<small>Больше анкет, историй и видео</small></span><span class="prem-tag">PRO</span></button>' +
+        '<button class="choice-row" data-act="gender"><span>Пол<small>' + (S.me && S.me.gender === 'female' ? 'Девушка' : S.me && S.me.gender === 'male' ? 'Парень' : 'Не указан') + '</small></span></button>' +
         '<button class="choice-row" data-act="reset-stats"><span>Сбросить статистику<small>Обнулить счётчики профиля</small></span></button>' +
         '<button class="choice-row" data-act="logout"><span>Выйти из анкеты</span></button>' +
         '</div></div></div>';
@@ -1046,7 +1047,7 @@
   }
 
   function photoCap() {
-    return (S.me && S.me.premium) ? 6 : 3;
+    return (S.me && S.me.premium) ? 5 : 2;
   }
 
   function countPhotos(list) {
@@ -1335,9 +1336,9 @@
     return sheetFrame(
       '<h2>Анкета</h2><input class="field" id="edit-name" maxlength="32" value="' + esc(e.name) + '" placeholder="Имя">' +
       '<div style="height:10px"></div><textarea class="area" id="edit-bio" maxlength="80" placeholder="О себе">' + esc(e.bio) + '</textarea>' +
-      '<div class="count">' + e.bio.length + '/80</div><p class="hint">' + (S.me && S.me.premium ? 'До 6 фото и видео. Нажми фото, чтобы заменить.' : 'До 3 фото. Больше и видео — в Premium.') + '</p><div class="pick-grid">' + tiles + add + '</div>' +
-      '<div class="label" style="margin:14px 0 8px;color:var(--text-2);font-size:13px">Кого показывать</div>' +
-      '<div class="seg" data-i="' + li + '"><i class="seg-pill"></i>' + look('all', 'Все') + look('male', 'Парни') + look('female', 'Девушки') + '</div>' +
+      '<div class="count">' + e.bio.length + '/80</div>' +
+      '<div style="height:8px"></div><input class="field" id="edit-city" maxlength="32" value="' + esc(e.city || '') + '" placeholder="Город (необязательно)">' +
+      '<p class="hint">' + (S.me && S.me.premium ? 'До 5 фото. Нажми на фото, чтобы заменить.' : 'До 2 фото. Больше — в Premium.') + '</p><div class="pick-grid">' + tiles + add + '</div>' +
       '<div class="sheet-error" id="sheet-error"></div>',
       '<button class="btn btn-primary btn-block" data-act="save-edit">Сохранить</button>'
     );
@@ -1417,6 +1418,7 @@
     else if (S.sheet === 'premium') html = premiumSheet();
     else if (S.sheet === 'compose') html = composeSheet();
     else if (S.sheet === 'storynew') html = storyNewSheet();
+    else if (S.sheet === 'gender') html = genderSheet();
     else if (S.sheet === 'edit') html = editSheet();
     else if (S.sheet === 'more') html = moreSheet(S.sheetPayload || {});
     else if (S.sheet === 'actions') html = actionsSheet(S.sheetPayload || {});
@@ -2196,6 +2198,17 @@
   }
 
   /* Centered iOS-style menu for the story "+" (upload only, no camera capture). */
+  function genderSheet() {
+    var g = S.me && S.me.gender;
+    return sheetFrame(
+      '<h2>Твой пол</h2><p class="hint">Показываем в анкете и учитываем в подборе.</p>' +
+      '<div class="choice-list">' +
+      '<button class="choice-row' + (g === 'male' ? ' on' : '') + '" data-act="set-gender" data-value="male"><span>Парень</span></button>' +
+      '<button class="choice-row' + (g === 'female' ? ' on' : '') + '" data-act="set-gender" data-value="female"><span>Девушка</span></button>' +
+      '</div>'
+    );
+  }
+
   function storyNewSheet() {
     var photoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>';
     var fileIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>';
@@ -2708,6 +2721,12 @@
       if (window.TG) TG.selection();
       return;
     }
+    if (act === 'gender') { openSheet('gender', { key: 'gender' }); return; }
+    if (act === 'set-gender') {
+      var gv = t.getAttribute('data-value');
+      CupionAPI.updateMe({ gender: gv }).then(function (me) { S.me = me; closeSheet(); render(); toast('Сохранено'); }).catch(function () {});
+      return;
+    }
     if (act === 'reset-stats') { toast('Статистика сброшена'); return; }
     if (act === 'logout') {
       CupionAPI.logout().then(function () {
@@ -2763,7 +2782,7 @@
     }
     S.edit.name = name.trim();
     S.edit.bio = bio.trim();
-    CupionAPI.updateMe({ name: S.edit.name, bio: S.edit.bio, lookingFor: S.edit.lookingFor, photos: S.edit.photos }).then(function (me) {
+    CupionAPI.updateMe({ name: S.edit.name, bio: S.edit.bio, city: (document.getElementById('edit-city') || {}).value || '', lookingFor: S.edit.lookingFor, photos: S.edit.photos }).then(function (me) {
       S.me = me;
       closeSheet();
       toast('Анкета обновлена');
