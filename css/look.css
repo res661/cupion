@@ -2651,3 +2651,4 @@ body, #app {
 :root[data-theme="dark"] .rr-cell.given { background: rgba(255, 179, 0, 0.20); color: #ffc65c; }
 :root[data-theme="dark"] .rr-answered { background: rgba(10, 132, 255, 0.18); color: #6cb6ff; }
 :root[data-theme="dark"] .rr-card { box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5); }
+.rr-media .rr-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

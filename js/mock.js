@@ -26,8 +26,8 @@
   /* 20 profiles. pending:true anketas arrive after "Появились новые". */
   var PEOPLE = [
     /* --- test profiles with real uploaded photos --- */
-    { id: 'test_photo_1', username: 'a_photo_1', name: 'Саша', age: 21, gender: 'female', premium: false, rating10: 9.5, ratingsCount: 120, matchesCount: 3, bio: 'тестовая анкета с фото', caption: 'проверка фото', createdAt: Date.now() - 60 * 1000, photos: [{ id: 'tp1', type: 'photo', url: 'assets/photos/test1.jpg' }, { id: 'tp1b', type: 'photo', url: 'assets/photos/test2.jpg' }], stories: [{ id: 'tp1s', url: 'assets/photos/test3.jpg', createdAt: Date.now() - 4 * 60000 }] },
-    { id: 'test_photo_2', username: 'a_photo_2', name: 'Лиза', age: 20, gender: 'female', premium: true, rating10: 9.7, ratingsCount: 240, matchesCount: 7, bio: 'тест: премиум и видео', caption: 'вторая тестовая', createdAt: Date.now() - 120 * 1000, photos: [{ id: 'tp2', type: 'photo', url: 'assets/photos/test4.jpg' }, { id: 'tp2b', type: 'photo', url: 'assets/photos/test5.jpg' }], stories: [{ id: 'tp2s', url: 'assets/photos/test6.jpg', createdAt: Date.now() - 2 * 60000 }] },
+    { id: 'test_photo_1', username: 'a_photo_1', name: 'Саша', age: 21, gender: 'female', premium: false, rating10: 9.5, ratingsCount: 120, matchesCount: 3, bio: 'тестовая анкета с фото', caption: 'проверка фото', createdAt: Date.now() - 60 * 1000, photos: [{ id: 'tp1', type: 'video', url: 'assets/video/clip1.mp4', poster: 'assets/photos/test1.jpg' }, { id: 'tp1b', type: 'photo', url: 'assets/photos/test2.jpg' }], stories: [{ id: 'tp1s', url: 'assets/photos/test3.jpg', createdAt: Date.now() - 4 * 60000 }] },
+    { id: 'test_photo_2', username: 'a_photo_2', name: 'Лиза', age: 20, gender: 'female', premium: true, rating10: 9.7, ratingsCount: 240, matchesCount: 7, bio: 'тест: премиум и видео', caption: 'вторая тестовая', createdAt: Date.now() - 120 * 1000, photos: [{ id: 'tp2', type: 'video', url: 'assets/video/clip2.mp4', poster: 'assets/photos/test4.jpg' }, { id: 'tp2b', type: 'photo', url: 'assets/photos/test5.jpg' }], stories: [{ id: 'tp2s', url: 'assets/photos/test6.jpg', createdAt: Date.now() - 2 * 60000 }] },
     { id: 'test_photo_3', username: 'a_photo_3', name: 'Дана', age: 22, gender: 'female', premium: false, rating10: 9.3, ratingsCount: 88, matchesCount: 2, bio: 'тест: одно фото', caption: 'одна фотография', createdAt: Date.now() - 180 * 1000, photos: [{ id: 'tp3', type: 'photo', url: 'assets/photos/test2.jpg' }], stories: [] },
     { id: 'test_photo_4', username: 'a_photo_4', name: 'Мила', age: 23, gender: 'female', premium: true, rating10: 9.6, ratingsCount: 310, matchesCount: 9, bio: 'тест: три фото и история', caption: 'три фотографии', createdAt: Date.now() - 240 * 1000, photos: [{ id: 'tp4', type: 'photo', url: 'assets/photos/test3.jpg' }, { id: 'tp4b', type: 'photo', url: 'assets/photos/test4.jpg' }, { id: 'tp4c', type: 'photo', url: 'assets/photos/test5.jpg' }], stories: [{ id: 'tp4s', url: 'assets/photos/test1.jpg', createdAt: Date.now() - 6 * 60000 }] },
     { id: 'test_photo_5', username: 'a_photo_5', name: 'Ника', age: 19, gender: 'female', premium: false, rating10: 9.1, ratingsCount: 45, matchesCount: 1, bio: 'тест: история без фото', caption: 'история есть, фото нет', createdAt: Date.now() - 300 * 1000, photos: [{ id: 'tp5', type: 'photo', url: 'assets/photos/test6.jpg' }], stories: [{ id: 'tp5s', url: 'assets/photos/test2.jpg', createdAt: Date.now() - 3 * 60000 }, { id: 'tp5s2', url: 'assets/photos/test4.jpg', createdAt: Date.now() - 60000 }] },
@@ -129,6 +129,26 @@
   function clone(v) { return JSON.parse(JSON.stringify(v)); }
 
   function seedRatings(now) {
+    var rows = seedRatingsBase(now);
+    var testIds = ['test_photo_1', 'test_photo_2', 'test_photo_3', 'test_photo_4', 'test_photo_5', 'test_photo_6'];
+    var scores = [10, 9, 7, 8, 10, 6];
+    var texts = ['очень тёплые фото', 'давай познакомимся', '', 'красивая анкета', 'мне нравится твой стиль', ''];
+    testIds.forEach(function (id, i) {
+      if (!personById(id)) return;
+      rows.unshift({
+        id: 'r_test_' + (i + 1),
+        from: id,
+        to: 'me',
+        score: scores[i],
+        text: texts[i],
+        photoId: '',
+        createdAt: now - (i + 1) * 7 * 60000
+      });
+    });
+    return rows;
+  }
+
+  function seedRatingsBase(now) {
     var rows = [
       ['r_sonya', 'sonya', 'me', 9, '', 2 * 60000],
       ['r_max', 'max_k', 'me', 9, 'Давай познакомимся — очень тёплые фото', 8 * 60000],
