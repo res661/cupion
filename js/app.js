@@ -1840,6 +1840,18 @@
     storyRAF = 0;
   }
 
+  var homeAnim = null;
+  function mountHomeLottie() {
+    if (!window.lottie) return;
+    var host = document.getElementById('dock-home-lottie');
+    if (!host) return;
+    if (homeAnim) { try { homeAnim.destroy(); } catch (e) {} homeAnim = null; }
+    host.innerHTML = '';
+    try {
+      homeAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/home.json' });
+    } catch (e) {}
+  }
+
   var topAnim = null;
   function mountTopLottie() {
     if (!window.lottie) return;
@@ -2005,7 +2017,7 @@
     var onBoard = S.screen === 'rating';
     var onRates = S.screen === 'ratings';
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
-      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + iconPair(ICON.home, ICON.homeFill) + '</button>' +
+      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + '<span class="dock-lottie" id="dock-home-lottie"></span>' + '</button>' +
       '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + '<span class="dock-lottie" id="dock-top-lottie"></span>' + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
       '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<span class="dock-lottie" id="dock-lottie"></span>' +
@@ -2123,6 +2135,7 @@
     mountDockLottie();
     mountProfileLottie();
     mountTopLottie();
+    mountHomeLottie();
     restoreScroll();
     renderSheet();
     renderStory();
