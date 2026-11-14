@@ -341,7 +341,7 @@
       if (city && city.length < 2) throw new Error('Укажи город');
       var name = String(draft.name || '').trim();
       if (name.length < 2) throw new Error('Как тебя зовут?');
-      var photos = (draft.photos || []).slice(0, 5).map(function (p, i) {
+      var photos = (draft.photos || []).slice(0, 3).map(function (p, i) {
         return { id: 'me_p' + (i + 1), type: p.type || 'photo', url: p.url || '', poster: p.poster || '', ratio: Number(p.ratio) || 0 };
       });
       if (!photos.length) throw new Error('Добавь хотя бы одно фото');
@@ -382,7 +382,7 @@
       if (patch.gender) state.me.gender = String(patch.gender);
       if (patch.avatar != null) state.me.avatar = String(patch.avatar);
       if (patch.photos) {
-        var cap = state.me.premium ? 6 : 3;
+        var cap = state.me.premium ? 4 : 1;
         var kept = [];
         var n = 0;
         patch.photos.forEach(function (p) {
@@ -664,7 +664,7 @@
       if (type === 'video' && !state.me.premium) return { ok: false, reason: 'premium' };
       var items = payload.photos || [];
       if (!items.length) throw new Error('Нет файла');
-      var cap = state.me.premium ? 6 : 3;
+      var cap = state.me.premium ? 4 : 1;
       var have = state.me.photos.filter(function (p) { return (p.type || 'photo') !== 'video'; }).length;
       if (type !== 'video' && have >= cap) return { ok: false, reason: 'premium' };
       if (type !== 'video') items = items.slice(0, Math.max(0, cap - have));

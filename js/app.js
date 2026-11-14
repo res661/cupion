@@ -1106,12 +1106,12 @@
     }
     if (S.regStep === 2) return validName(r.name);
     if (S.regStep === 3) return String(r.bio || '').trim().length >= 2;
-    if (S.regStep === 4) return r.photos.length >= 1 && r.photos.length <= ((S.me && S.me.premium) ? 5 : 2);
+    if (S.regStep === 4) return r.photos.length >= 1 && r.photos.length <= ((S.me && S.me.premium) ? 3 : 1);
     return true;
   }
 
   function photoCap() {
-    return (S.me && S.me.premium) ? 5 : 2;
+    return (S.me && S.me.premium) ? 3 : 1;
   }
 
   function countPhotos(list) {
@@ -1160,7 +1160,7 @@
       var tiles = r.photos.map(function (p, idx) {
         return photoPick(p, idx, r.photos.length, 'reg');
       }).join('');
-      var regCap = (S.me && S.me.premium) ? 5 : 2;
+      var regCap = (S.me && S.me.premium) ? 3 : 1;
       var add = r.photos.length < regCap
         ? '<button class="pick-add" data-act="pick-reg" aria-label="Добавить фото">+</button>'
         : (r.photos.length && !(S.me && S.me.premium) ? '<button class="pick-add locked" data-act="premium" aria-label="Больше в Premium">+</button>' : '');
@@ -2662,7 +2662,11 @@
     if (act === 'tg-avatar') {
       var tu = window.TG ? TG.user() : null;
       var photoUrl = tu && tu.photo_url ? tu.photo_url : '';
-      if (!photoUrl) { toast('В Telegram нет фото профиля'); return; }
+      if (!photoUrl) {
+        var fb = S.reg && S.reg.photos && S.reg.photos[0] ? S.reg.photos[0].url : '';
+        if (fb) { S.reg.avatar = fb; var apf = document.querySelector('.avatar-pick'); if (apf) { apf.innerHTML = '<img src="' + esc(displayUrl(fb) || fb) + '" alt="">'; apf.classList.add('has'); } toast('Фото из Telegram недоступно — взяли фото анкеты'); return; }
+        toast('В Telegram нет фото профиля'); return;
+      }
       S.edit.avatar = photoUrl;
       var ap2 = document.querySelector('.avatar-pick');
       if (ap2) { ap2.innerHTML = '<img src="' + esc(photoUrl) + '" alt="">'; ap2.classList.add('has'); }
@@ -3027,7 +3031,7 @@
       return;
     }
     var room = 1;
-    if (purpose === 'reg') room = Math.max(0, ((S.me && S.me.premium) ? 5 : 2) - S.reg.photos.length);
+    if (purpose === 'reg') room = Math.max(0, ((S.me && S.me.premium) ? 3 : 1) - S.reg.photos.length);
     else if (purpose === 'edit') room = Math.max(0, photoCap() - countPhotos(S.edit.photos));
     else if (purpose === 'post') room = Math.max(0, photoCap() - countPhotos(S.me && S.me.photos));
     else if (purpose === 'replace-edit' || purpose === 'replace-reg') room = 1;
@@ -3045,7 +3049,7 @@
         return;
       }
       if (purpose === 'reg') {
-        S.reg.photos = S.reg.photos.concat(pics).slice(0, (S.me && S.me.premium) ? 5 : 2);
+        S.reg.photos = S.reg.photos.concat(pics).slice(0, (S.me && S.me.premium) ? 3 : 1);
         render();
       } else if (purpose === 'edit') {
         var roomLeft = photoCap() - countPhotos(S.edit.photos);
