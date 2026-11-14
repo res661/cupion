@@ -395,7 +395,7 @@
           return { id: p.id || ('me_p' + (i + 1) + '_' + Date.now()), type: p.type || 'photo', url: p.url, poster: p.poster || '', ratio: Number(p.ratio) || 0, zoom: Number(p.zoom) || 1, posX: Number(p.posX) || 50, posY: Number(p.posY) || 50 };
         });
         var first = state.me.photos[0];
-        state.me.avatar = first ? (first.poster || first.url) : '';
+        if (!state.me.avatar) state.me.avatar = first ? (first.poster || first.url) : '';
       }
       writeStore();
       return publicUser(state.me);

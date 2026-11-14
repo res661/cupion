@@ -1105,6 +1105,7 @@
         '<div class="set-card"><div class="label">Настройки</div>' +
         '<button class="choice-row" data-act="premium"><span>Premium<small>Больше анкет, историй и видео</small></span><span class="prem-tag">PRO</span></button>' +
         '<button class="choice-row" data-act="theme-open"><span>Тема<small>' + (S.theme === 'dark' ? 'Тёмная' : S.theme === 'light' ? 'Светлая' : 'Как в телефоне') + '</small></span></button>' +
+        '<button class="choice-row" data-act="looking"><span>Кого искать<small>' + (S.me && S.me.lookingFor === 'male' ? 'Парней' : S.me && S.me.lookingFor === 'female' ? 'Девушек' : 'Всех') + '</small></span></button>' +
         '<button class="choice-row" data-act="gender"><span>Пол<small>' + (S.me && S.me.gender === 'female' ? 'Девушка' : S.me && S.me.gender === 'male' ? 'Парень' : 'Не указан') + '</small></span></button>' +
         '<button class="choice-row" data-act="reset-stats"><span>Сбросить статистику<small>Обнулить счётчики профиля</small></span></button>' +
         '<button class="choice-row" data-act="logout"><span>Выйти из анкеты</span></button>' +
@@ -1140,6 +1141,7 @@
     if (S.regStep === 2) return validName(r.name);
     if (S.regStep === 3) return String(r.bio || '').trim().length >= 2;
     if (S.regStep === 4) return !!r.avatar && r.photos.length >= 1 && r.photos.length <= ((S.me && S.me.premium) ? 3 : 1);
+    if (S.regStep === 5) return !!r.gender && !!r.lookingFor;
     return true;
   }
 
@@ -1173,7 +1175,7 @@
 
   function regScreen() {
     var steps = '';
-    for (var i = 0; i < 5; i++) steps += '<i class="' + (i === S.regStep ? 'on' : i < S.regStep ? 'done' : '') + '"></i>';
+    for (var i = 0; i < 6; i++) steps += '<i class="' + (i === S.regStep ? 'on' : i < S.regStep ? 'done' : '') + '"></i>';
     var back = S.regStep > 0
       ? '<button class="glass-circle" data-act="back" aria-label="Назад">' + ICON.back + '</button>'
       : '<span></span>';
@@ -1194,6 +1196,16 @@
       body = '<h1>Расскажи о себе</h1><p class="lead">Короткое описание профиля.</p>' +
         '<textarea class="area" data-reg="bio" maxlength="80" placeholder="' + regBioHint() + '">' + esc(r.bio) + '</textarea>' +
         '<div class="count" data-count>' + r.bio.length + '/80</div>';
+    } else if (S.regStep === 5) {
+      var chip = function (group, value, label) {
+        var cur = group === 'gender' ? r.gender : (r.lookingFor || 'all');
+        return '<button type="button" class="reg-chip' + (cur === value ? ' on' : '') + '" data-act="reg-pick" data-group="' + group + '" data-value="' + value + '">' + label + '</button>';
+      };
+      body = '<h1>Кто ты и кого ищешь?</h1><p class="lead">По полу подбираем подходящие анкеты.</p>' +
+        '<div class="reg-chips">' + chip('gender', 'male', 'Парень') + chip('gender', 'female', 'Девушка') + '</div>' +
+        '<p class="lead reg-sub">Ищу</p>' +
+        '<div class="reg-chips">' + chip('looking', 'male', 'Парней') + chip('looking', 'female', 'Девушек') + chip('looking', 'all', 'Всех') + '</div>' +
+        '<div class="sheet-error" id="reg-error"></div>';
     } else {
       var tiles = r.photos.map(function (p, idx) {
         return photoPick(p, idx, r.photos.length, 'reg');
@@ -1224,7 +1236,7 @@
         '</div>' +
         '';
     }
-    var label = S.regStep === 4 ? 'Готово' : 'Дальше';
+    var label = S.regStep === 5 ? 'Готово' : 'Дальше';
     var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : (S.regStep === 3 ? '<button class="text-btn" data-act="skip-bio">Пропустить</button>' : '');
     var dir = S.regDir < 0 ? 'enter-back' : 'enter-fwd';
     return '<div class="reg ' + dir + '"><div class="reg-top">' + back + '<div class="steps">' + steps + '</div></div>' +
@@ -1434,6 +1446,7 @@
     else if (S.sheet === 'compose') html = composeSheet();
     else if (S.sheet === 'storynew') html = storyNewSheet();
     else if (S.sheet === 'gender') html = genderSheet();
+    else if (S.sheet === 'looking') html = lookingSheet();
     else if (S.sheet === 'theme') html = themeSheet();
     else if (S.sheet === 'edit') html = editSheet();
     else if (S.sheet === 'more') html = moreSheet(S.sheetPayload || {});
@@ -2246,6 +2259,14 @@
     );
   }
 
+  function lookingSheet() {
+    var cur = (S.me && S.me.lookingFor) || 'all';
+    var row = function (v, label) {
+      return '<button class="choice-row' + (cur === v ? ' on' : '') + '" data-act="set-looking" data-value="' + v + '"><span>' + label + '</span></button>';
+    };
+    return sheetFrame('<h2>Кого искать</h2><div class="choice-list">' + row('male', 'Парней') + row('female', 'Девушек') + row('all', 'Всех') + '</div>');
+  }
+
   function genderSheet() {
     var g = S.me && S.me.gender;
     return sheetFrame(
@@ -2746,6 +2767,16 @@
       }
       return;
     }
+    if (act === 'reg-pick') {
+      var group = t.getAttribute('data-group');
+      var value = t.getAttribute('data-value');
+      if (group === 'gender') S.reg.gender = value;
+      else S.reg.lookingFor = value;
+      if (window.TG) TG.selection();
+      S.regDir = 0;
+      render();
+      return;
+    }
     if (act === 'reg-avatar') { S.pickPurpose = 'avatar-reg'; pickFiles('avatar-reg'); return; }
     if (act === 'reg-tg-avatar') {
       var ru = window.TG ? TG.user() : null;
@@ -2835,6 +2866,12 @@
       if (window.TG) TG.selection();
       return;
     }
+    if (act === 'looking') { openSheet('looking', { key: 'looking' }); return; }
+    if (act === 'set-looking') {
+      var lv = t.getAttribute('data-value');
+      CupionAPI.updateMe({ lookingFor: lv }).then(function (me) { S.me = me; closeSheet(); render(); toast('Сохранено'); }).catch(function () {});
+      return;
+    }
     if (act === 'gender') { openSheet('gender', { key: 'gender' }); return; }
     if (act === 'set-gender') {
       var gv = t.getAttribute('data-value');
@@ -2878,7 +2915,7 @@
       if (window.TG) TG.notify('error');
       return;
     }
-    if (S.regStep >= 4) { finishReg(); return; }
+    if (S.regStep >= 5) { finishReg(); return; }
     S.regDir = 1;
     S.regStep += 1;
     if (S.regStep === 2 && S.reg.username) checkUsername(S.reg.username);

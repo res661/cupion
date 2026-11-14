@@ -2201,3 +2201,24 @@ body, #app {
 .me-empty-plus { font-size: 42px; font-weight: 300; line-height: 1; color: #0a84ff; }
 .me-empty-text { font-size: 14px; font-weight: 600; }
 :root[data-theme="dark"] .me-empty { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.16); }
+/* registration: gender + looking chips */
+.reg-chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 6px; }
+.reg-chip {
+  flex: 1 1 0;
+  min-width: 96px;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--input);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.reg-chip.on {
+  background: #0a84ff;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.32);
+}
+.reg-sub { margin: 18px 0 0; font-size: 15px; font-weight: 700; color: var(--text); }
+:root[data-theme="dark"] .reg-chip { background: rgba(255, 255, 255, 0.09); }
+:root[data-theme="dark"] .reg-chip.on { background: #0a84ff; }
