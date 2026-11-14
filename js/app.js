@@ -282,11 +282,24 @@
     }, 2200);
   }
 
-  function applyTheme() {
-    S.theme = 'light';
-    document.documentElement.dataset.theme = 'light';
-    document.documentElement.style.colorScheme = 'light';
-    if (window.TG) TG.paintChrome(false);
+  function applyTheme(mode) {
+    var m = mode || S.theme || 'auto';
+    S.theme = m;
+    var dark;
+    if (m === 'auto') {
+      dark = !!(window.TG && TG.colorScheme && TG.colorScheme() === 'dark');
+      if (!dark && !(window.TG && TG.colorScheme && TG.colorScheme()) && window.matchMedia) {
+        dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+    } else {
+      dark = m === 'dark';
+    }
+    S.dark = dark;
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', dark ? '#0d0d0f' : '#F7F9FC');
+    if (window.TG) TG.paintChrome(dark);
   }
 
   function tabsVisible() {
@@ -1015,6 +1028,7 @@
         '<div class="profile-actions">' + primary + '</div>' +
         '<div class="set-card"><div class="label">Настройки</div>' +
         '<button class="choice-row" data-act="premium"><span>Premium<small>Больше анкет, историй и видео</small></span><span class="prem-tag">PRO</span></button>' +
+        '<button class="choice-row" data-act="theme-open"><span>Тема<small>' + (S.theme === 'dark' ? 'Тёмная' : S.theme === 'light' ? 'Светлая' : 'Как в телефоне') + '</small></span></button>' +
         '<button class="choice-row" data-act="gender"><span>Пол<small>' + (S.me && S.me.gender === 'female' ? 'Девушка' : S.me && S.me.gender === 'male' ? 'Парень' : 'Не указан') + '</small></span></button>' +
         '<button class="choice-row" data-act="reset-stats"><span>Сбросить статистику<small>Обнулить счётчики профиля</small></span></button>' +
         '<button class="choice-row" data-act="logout"><span>Выйти из анкеты</span></button>' +
@@ -1426,6 +1440,7 @@
     else if (S.sheet === 'compose') html = composeSheet();
     else if (S.sheet === 'storynew') html = storyNewSheet();
     else if (S.sheet === 'gender') html = genderSheet();
+    else if (S.sheet === 'theme') html = themeSheet();
     else if (S.sheet === 'edit') html = editSheet();
     else if (S.sheet === 'more') html = moreSheet(S.sheetPayload || {});
     else if (S.sheet === 'actions') html = actionsSheet(S.sheetPayload || {});
@@ -2210,6 +2225,21 @@
   }
 
   /* Centered iOS-style menu for the story "+" (upload only, no camera capture). */
+  function themeSheet() {
+    var t = S.theme || 'auto';
+    var row = function (v, label, hint) {
+      return '<button class="choice-row' + (t === v ? ' on' : '') + '" data-act="theme" data-theme="' + v + '">' +
+        '<span>' + label + '<small>' + hint + '</small></span></button>';
+    };
+    return sheetFrame(
+      '<h2>Тема</h2><p class="hint">«Как в телефоне» — подстраивается под систему.</p><div class="choice-list">' +
+      row('auto', 'Как в телефоне', 'авто') +
+      row('light', 'Светлая', 'всегда') +
+      row('dark', 'Тёмная', 'всегда') +
+      '</div>'
+    );
+  }
+
   function genderSheet() {
     var g = S.me && S.me.gender;
     return sheetFrame(
@@ -2727,9 +2757,11 @@
       return;
     }
     if (act === 'copy') { copyText(t.getAttribute('data-link')); return; }
+    if (act === 'theme-open') { openSheet('theme', { key: 'theme' }); return; }
     if (act === 'theme') {
       var theme = t.getAttribute('data-theme');
       CupionAPI.setTheme(theme).then(function (saved) {
+        closeSheet();
         applyTheme(saved);
         try { localStorage.setItem('cupion-theme', saved); } catch (err) {}
         render();
@@ -3577,7 +3609,9 @@
     prefill();
     var start = window.TG ? String(TG.startParam() || '') : '';
     if (start.indexOf('u_') === 0) S.startUser = decodeURIComponent(start.slice(2));
+    try { S.theme = localStorage.getItem('cupion-theme') || S.theme || 'auto'; } catch (e) {}
     applyTheme();
+    CupionAPI.getTheme().then(function (saved) { if (saved && saved !== S.theme) { S.theme = saved; applyTheme(); } }).catch(function () {});
     CupionAPI.getMe().then(function (me) {
       S.me = me;
       if (!me) {
