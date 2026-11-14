@@ -1199,10 +1199,10 @@
         '<button class="reg-tg" data-act="reg-tg-avatar">Из Telegram</button></div>' +
         '<div class="reg-hero-wrap">' +
         '<button class="reg-hero' + (first ? ' filled' : '') + '" data-act="pick-reg" aria-label="Выбрать фото">' + face + '</button>' +
-        (first ? '<button class="reg-rm" data-act="rm-reg-main" aria-label="Удалить фото">−</button>' : '') +
+        (first ? '<button type="button" class="reg-rm" data-act="rm-reg-main" aria-label="Удалить фото">−</button>' : '') +
 
-        (r.photos.length > 1 ? '<button class="reg-nav prev" data-act="reg-main-move" data-dir="-1" aria-label="Назад">‹</button><button class="reg-nav next" data-act="reg-main-move" data-dir="1" aria-label="Вперёд">›</button>' : '') +
-        ((r.photos.length && r.photos.length < regCap) ? '<button class="reg-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '') +
+        (r.photos.length > 1 ? '<button type="button" class="reg-nav prev" data-act="reg-main-move" data-dir="-1" aria-label="Назад">‹</button><button type="button" class="reg-nav next" data-act="reg-main-move" data-dir="1" aria-label="Вперёд">›</button>' : '') +
+        ((r.photos.length && r.photos.length < regCap) ? '<button type="button" class="reg-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '') +
         '</div>' +
         '<div class="post-meta"><div class="post-title">' + esc(r.name || 'Имя') + ', ' + esc(r.age || '—') + (r.city ? ' · ' + esc(r.city) : '') + '</div></div>' +
         '<p class="caption">' + (r.bio ? esc(r.bio) : (first ? 'Нажми на фото, чтобы заменить' : 'Нажми на плюс, чтобы добавить фото')) + '</p>' +
@@ -2706,7 +2706,7 @@
       toast('Аватарка из Telegram');
       return;
     }
-    if (act === 'rm-reg-main') { S.reg.photos.shift(); render(); return; }
+    if (act === 'rm-reg-main') { S.reg.photos.shift(); S.regDir = 0; render(); return; }
     if (act === 'reg-main-move') {
       var dir = parseInt(t.getAttribute('data-dir'), 10) || 1;
       if (S.reg.photos.length > 1) {
@@ -2714,6 +2714,7 @@
         var tmp = S.reg.photos[0];
         S.reg.photos[0] = S.reg.photos[idx];
         S.reg.photos[idx] = tmp;
+        S.regDir = 0;
         render();
       }
       return;

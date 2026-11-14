@@ -2104,3 +2104,5 @@ body, #app {
   display: grid; place-items: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
+/* no page-like re-animation when editing reg photos */
+.reg.enter-fwd, .reg.enter-back { animation: none; }
