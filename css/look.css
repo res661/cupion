@@ -1863,3 +1863,5 @@ body, #app {
 .edit-preview .frame-clip { max-height: 190px; }
 .edit-preview .frame { margin: 0; }
 .edit-preview .media-dots { display: none; }
+.card-edit { display: block; width: 100%; margin: 14px auto 2px; height: 46px; border-radius: 999px; }
+.card-stats { display: none; }

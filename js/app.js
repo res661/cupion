@@ -883,8 +883,7 @@
       mediaBlock(post, '') +
       '<div class="post-meta"><div class="post-title">' + esc(post.name) + ', ' + esc(post.age) + city + count + '</div>' + scoreHtml + '</div>' +
       '<p class="caption">' + esc(post.caption || post.bio || '') + '</p>' +
-      (post.isMine ? '<div class="card-stats"><b>' + esc(avgScore(post) || '—') + '</b><i>★</i><span>' + esc(compactNum(post.ratingsCount)) + ' оценок</span><span>' + esc(compactNum(post.matchesCount)) + ' мэтчей</span></div>' +
-        '<button class="btn btn-white card-edit" data-act="edit">Редактировать</button>' : '') + rateUI + '</div></article>';
+      (post.isMine ? '<button class="btn btn-primary card-edit" data-act="edit">Редактировать</button>' : '') + rateUI + '</div></article>';
   }
 
   function feedScreen() {
