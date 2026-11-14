@@ -1546,3 +1546,7 @@ body, #app {
 
 .heart-reaction { display: block; width: 30px; height: 30px; }
 .heart-reaction svg { width: 100%; height: 100%; }
+
+/* premium badge: sticker only, no blue pill */
+.prem { background: transparent !important; box-shadow: none !important; width: 18px; height: 18px; }
+.prem-lottie { width: 18px; height: 18px; }

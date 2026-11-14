@@ -1897,7 +1897,7 @@
     if (topAnim) { try { topAnim.destroy(); } catch (e) {} topAnim = null; }
     host.innerHTML = '';
     try {
-      topAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/top.json' });
+      topAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/cup.json' });
     } catch (e) {}
   }
 
