@@ -125,7 +125,25 @@
   function ph() { return phAvatar(); }
 
   function premMark() {
-    return '<span class="prem" aria-label="Premium"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="#fff" d="M6.15 8.15 4.4 6.4 3.2 7.6l2.95 2.95 6.1-6.1-1.2-1.2z"/></svg></span>';
+    return '<span class="prem" aria-label="Premium"><span class="prem-lottie" data-prem></span></span>';
+  }
+
+  var premAnims = [];
+  var fireAnims = [];
+  function mountInlineLotties() {
+    if (!window.lottie) return;
+    premAnims.forEach(function (x) { try { x.destroy(); } catch (e) {} });
+    fireAnims.forEach(function (x) { try { x.destroy(); } catch (e) {} });
+    premAnims = []; fireAnims = [];
+    var i;
+    var badges = document.querySelectorAll('[data-prem]');
+    for (i = 0; i < badges.length; i++) {
+      try { premAnims.push(window.lottie.loadAnimation({ container: badges[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/prem.json' })); } catch (e) {}
+    }
+    var fires = document.querySelectorAll('[data-fire]');
+    for (i = 0; i < fires.length; i++) {
+      try { fireAnims.push(window.lottie.loadAnimation({ container: fires[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/fire.json' })); } catch (e) {}
+    }
   }
 
   function avgScore(post) {
@@ -1616,7 +1634,10 @@
         '<div class="story-bottom">' +
         '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥'].map(function (emo) {
           var picked = S.picked && S.picked[item.id] === emo;
-          return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
+          if (emo === '🔥') {
+        return '<button class="emoji-btn lottie-emoji' + (picked ? ' on' : '') + '" data-act="react" data-emoji="🔥" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="🔥"><span class="fire-lottie" data-fire></span></button>';
+      }
+      return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
         }).join('') + '</div>' +
         '<div class="story-comment-box">' +
         '<input type="text" class="story-comment-input" id="story-comment-' + esc(item.id) + '" placeholder="Комментарий" maxlength="180" data-story="' + esc(item.id) + '" data-user="' + esc(st.userId) + '">' +
@@ -1664,6 +1685,7 @@
       storyInput.addEventListener('focus', function () { if (S.story) S.story.paused = true; });
       storyInput.addEventListener('blur', function () { if (S.story) S.story.paused = false; });
     }
+    mountInlineLotties();
     restartClock();
   }
 
@@ -2150,6 +2172,7 @@
     mountDockLottie();
     mountProfileLottie();
     mountTopLottie();
+    mountInlineLotties();
     mountHomeLottie();
     restoreScroll();
     renderSheet();

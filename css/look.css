@@ -1531,3 +1531,10 @@ body, #app {
 .pick { border-radius: 18px; overflow: hidden; }
 .pick img { border-radius: 18px; }
 .pick-add { border-radius: 18px; }
+
+.prem-lottie { display: block; width: 16px; height: 16px; }
+.prem-lottie svg { width: 100%; height: 100%; }
+.prem { overflow: hidden; padding: 0; }
+.lottie-emoji { padding: 0; overflow: hidden; }
+.fire-lottie { display: block; width: 30px; height: 30px; }
+.fire-lottie svg { width: 100%; height: 100%; }
