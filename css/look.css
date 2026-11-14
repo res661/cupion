@@ -1786,3 +1786,12 @@ body, #app {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), inset 0 0 0 0.5px rgba(255, 255, 255, 0.12);
 }
 .dock-btn.on:active { transform: translateY(-1px) scale(0.97); }
+/* profile anketa = exactly like the feed card */
+.screen-profile .own-card { margin: 0; }
+.screen-profile .own-card .card { margin: 0; }
+.screen-profile .own-card .post-head { padding: 2px 2px 12px; }
+.screen-profile .own-card .frame { margin: 0; }
+.screen-profile .own-card .frame-clip { box-shadow: none; }
+.screen-profile .own-card .post-meta { margin: 12px 2px 0; }
+.screen-profile .own-card .caption { margin: 6px 2px 2px; font-size: 15px; }
+.screen-profile .own-card .post { padding: 0; }

@@ -844,7 +844,7 @@
           return '<i class="' + (i === idx ? 'on' : '') + '"></i>';
         }).join('') + '</span>'
       : '';
-    return '<div class="frame"><div class="frame-clip" data-swipe="' + esc(post.id) + '">' +
+    return '<div class="frame"><div class="frame-clip"' + (photos.length > 1 ? ' data-swipe="' + esc(post.id) + '"' : '') + '>' +
       '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
       dots + '</div>' + (chip || '') + '</div>';
   }
