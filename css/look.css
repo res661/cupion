@@ -2357,3 +2357,13 @@ body, #app {
   0% { background: rgba(10, 132, 255, 0.10); }
   100% { background: transparent; }
 }
+/* mutual tab: chips + counter, low-score hint, clean flash */
+.mutual-chips { display: flex; gap: 8px; margin: 4px 0 8px; }
+.mutual-chips .reg-chip { flex: 0 0 auto; min-width: 0; height: 36px; padding: 0 16px; font-size: 14px; }
+.mutual-count { padding: 0 20px 8px; font-size: 13px; color: var(--text-2); font-weight: 600; }
+.rate-hint { font-size: 12px; color: var(--text-3); }
+.rate-row.fresh { animation: rowFlash 0.7s ease; }
+@keyframes rowFlash {
+  0% { box-shadow: inset 0 0 0 2px rgba(10, 132, 255, 0.45); }
+  100% { box-shadow: inset 0 0 0 0 rgba(10, 132, 255, 0); }
+}

@@ -1001,6 +1001,9 @@
         for (var k = 1; k <= 10; k++) inline += '<button type="button" class="mini-star" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
         replyRow = '<span class="quick-stars">' + inline + '</span>';
       }
+      if (!row.repliedScore && row.score <= 5) {
+        actions += '<span class="rate-hint">оценка ниже 6 — написать нельзя</span>';
+      }
       if (row.score > 5) {
         actions += '<button class="btn btn-primary btn-sm" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>';
       }
@@ -1027,7 +1030,7 @@
 
   function ratingsScreen() {
     var i = S.ratingsTab === 'out' ? 1 : S.ratingsTab === 'matches' ? 2 : 0;
-    var hero = (S.ratingsTab !== 'out' && S.matches && S.matches[0]) ? matchHero(S.matches[0]) : '';
+    var hero = '';
     var body = '';
     if (S.ratingsTab === 'in') {
       body = (S.incoming || []).map(function (row, i) { return ratingRow(row, true, i); }).join('');
@@ -1036,20 +1039,29 @@
       body = (S.outgoing || []).map(function (row, i) { return ratingRow(row, false, i); }).join('');
       if (!body) body = '<div class="empty"><div class="empty-orb"></div><h3>Ты ещё никого не оценил</h3><p>Поставь первую оценку в ленте.</p></div>';
     } else {
-      body = (S.matches || []).slice(1).map(function (m) {
+      var kind = S.mutualKind || 'anketa';
+      var mutualChips = '<div class="pad"><div class="mutual-chips">' +
+        '<button type="button" class="reg-chip' + (kind === 'anketa' ? ' on' : '') + '" data-act="mutual-kind" data-kind="anketa">По анкетам</button>' +
+        '<button type="button" class="reg-chip' + (kind === 'story' ? ' on' : '') + '" data-act="mutual-kind" data-kind="story">По историям</button>' +
+        '</div></div>';
+      var allMutual = (S.matches || []).slice(1).filter(function (m) {
+        return (m.kind === 'story' ? 'story' : 'anketa') === kind;
+      });
+      body = mutualChips + (allMutual.length ? '<div class="mutual-count">Взаимных: ' + allMutual.length + '</div>' : '');
+      body += allMutual.map(function (m) {
         return '<article class="rate-row"><div class="rate-main">' + phAvatar() +
-          '<div><b>@' + esc((S.me && S.me.username) || 'ты') + ' и @' + esc(m.user.username) + '</b><div class="sub">' + (m.kind === 'story' ? 'мэтч по истории' : 'мэтч') + ' · ' + timeAgo(m.createdAt) + '</div></div>' +
+          '<div><b>@' + esc((S.me && S.me.username) || 'ты') + ' и @' + esc(m.user.username) + '</b><div class="sub">' + (kind === 'story' ? 'взаимная реакция на историю' : 'взаимная оценка анкеты') + ' · ' + timeAgo(m.createdAt) + '</div></div>' +
           '<button class="thumb-btn" data-act="person" data-id="' + esc(m.user.id) + '">' + phPhoto() + '</button></div>' +
           '<div class="hair"></div><div class="rate-foot"><span></span>' +
-          '<button class="btn btn-primary btn-sm" data-act="person" data-id="' + esc(m.user.id) + '">Смотреть</button></div></article>';
+          '<button class="btn btn-primary btn-sm" data-act="person" data-id="' + esc(m.user.id) + '">Написать</button></div></article>';
       }).join('');
-      if (!S.matches || !S.matches.length) body = '<div class="empty"><div class="empty-orb"></div><h3>Мэтчей пока нет</h3><p>Взаимная оценка превращается в мэтч.</p></div>';
+      if (!allMutual.length) body += '<div class="empty"><div class="empty-orb"></div><h3>Пока нет взаимных</h3><p>' + (kind === 'story' ? 'Совпадения по реакциям на истории появятся здесь.' : 'Взаимная оценка анкет появится здесь.') + '</p></div>';
     }
     return '<div class="screen"><div class="scroll"><div class="page-head"><h1>Оценки</h1><p>Кто оценил тебя</p></div>' +
       '<div class="pad"><div class="seg" data-i="' + i + '"><i class="seg-pill"></i>' +
       '<button type="button" data-act="rtab" data-tab="in" class="' + (i === 0 ? 'on' : '') + '">Тебе</button>' +
       '<button type="button" data-act="rtab" data-tab="out" class="' + (i === 1 ? 'on' : '') + '">Ты</button>' +
-      '<button type="button" data-act="rtab" data-tab="matches" class="' + (i === 2 ? 'on' : '') + '">Мэтчи</button></div></div>' +
+      '<button type="button" data-act="rtab" data-tab="matches" class="' + (i === 2 ? 'on' : '') + '">Взаимные</button></div></div>' +
       hero + body + '</div></div>';
   }
 
@@ -2385,6 +2397,7 @@
       }).then(function () { return loadStories(); }).then(render).catch(function () {});
       return;
     }
+    if (act === 'mutual-kind') { S.mutualKind = t.getAttribute('data-kind'); S.ratingsTab = 'matches'; render(); return; }
     if (act === 'rtab') {
       S.ratingsTab = t.getAttribute('data-tab') || 'in';
       if (window.TG) TG.selection();
@@ -2525,7 +2538,7 @@
       var rn = parseInt(t.getAttribute('data-n'), 10) || 0;
       S.replyRateId = null;
       S.freshRatingId = rid;
-      setTimeout(function () { S.freshRatingId = null; }, 900);
+      setTimeout(function () { S.freshRatingId = null; render(); }, 900);
       CupionAPI.rate({ toId: rid, score: rn }).then(function () {
         loadRatings().then(function () { render(); if (window.TG) TG.impact('light'); toast('Оценка отправлена'); });
       }).catch(function (err) { toast(err && err.message ? err.message : 'Не получилось'); render(); });
