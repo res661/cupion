@@ -892,7 +892,9 @@
       : '';
     return '<div class="frame"><div class="frame-clip"' + (photos.length > 1 ? ' data-swipe="' + esc(post.id) + '"' : '') + '>' +
       '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
-      dots + '</div>' + (chip || '') + '</div>';
+      dots + '</div>' +
+      (post.isMine ? '<button type="button" class="reg-rm" data-act="me-rm-photo" aria-label="Удалить фото">−</button>' : '') +
+      '</div>';
   }
 
   function firstPhoto(post) {
@@ -936,8 +938,9 @@
     }
     
     return '<article class="post" data-post="' + esc(post.id) + '" style="--i:' + Math.min(index || 0, 7) + '"><div class="card">' +
-      '<div class="post-head"><button class="mini-ava">' + cardAvatar(post) + '</button>' +
+      '<div class="post-head"><button class="mini-ava"' + (post.isMine ? ' data-act="me-avatar"' : '') + '>' + cardAvatar(post) + '</button>' +
       '<div class="post-user">' + esc(post.name) + (post.premium ? premMark() : '') + '</div>' +
+      (post.isMine ? '<button class="reg-tg" data-act="me-tg-avatar">Из Telegram</button>' : '') +
       (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
       '</div>' +
       mediaBlock(post, '') +
@@ -1327,22 +1330,24 @@
     var stars = '';
     for (var i = 1; i <= 10; i++) stars += '<button type="button" data-act="star" data-n="' + i + '" class="' + (i <= n ? 'on' : '') + '" aria-label="' + i + '">★</button>';
     return sheetFrame(
-      '<div class="edit-head"><h2>Твоя анкета</h2><span class="edit-count">' + used + ' / ' + cap + ' фото</span></div>' +
-      '<div class="edit-preview">' + mediaBlock({ id: 'edit-preview', photos: e.photos }, '') + '</div>' +
-      '<div class="zoom-row"><span>Масштаб</span><input type="range" id="photo-zoom" min="100" max="200" step="5" value="' + Math.round((Number(e.photos[0] && e.photos[0].zoom) || 1) * 100) + '"></div>' +
-      '<div class="edit-sub">Аватарка<small>Кружок рядом с именем</small></div>' +
-      '<div class="avatar-row">' +
-      '<span class="avatar-pick' + (e.avatar ? ' has' : '') + '">' + (e.avatar ? '<img src="' + esc(displayUrl(e.avatar) || e.avatar) + '" alt="">' : phAvatar()) + '</span>' +
-      '<button class="btn btn-white avatar-btn" data-act="pick-avatar">Выбрать аватарку</button>' +
-      '<button class="btn btn-white avatar-btn" data-act="tg-avatar">Из Telegram</button>' +
-      '</div>' +
-      '<div class="edit-sub">Фото анкеты<small>Их видят в ленте</small></div>' +
-      '<div class="pick-grid">' + tiles + add + '</div>' +
+      '<h2>' + (p && p.name ? esc(p.name) : 'Оценка') + '</h2>' +
+      '<div class="stars">' + stars + '</div>' +
+      '<input class="field" id="rate-comment" maxlength="60" placeholder="Комментарий (необязательно)">' +
+      '<div class="sheet-error" id="sheet-error"></div>',
+      '<button class="btn btn-primary btn-block" data-act="save-rate">Оценить</button>'
+    );
+  }
+
+  function editSheet() {
+    var e = S.edit;
+    if (!e) return '';
+    return sheetFrame(
+      '<div class="edit-head"><h2>Твоя анкета</h2><span class="edit-count">фото — на карточке</span></div>' +
       '<div class="edit-fields">' +
       '<label class="edit-field"><span>Имя</span><input class="field" id="edit-name" maxlength="32" value="' + esc(e.name) + '" placeholder="Как тебя зовут"></label>' +
       '<label class="edit-field"><span>Возраст</span><input class="field" id="edit-age" inputmode="numeric" maxlength="2" value="' + esc(e.age || '') + '" placeholder="18"></label>' +
-      '<label class="edit-field"><span>Город</span><input class="field" id="edit-city" maxlength="32" value="' + esc(e.city || '') + '" placeholder="Необязательно"></label>' +
-      '<label class="edit-field"><span>О себе</span><textarea class="area" id="edit-bio" maxlength="80" placeholder="Пара слов о тебе">' + esc(e.bio) + '</textarea></label>' +
+      '<label class="edit-field"><span>Город</span><input class="field" id="edit-city" maxlength="32" value="' + esc(e.city || '') + '" placeholder="' + regCityHint() + '"></label>' +
+      '<label class="edit-field"><span>Описание</span><textarea class="area" id="edit-bio" maxlength="80" placeholder="' + regBioHint() + '">' + esc(e.bio) + '</textarea></label>' +
       '<div class="count">' + e.bio.length + '/80</div>' +
       '</div>' +
       '<div class="sheet-error" id="sheet-error"></div>',
@@ -2747,6 +2752,22 @@
       toast('Аватарка из Telegram');
       return;
     }
+    if (act === 'me-avatar') { S.pickPurpose = 'avatar-me'; pickFiles('avatar-me'); return; }
+    if (act === 'me-tg-avatar') {
+      var tgUser = window.TG ? TG.user() : null;
+      var tgPhoto = tgUser && tgUser.photo_url ? tgUser.photo_url : '';
+      var fpMe = firstPhoto(S.me);
+      var use = tgPhoto || (fpMe ? fpMe.url : '') || initialsAvatar(S.me && S.me.name);
+      CupionAPI.updateMe({ avatar: use }).then(function (me) { S.me = me; render(); toast(tgPhoto ? 'Аватарка из Telegram' : 'Поставили аватарку'); }).catch(function () {});
+      return;
+    }
+    if (act === 'me-rm-photo') {
+      var rest = ((S.me && S.me.photos) || []).slice(1);
+      if (!rest.length) { toast('Нужно хотя бы одно фото'); return; }
+      CupionAPI.updateMe({ photos: rest }).then(function (me) { S.me = me; render(); toast('Фото удалено'); }).catch(function () {});
+      return;
+    }
+    if (act === 'me-avatar') { return; }
     if (act === 'edit-look') {
       S.edit.lookingFor = t.getAttribute('data-value');
       sheetSig = '';
@@ -2961,7 +2982,7 @@
 
   function pickFiles(purpose) {
     S.pickPurpose = purpose;
-    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : (purpose === 'avatar' ? 'pick-avatar' : (purpose === 'avatar-reg' ? 'pick-avatar-reg' : 'pick-images')));
+    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : (purpose === 'avatar' ? 'pick-avatar' : (purpose === 'avatar-reg' ? 'pick-avatar-reg' : (purpose === 'avatar-me' ? 'pick-avatar' : 'pick-images'))));
     var input = document.getElementById(id);
     if (!input) return;
     input.value = '';
@@ -2976,10 +2997,23 @@
         var w = img.naturalWidth || img.width;
         var h = img.naturalHeight || img.height;
         var ratio = h ? w / h : 1;
-        URL.revokeObjectURL(peek);
-        putMedia(file).then(function (url) {
-          resolve({ url: url, ratio: ratio, type: 'photo', width: w, height: h });
-        }).catch(function (err) { reject(err); });
+        try {
+          var max = 900;
+          var scale = Math.min(1, max / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * scale));
+          var ch = Math.max(1, Math.round(h * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = cw; canvas.height = ch;
+          canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          URL.revokeObjectURL(peek);
+          resolve({ url: dataUrl, ratio: ratio, type: 'photo', width: cw, height: ch });
+        } catch (err) {
+          URL.revokeObjectURL(peek);
+          putMedia(file).then(function (url) {
+            resolve({ url: url, ratio: ratio, type: 'photo', width: w, height: h });
+          }).catch(reject);
+        }
       };
       img.onerror = function () { URL.revokeObjectURL(peek); reject(new Error('Не удалось прочитать фото')); };
       img.src = peek;
@@ -3034,6 +3068,12 @@
     var files = Array.prototype.slice.call(e.target.files || []);
     if (!files.length) return;
     var purpose = S.pickPurpose;
+    if (purpose === 'avatar-me') {
+      readImage(files[0]).then(function (pic) {
+        return CupionAPI.updateMe({ avatar: pic.url });
+      }).then(function (me) { if (me) S.me = me; render(); toast('Аватарка обновлена'); }).catch(function () { toast('Не удалось загрузить'); });
+      return;
+    }
     if (purpose === 'avatar-reg') {
       readImage(files[0]).then(function (pic) { S.reg.avatar = pic.url; render(); }).catch(function () { toast('Не удалось загрузить'); });
       return;
