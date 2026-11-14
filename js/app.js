@@ -1019,7 +1019,7 @@
     return '<article class="rate-row' + (revealed ? '' : ' anon') + fresh + '"' + open + ' style="--i:' + Math.min(index || 0, 7) + '">' +
       '<div class="rate-main">' + phAvatar(revealed ? '' : 'anon') +
       '<div>' + nameBtn + '<div class="sub">' + esc(line) + '</div></div>' +
-      (revealed ? '<button class="thumb-btn" data-act="person" data-id="' + esc(who.id) + '">' + phPhoto() + '</button>' : '<span class="thumb-btn">' + phPhoto() + '</span>') +
+      (revealed ? '<button class="thumb-btn' + (who.photos && who.photos[0] ? '' : ' art') + '" data-act="person" data-id="' + esc(who.id) + '">' + (who.photos && who.photos[0] && (realImg(who.photos[0].url) || realImg(who.photos[0].poster)) ? realImg(who.photos[0].url) || realImg(who.photos[0].poster) : letterArt(who)) + '</button>' : '<span class="thumb-btn">' + phPhoto() + '</span>') +
       '</div>' + quote +
       '<div class="hair"></div>' +
       '<div class="rate-foot">' +
@@ -2049,6 +2049,11 @@
     return 0;
   }
 
+  function letterArt(person, cls) {
+    var ch = String((person && person.name) || '?').trim().charAt(0).toUpperCase() || '?';
+    return '<div class="letter-art ' + (cls || '') + '"><span>' + esc(ch) + '</span></div>';
+  }
+
   function renderPeek() {
     var root = document.getElementById('peek-root');
     if (!root) return;
@@ -2062,7 +2067,7 @@
     if (photo.type === 'video' && (ownUrl(shown) || assetUrl(photo.url))) {
       media = '<video class="peek-media" src="' + esc(shown || photo.url) + '" autoplay muted loop playsinline></video>';
     } else {
-      media = realImg(photo.type === 'video' ? photo.poster : photo.url, 'peek-media') || phPhoto('peek-media');
+      media = realImg(photo.type === 'video' ? photo.poster : photo.url, 'peek-media') || letterArt(p, 'peek-media');
     }
     var mine = !!(p.isMine || (S.me && p.id === S.me.id));
     var score = avgScore(p);
