@@ -125,7 +125,8 @@
   function ph() { return phAvatar(); }
 
   function premMark() {
-    return '<span class="prem" aria-label="Premium"><span class="prem-lottie" data-prem></span></span>';
+    /* static verified-style blue check: no animation, no load */
+    return '<span class="prem" aria-label="Premium"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#0a84ff"/><path fill="#fff" d="M7.1 10.6 5.2 8.7l-1 1 2.9 2.9 4.7-4.7-1-1z"/></svg></span>';
   }
 
   var premAnims = [];
@@ -136,10 +137,7 @@
     fireAnims.forEach(function (x) { try { x.destroy(); } catch (e) {} });
     premAnims = []; fireAnims = [];
     var i;
-    var badges = document.querySelectorAll('[data-prem]');
-    for (i = 0; i < badges.length; i++) {
-      try { premAnims.push(window.lottie.loadAnimation({ container: badges[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/prem.json' })); } catch (e) {}
-    }
+
 
   }
 
@@ -2055,12 +2053,12 @@
     var onBoard = S.screen === 'rating';
     var onRates = S.screen === 'ratings';
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
-      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + '<span class="dock-lottie" id="dock-home-lottie"></span>' + '</button>' +
-      '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + '<span class="dock-lottie" id="dock-top-lottie"></span>' + '</button>' +
+      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + '<img class="dock-ico" src="assets/dock/search.webp" alt="">' + '</button>' +
+      '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + '<img class="dock-ico" src="assets/dock/cup.webp" alt="">' + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
-      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<span class="dock-lottie" id="dock-lottie"></span>' +
+      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<img class="dock-ico" src="assets/dock/heart.webp" alt="">' +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
-      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + '<span class="dock-lottie" id="dock-profile-lottie"></span>' + '</button>' +
+      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + '<img class="dock-ico" src="assets/dock/profile.webp" alt="">' + '</button>' +
       '</div></div>';
   }
 
@@ -2170,11 +2168,7 @@
       S.spring = '';
     }
     nav.innerHTML = tabsVisible() ? tabs() : '';
-    mountDockLottie();
-    mountProfileLottie();
-    mountTopLottie();
     mountInlineLotties();
-    mountHomeLottie();
     restoreScroll();
     renderSheet();
     renderStory();
