@@ -522,11 +522,16 @@
     return Promise.all([
       CupionAPI.getIncoming(),
       CupionAPI.getOutgoing(),
-      CupionAPI.getMatches()
+      CupionAPI.getMatches(),
+      CupionAPI.getLeaderboard(S.board || 'all')
     ]).then(function (res) {
       S.incoming = res[0] || [];
       S.outgoing = res[1] || [];
       S.matches = res[2] || [];
+      var rows = res[3] || [];
+      S.rankTotal = rows.length;
+      S.myRank = 0;
+      rows.forEach(function (r) { if (r.own) S.myRank = r.rank; });
     });
   }
 
@@ -1022,9 +1027,13 @@
       return '<div class="screen screen-profile"><div class="scroll">' +
         '<div class="profile-bar"><span></span><span class="brand">Моя анкета</span><span></span></div>' +
         '<div class="own-card">' + postCard(Object.assign({}, user, { isMine: true }), 0) + '</div>' +
-        '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
+        '<div class="stats-hero">' +
+        '<div class="sh-main"><span class="sh-label">средняя оценка</span><b>' + esc(user.ratingLabel || '—') + '</b></div>' +
+        '<div class="sh-row">' +
         '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
-        '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div></div>' +
+        '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div>' +
+        '<div><b>' + (S.myRank ? '#' + esc(S.myRank) : '—') + '</b><span>в топе</span></div>' +
+        '</div></div>' +
         '<div class="profile-actions">' + primary + '</div>' +
         '<div class="set-card"><div class="label">Настройки</div>' +
         '<button class="choice-row" data-act="premium"><span>Premium<small>Больше анкет, историй и видео</small></span><span class="prem-tag">PRO</span></button>' +

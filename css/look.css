@@ -1795,3 +1795,51 @@ body, #app {
 .screen-profile .own-card .post-meta { margin: 12px 2px 0; }
 .screen-profile .own-card .caption { margin: 6px 2px 2px; font-size: 15px; }
 .screen-profile .own-card .post { padding: 0; }
+/* ================= profile stats hero ================= */
+.stats-hero {
+  margin: 4px 16px 14px;
+  padding: 18px 18px 14px;
+  border-radius: 26px;
+  background: linear-gradient(160deg, rgba(0, 122, 255, 0.10), rgba(100, 210, 255, 0.06) 55%, rgba(255, 255, 255, 0));
+  border: 1px solid rgba(0, 122, 255, 0.14);
+  box-shadow: 0 14px 34px rgba(20, 45, 90, 0.08);
+}
+.stats-hero .sh-main { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stats-hero .sh-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-weight: 700;
+}
+.stats-hero .sh-main b {
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.stats-hero .sh-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+.stats-hero .sh-row > div {
+  text-align: center;
+  padding: 10px 6px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+.stats-hero .sh-row b { display: block; font-size: 18px; letter-spacing: -0.02em; }
+.stats-hero .sh-row span { font-size: 11px; color: var(--text-2); }
+:root[data-theme="dark"] .stats-hero {
+  background: linear-gradient(160deg, rgba(10, 132, 255, 0.16), rgba(100, 210, 255, 0.05) 60%, rgba(28, 28, 30, 0));
+  border-color: rgba(10, 132, 255, 0.24);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+}
+:root[data-theme="dark"] .stats-hero .sh-row > div {
+  background: rgba(44, 44, 46, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+}
