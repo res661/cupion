@@ -1174,11 +1174,17 @@
         '<div class="post-head"><button class="mini-ava" data-act="reg-avatar">' + avatarFace + '</button>' +
         '<div class="post-user">' + esc(r.name || 'Твоё имя') + '</div>' +
         '<button class="reg-tg" data-act="reg-tg-avatar">Из Telegram</button></div>' +
+        '<div class="reg-hero-wrap">' +
         '<button class="reg-hero' + (first ? ' filled' : '') + '" data-act="pick-reg" aria-label="Выбрать фото">' + face + '</button>' +
+        (first ? '<button class="reg-rm" data-act="rm-reg-main" aria-label="Удалить фото">−</button>' : '') +
+        (first ? '<button class="reg-count">' + r.photos.length + ' / ' + regCap + '</button>' : '') +
+        (r.photos.length > 1 ? '<button class="reg-nav prev" data-act="reg-main-move" data-dir="-1" aria-label="Назад">‹</button><button class="reg-nav next" data-act="reg-main-move" data-dir="1" aria-label="Вперёд">›</button>' : '') +
+        ((r.photos.length && r.photos.length < regCap) ? '<button class="reg-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '') +
+        '</div>' +
         '<div class="post-meta"><div class="post-title">' + esc(r.name || 'Имя') + ', ' + esc(r.age || '—') + (r.city ? ' · ' + esc(r.city) : '') + '</div></div>' +
         '<p class="caption">' + (r.bio ? esc(r.bio) : (first ? 'Нажми на фото, чтобы заменить' : 'Нажми на плюс, чтобы добавить фото')) + '</p>' +
         '</div>' +
-        (r.photos.length ? '<div class="pick-grid reg-thumbs">' + tiles + add + '</div>' : '');
+        '';
     }
     var label = S.regStep === 4 ? 'Готово' : 'Дальше';
     var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : '';
@@ -2661,6 +2667,18 @@
       var ap2 = document.querySelector('.avatar-pick');
       if (ap2) { ap2.innerHTML = '<img src="' + esc(photoUrl) + '" alt="">'; ap2.classList.add('has'); }
       toast('Аватарка из Telegram');
+      return;
+    }
+    if (act === 'rm-reg-main') { S.reg.photos.shift(); render(); return; }
+    if (act === 'reg-main-move') {
+      var dir = parseInt(t.getAttribute('data-dir'), 10) || 1;
+      if (S.reg.photos.length > 1) {
+        var idx = dir > 0 ? 1 : S.reg.photos.length - 1;
+        var tmp = S.reg.photos[0];
+        S.reg.photos[0] = S.reg.photos[idx];
+        S.reg.photos[idx] = tmp;
+        render();
+      }
       return;
     }
     if (act === 'reg-avatar') { S.pickPurpose = 'avatar-reg'; pickFiles('avatar-reg'); return; }

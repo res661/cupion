@@ -2066,3 +2066,41 @@ body, #app {
 .zoom-row span { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-3); }
 .zoom-row input[type=range] { flex: 1; }
 .edit-preview .media-slide { overflow: hidden; }
+
+/* registration hero: controls on the photo itself */
+.reg-hero-wrap { position: relative; }
+.reg-hero-wrap .reg-hero { margin: 0; }
+.reg-rm {
+  position: absolute; top: 8px; right: 8px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55); color: #fff;
+  font-size: 18px; line-height: 1;
+  display: grid; place-items: center;
+  backdrop-filter: blur(10px);
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+}
+.reg-count {
+  position: absolute; top: 8px; left: 8px;
+  height: 24px; padding: 0 9px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5); color: #fff;
+  font-size: 12px; font-weight: 650;
+  display: grid; place-items: center;
+  backdrop-filter: blur(10px);
+}
+.reg-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9); color: #111;
+  font-size: 18px; display: grid; place-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+.reg-nav.prev { left: 8px; }
+.reg-nav.next { right: 8px; }
+.reg-add {
+  position: absolute; bottom: 8px; right: 8px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92); color: #0a84ff;
+  font-size: 24px; line-height: 1;
+  display: grid; place-items: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
