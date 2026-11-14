@@ -1681,3 +1681,68 @@ body, #app {
 :root[data-theme="dark"] .ad-story .bars b { background: rgba(255, 255, 255, 0.18); }
 :root[data-theme="dark"] .ad-story .bars i { background: #fff; }
 :root[data-theme="dark"] .ad-badge { background: rgba(10, 132, 255, 0.22); color: #6cb6ff; }
+/* ================= DARK THEME — surfaces sweep ================= */
+:root[data-theme="dark"] .dock-bg,
+:root[data-theme="dark"] .dock-inner,
+:root[data-theme="dark"] .tabbar,
+:root[data-theme="dark"] .seg-pill,
+:root[data-theme="dark"] .rate-row,
+:root[data-theme="dark"] .pod,
+:root[data-theme="dark"] .board-row,
+:root[data-theme="dark"] .score-outline,
+:root[data-theme="dark"] .peek-card,
+:root[data-theme="dark"] .rx,
+:root[data-theme="dark"] .sheet-rx,
+:root[data-theme="dark"] .story-inbox,
+:root[data-theme="dark"] .rate-chip,
+:root[data-theme="dark"] .lock-badge,
+:root[data-theme="dark"] .btn-white,
+:root[data-theme="dark"] .profile-bar .glass-circle,
+:root[data-theme="dark"] .app-header .icon-btn,
+:root[data-theme="dark"] .tile .mark,
+:root[data-theme="dark"] .pick-add,
+:root[data-theme="dark"] .cmp,
+:root[data-theme="dark"] .pcat,
+:root[data-theme="dark"] .choice-row,
+:root[data-theme="dark"] .set-card,
+:root[data-theme="dark"] .screen-profile .stats > div,
+:root[data-theme="dark"] .screen-profile .set-card { background: #1c1c1e; border-color: rgba(255, 255, 255, 0.09); color: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
+
+:root[data-theme="dark"] .rate-row,
+:root[data-theme="dark"] .board-row,
+:root[data-theme="dark"] .pod { border-color: rgba(255, 255, 255, 0.08); }
+:root[data-theme="dark"] .board-row .num,
+:root[data-theme="dark"] .rate-row .who b,
+:root[data-theme="dark"] .pod b { color: #fff; }
+:root[data-theme="dark"] .rate-row .who small,
+:root[data-theme="dark"] .board-row .city,
+:root[data-theme="dark"] .board-row .sub { color: rgba(235, 235, 245, 0.6); }
+
+:root[data-theme="dark"] .seg { background: rgba(118, 118, 128, 0.24); }
+:root[data-theme="dark"] .seg button { color: rgba(235, 235, 245, 0.6); }
+:root[data-theme="dark"] .seg button.on { color: #fff; }
+:root[data-theme="dark"] .seg button::before { background: transparent; }
+
+:root[data-theme="dark"] .app-header { background: rgba(18, 18, 20, 0.78); border-bottom: 0.5px solid rgba(255, 255, 255, 0.07); }
+:root[data-theme="dark"] .app-header .glass-circle,
+:root[data-theme="dark"] .profile-bar .glass-circle { background: rgba(44, 44, 46, 0.9); border-color: rgba(255, 255, 255, 0.12); color: #fff; }
+:root[data-theme="dark"] .icon-btn svg,
+:root[data-theme="dark"] .glass-circle svg { color: #fff; }
+:root[data-theme="dark"] .dock-btn { color: rgba(235, 235, 245, 0.7); }
+:root[data-theme="dark"] .dock-btn.on { color: #fff; }
+
+:root[data-theme="dark"] .empty { color: rgba(235, 235, 245, 0.6); }
+:root[data-theme="dark"] .empty h3 { color: #fff; }
+
+:root[data-theme="dark"] .pay-hero { background: linear-gradient(160deg, #11243c, #101a28 60%, #141416); }
+:root[data-theme="dark"] .pay-badge { background: rgba(255, 255, 255, 0.9); color: #0a0a0a; }
+:root[data-theme="dark"] .terms { color: rgba(235, 235, 245, 0.45); }
+
+:root[data-theme="dark"] .ad-story { background: #0d0d0f; color: #fff; }
+:root[data-theme="dark"] .ad-body h2 { color: #fff; }
+:root[data-theme="dark"] .ad-body p { color: rgba(235, 235, 245, 0.65); }
+:root[data-theme="dark"] .ad-badge { background: rgba(10, 132, 255, 0.24); color: #6cb6ff; }
+
+:root[data-theme="dark"] .btn-primary { background: #0a84ff; color: #fff; }
+:root[data-theme="dark"] .text-btn { color: rgba(235, 235, 245, 0.7); }
+:root[data-theme="dark"] .linkish { color: rgba(235, 235, 245, 0.6); }
