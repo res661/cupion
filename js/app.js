@@ -1207,6 +1207,7 @@
     CupionAPI.register(S.reg).then(function (me) {
       S.me = me;
       S.screen = 'feed';
+      CupionAPI.getMe().then(function (fresh) { if (fresh) { S.me = fresh; render(); } }).catch(function () {});
       S.regStep = 0;
       return Promise.all([loadFeed(), loadStories(), CupionAPI.unseenCount()]);
     }).then(function (res) {

@@ -341,7 +341,7 @@
       if (city && city.length < 2) throw new Error('Укажи город');
       var name = String(draft.name || '').trim();
       if (name.length < 2) throw new Error('Как тебя зовут?');
-      var photos = (draft.photos || []).slice(0, 3).map(function (p, i) {
+      var photos = (draft.photos || []).slice(0, 5).map(function (p, i) {
         return { id: 'me_p' + (i + 1), type: p.type || 'photo', url: p.url || '', poster: p.poster || '', ratio: Number(p.ratio) || 0 };
       });
       if (!photos.length) throw new Error('Добавь хотя бы одно фото');

@@ -2039,3 +2039,21 @@ body, #app {
 .reg-card .caption { margin: 6px 2px 2px; font-size: 14px; color: var(--text-2); }
 .reg-thumbs { margin-top: 4px; }
 :root[data-theme="dark"] .reg-card { background: var(--card); border-color: rgba(255, 255, 255, 0.08); }
+/* ===== registration layout: no overlap with steps/back ===== */
+.reg-top { flex: none; margin-bottom: 10px; }
+.reg-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  justify-content: flex-start;
+  padding-top: 4px;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.reg h1 { font-size: 28px; line-height: 1.1; }
+.reg .lead { margin: 6px 0 12px; font-size: 15px; }
+.reg-step-hint { margin-top: 6px; }
+/* compact card preview inside registration so it fits above the keyboard */
+.reg-card { padding: 12px; border-radius: 26px; margin: 4px 0 12px; }
+.reg-card .post-head { padding-bottom: 10px; }
+.reg-hero { max-height: 32vh; }
