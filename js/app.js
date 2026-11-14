@@ -1848,7 +1848,7 @@
     if (dockAnim) { try { dockAnim.destroy(); } catch (e) {} dockAnim = null; }
     host.innerHTML = '';
     try {
-      dockAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart.json' });
+      dockAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart2.json' });
     } catch (e) {}
   }
 
@@ -1858,7 +1858,7 @@
     if (!host || host.__mounted) return;
     host.__mounted = true;
     try {
-      window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart.json' });
+      window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart2.json' });
     } catch (e) {}
   }
 
