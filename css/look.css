@@ -1885,3 +1885,52 @@ body, #app {
 .edit-field .area { min-height: 78px; }
 .edit-preview .frame-clip { border-radius: 20px; }
 .ava-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+/* ===== avatar row in editor ===== */
+.edit-sub {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 14px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.edit-sub small { font-size: 12px; font-weight: 500; color: var(--text-3); }
+.avatar-row { display: flex; align-items: center; gap: 10px; }
+.avatar-pick {
+  width: 62px; height: 62px; border-radius: 50%;
+  overflow: hidden; flex: none;
+  background: var(--input);
+  display: grid; place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 18px rgba(20, 45, 90, 0.12);
+}
+.avatar-pick img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-btn { flex: 1; height: 42px; border-radius: 999px; font-size: 14px; }
+
+/* ===== compact match notice (no full-screen animation) ===== */
+.match-mini {
+  position: absolute;
+  left: 12px; right: 12px;
+  bottom: calc(var(--inset-bottom) + 92px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 40px rgba(20, 45, 90, 0.16);
+  backdrop-filter: blur(20px) saturate(160%);
+  animation: rise 0.35s var(--spring);
+}
+.match-mini .mm-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; flex: none; background: var(--input); }
+.match-mini .mm-ava img { width: 100%; height: 100%; object-fit: cover; }
+.match-mini .mm-text { flex: 1; min-width: 0; }
+.match-mini .mm-text b { display: block; font-size: 15px; }
+.match-mini .mm-text span { display: block; font-size: 13px; color: var(--text-2); }
+.match-mini .mm-btn { height: 38px; padding: 0 14px; border-radius: 999px; font-size: 14px; }
+:root[data-theme="dark"] .match-mini { background: rgba(28, 28, 30, 0.94); border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); }
+
+/* video in cards: fill the 4:5 frame like photos */
+.frame .feed-video { object-fit: cover; border-radius: 24px; }

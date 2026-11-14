@@ -1242,6 +1242,13 @@
     return sheetFrame(
       '<div class="edit-head"><h2>Твоя анкета</h2><span class="edit-count">' + used + ' / ' + cap + ' фото</span></div>' +
       '<div class="edit-preview">' + mediaBlock({ id: 'edit-preview', photos: e.photos }, '') + '</div>' +
+      '<div class="edit-sub">Аватарка<small>Кружок рядом с именем</small></div>' +
+      '<div class="avatar-row">' +
+      '<span class="avatar-pick' + (e.avatar ? ' has' : '') + '">' + (e.avatar ? '<img src="' + esc(displayUrl(e.avatar) || e.avatar) + '" alt="">' : phAvatar()) + '</span>' +
+      '<button class="btn btn-white avatar-btn" data-act="pick-avatar">Выбрать аватарку</button>' +
+      '<button class="btn btn-white avatar-btn" data-act="tg-avatar">Из Telegram</button>' +
+      '</div>' +
+      '<div class="edit-sub">Фото анкеты<small>Их видят в ленте</small></div>' +
       '<div class="pick-grid">' + tiles + add + '</div>' +
       '<div class="edit-fields">' +
       '<label class="edit-field"><span>Имя</span><input class="field" id="edit-name" maxlength="32" value="' + esc(e.name) + '" placeholder="Как тебя зовут"></label>' +
@@ -1850,6 +1857,18 @@
   }
 
   function renderMatch() {
+    var root = document.getElementById('match-root');
+    if (!root) return;
+    if (!S.match) { root.innerHTML = ''; return; }
+    var u = S.match;
+    root.innerHTML = '<div class="match-mini" data-act="match-close">' +
+      '<div class="mm-ava">' + cardAvatar(u) + '</div>' +
+      '<div class="mm-text"><b>Это мэтч!</b><span>' + esc(u.name) + ' тоже оценил(а) тебя</span></div>' +
+      '<button class="btn btn-primary mm-btn" data-act="person" data-id="' + esc(u.id) + '">Написать</button>' +
+      '</div>';
+  }
+
+  function renderMatchOld() {
     var root = document.getElementById('match-root');
     if (!root) return;
     var sig = S.match ? (S.match.id + ':' + (S.matchKind || '')) : '';
@@ -2594,11 +2613,23 @@
         lookingFor: S.me.lookingFor || 'all',
         photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '', ratio: p.ratio || 0 }; })
       };
+      S.edit.photos = S.edit.photos || [];
+      S.edit.avatar = S.edit.avatar || S.me.avatar || '';
       Promise.all(S.edit.photos.map(function (p) { return resolveMedia(p.url); })).then(function () {
         openSheet('edit', { key: 'edit' });
         sheetSig = '';
         renderSheet();
       }).catch(function () { openSheet('edit', { key: 'edit' }); });
+      return;
+    }
+    if (act === 'pick-avatar') { S.pickPurpose = 'avatar'; pickFiles('avatar'); return; }
+    if (act === 'tg-avatar') {
+      var tu = window.TG ? TG.user() : null;
+      var photoUrl = tu && tu.photo_url ? tu.photo_url : '';
+      if (!photoUrl) { toast('В Telegram нет фото профиля'); return; }
+      S.edit.avatar = photoUrl;
+      sheetSig = '';
+      renderSheet();
       return;
     }
     if (act === 'edit-look') {
@@ -2725,7 +2756,7 @@
     }
     S.edit.name = name.trim();
     S.edit.bio = bio.trim();
-    CupionAPI.updateMe({ name: S.edit.name, age: parseInt((document.getElementById('edit-age') || {}).value, 10) || S.edit.age, bio: S.edit.bio, city: (document.getElementById('edit-city') || {}).value || '', lookingFor: S.edit.lookingFor, photos: S.edit.photos }).then(function (me) {
+    CupionAPI.updateMe({ avatar: S.edit.avatar || '', name: S.edit.name, age: parseInt((document.getElementById('edit-age') || {}).value, 10) || S.edit.age, bio: S.edit.bio, city: (document.getElementById('edit-city') || {}).value || '', lookingFor: S.edit.lookingFor, photos: S.edit.photos }).then(function (me) {
       S.me = me;
       closeSheet();
       toast('Анкета обновлена');
@@ -2815,7 +2846,7 @@
 
   function pickFiles(purpose) {
     S.pickPurpose = purpose;
-    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : 'pick-images');
+    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : (purpose === 'avatar' ? 'pick-avatar' : 'pick-images'));
     var input = document.getElementById(id);
     if (!input) return;
     input.value = '';
@@ -2880,6 +2911,16 @@
     var files = Array.prototype.slice.call(e.target.files || []);
     if (!files.length) return;
     var purpose = S.pickPurpose;
+    if (purpose === 'avatar') {
+      readImage(files[0]).then(function (pic) {
+        S.edit.avatar = pic.url;
+        S.sheet = 'edit';
+        S.sheetPayload = { key: 'edit' };
+        sheetSig = '';
+        renderSheet();
+      }).catch(function () { toast('Не удалось загрузить'); });
+      return;
+    }
     if (purpose === 'story') {
       var sf = files[0];
       var isVid = sf && /^video\//.test(String(sf.type || ''));
@@ -3449,7 +3490,7 @@
     var root = document.getElementById('app');
     if (!root) return;
     root.innerHTML = '<div id="stage"></div><div id="tabs"></div><div id="sheet-root"></div><div id="story-root"></div><div id="peek-root"></div><div id="match-root"></div><div id="toast-root"></div>' +
-      '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden><input id="pick-story" type="file" accept="image/*,video/*" hidden>';
+      '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden><input id="pick-story" type="file" accept="image/*,video/*" hidden><input id="pick-avatar" type="file" accept="image/*" hidden>';
     document.addEventListener('click', onClick);
     document.addEventListener('input', onInput);
     document.addEventListener('change', function (e) {
