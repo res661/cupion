@@ -1840,6 +1840,18 @@
     storyRAF = 0;
   }
 
+  var profileAnim = null;
+  function mountProfileLottie() {
+    if (!window.lottie) return;
+    var host = document.getElementById('dock-profile-lottie');
+    if (!host) return;
+    if (profileAnim) { try { profileAnim.destroy(); } catch (e) {} profileAnim = null; }
+    host.innerHTML = '';
+    try {
+      profileAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/profile.json' });
+    } catch (e) {}
+  }
+
   var dockAnim = null;
   function mountDockLottie() {
     if (!window.lottie) return;
@@ -1986,7 +1998,7 @@
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
       '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<span class="dock-lottie" id="dock-lottie"></span>' +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
-      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + iconPair(ICON.user, ICON.userFill) + '</button>' +
+      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + '<span class="dock-lottie" id="dock-profile-lottie"></span>' + '</button>' +
       '</div></div>';
   }
 
@@ -2097,6 +2109,7 @@
     }
     nav.innerHTML = tabsVisible() ? tabs() : '';
     mountDockLottie();
+    mountProfileLottie();
     restoreScroll();
     renderSheet();
     renderStory();
