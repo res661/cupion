@@ -995,13 +995,7 @@
     if (own) {
       return '<div class="screen screen-profile"><div class="scroll">' +
         '<div class="profile-bar"><span></span><span class="brand">Моя анкета</span><span></span></div>' +
-        '<article class="post own-card" data-post="me"><div class="card">' +
-        '<div class="post-head"><span class="mini-ava">' + phAvatar() + '</span>' +
-        '<div class="post-user">' + esc(user.name) + (user.premium ? premMark() : '') + '</div></div>' +
-        mediaBlock(user, '') +
-        '<div class="post-meta"><div class="post-title">' + esc(user.name) + ', ' + esc(user.age) + (user.city ? ' · ' + esc(user.city) : '') + '</div></div>' +
-        '<p class="caption">' + esc(user.caption || user.bio || '') + '</p>' +
-        '</div></article>' +
+        '<div class="own-card">' + postCard(Object.assign({}, user, { isMine: true }), 0) + '</div>' +
         '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
         '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
         '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div></div>' +
@@ -2227,6 +2221,10 @@
     if (!t) return;
     var act = t.getAttribute('data-act');
     if (act === 'tab') {
+      var __tab = t.getAttribute('data-tab');
+      if (__tab === 'profile' && S.me) {
+        CupionAPI.getMe().then(function (me) { if (me) { S.me = me; } render(); }).catch(function () {});
+      }
       var nextTab = t.getAttribute('data-tab') || 'feed';
       var here = (nextTab === 'profile' && (S.screen === 'profile' || S.screen === 'person')) || S.screen === nextTab;
       if (here && nextTab === 'feed') {
