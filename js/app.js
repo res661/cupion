@@ -994,15 +994,12 @@
     var title = revealed ? ('@' + who.username) : 'Аноним';
     var photoId = who.photos && who.photos[0] ? who.photos[0].id : '';
     var actions = '';
+    var replyRow = '';
     if (incoming && revealed) {
       if (!row.repliedScore) {
-        if (S.replyRateId === who.id) {
-          var inline = '';
-          for (var k = 1; k <= 10; k++) inline += '<button type="button" class="mini-star" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
-          actions += '<span class="quick-stars">' + inline + '</span>';
-        } else {
-          actions += '<button class="btn btn-glass btn-sm" data-act="reply-rate" data-id="' + esc(who.id) + '" data-photo="' + esc(photoId) + '">Оценить в ответ</button>';
-        }
+        var inline = '';
+        for (var k = 1; k <= 10; k++) inline += '<button type="button" class="mini-star" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
+        replyRow = '<span class="quick-stars">' + inline + '</span>';
       }
       if (row.score > 5) {
         actions += '<button class="btn btn-primary btn-sm" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>';
@@ -1023,7 +1020,8 @@
       '<div class="hair"></div>' +
       '<div class="rate-foot">' +
       '<span class="score-pair">' + (score ? '<span class="score-outline">★ ' + esc(score) + '</span>' : '<span></span>') + mineScore + '</span>' +
-      (actions ? '<span class="rate-actions">' + actions + '</span>' : '') + '</div></article>';
+      (actions ? '<span class="rate-actions">' + actions + '</span>' : '') + '</div>' +
+      (replyRow ? '<div class="reply-stars-row">' + replyRow + '</div>' : '') + '</article>';
   }
 
   function ratingsScreen() {

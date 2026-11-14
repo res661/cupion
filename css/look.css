@@ -2308,3 +2308,13 @@ body, #app {
   font-weight: 600;
 }
 .peek-got b { font-weight: 800; }
+/* reply rating chips row under the rating card */
+.reply-stars-row {
+  margin: 10px 12px 14px;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--hairline);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.reply-stars-row .quick-stars { flex-wrap: nowrap; }
+.mini-star { width: 32px; height: 32px; border-radius: 10px; flex: none; }
