@@ -873,9 +873,12 @@
   }
 
   function cardAvatar(post) {
-    var p = post && post.photos && post.photos[0];
-    var src = p ? (displayUrl(p.url) || '') : '';
-    if (!src && post && post.avatar) src = displayUrl(post.avatar) || '';
+    var src = '';
+    if (post && post.avatar) src = displayUrl(post.avatar) || '';
+    if (!src) {
+      var p = post && post.photos && post.photos[0];
+      if (p) src = displayUrl(p.url) || '';
+    }
     if (!src) return phAvatar();
     return '<img class="ava-img" src="' + esc(src) + '" alt="">';
   }
