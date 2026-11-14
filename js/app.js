@@ -996,7 +996,13 @@
     var actions = '';
     if (incoming && revealed) {
       if (!row.repliedScore) {
-        actions += '<button class="btn btn-glass btn-sm" data-act="rate" data-id="' + esc(who.id) + '" data-photo="' + esc(photoId) + '">Оценить в ответ</button>';
+        if (S.replyRateId === who.id) {
+          var inline = '';
+          for (var k = 1; k <= 10; k++) inline += '<button type="button" class="mini-star" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
+          actions += '<span class="quick-stars">' + inline + '</span>';
+        } else {
+          actions += '<button class="btn btn-glass btn-sm" data-act="reply-rate" data-id="' + esc(who.id) + '" data-photo="' + esc(photoId) + '">Оценить в ответ</button>';
+        }
       }
       if (row.score > 5) {
         actions += '<button class="btn btn-primary btn-sm" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>';
@@ -2024,6 +2030,14 @@
     if (window.TG) TG.impact('heavy');
   }
 
+  function incomingScoreFor(id) {
+    var rows = S.incoming || [];
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].user && rows[i].user.id === id && rows[i].revealed) return rows[i].score;
+    }
+    return 0;
+  }
+
   function renderPeek() {
     var root = document.getElementById('peek-root');
     if (!root) return;
@@ -2046,6 +2060,10 @@
       '<div class="peek-frame" style="--ratio:' + ratio.toFixed(3) + '">' + media + '</div>' +
       '<div class="peek-info"><div class="peek-name"><b>' + esc(p.name) + ', ' + esc(p.age) + '</b>' + (p.premium ? premMark() : '') + '<small>' + city.replace(' · ', '') + '</small></div>' +
       '<div class="post-score"><i>★</i><b>' + esc(score || '—') + '</b></div></div>' +
+      (mine ? '' : (function () {
+        var got = incomingScoreFor(p.id);
+        return got ? '<div class="peek-got">Тебе поставили <b>' + got + '</b> ★</div>' : '';
+      })()) +
       (p.caption || p.bio ? '<p class="peek-caption">' + esc(p.caption || p.bio) + '</p>' : '') +
       (mine ? '' : '<div class="card-rate peek-rate">' +
         '<textarea class="rate-comment" id="peek-comment-' + esc(p.id) + '" placeholder="Комментарий (необязательно)" maxlength="180"></textarea>' +
@@ -2500,6 +2518,16 @@
     }
     if (act === 'send-card-rate') {
       // This action is now unused - rating happens on star click
+      return;
+    }
+    if (act === 'reply-rate') { S.replyRateId = t.getAttribute('data-id'); render(); return; }
+    if (act === 'reply-star') {
+      var rid = t.getAttribute('data-id');
+      var rn = parseInt(t.getAttribute('data-n'), 10) || 0;
+      S.replyRateId = null;
+      CupionAPI.rate({ toId: rid, score: rn }).then(function () {
+        loadRatings().then(function () { render(); toast('Оценка отправлена'); });
+      }).catch(function (err) { toast(err && err.message ? err.message : 'Не получилось'); render(); });
       return;
     }
     if (act === 'rate') { if (S.peek) closePeek(true); if (needAccount()) return; if (S.me && t.getAttribute('data-id') === S.me.id) { toast('Себе оценку поставить нельзя'); return; } if (window.TG) TG.impact('light'); openRate(t.getAttribute('data-id'), t.getAttribute('data-photo')); return; }
