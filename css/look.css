@@ -2652,3 +2652,17 @@ body, #app {
 :root[data-theme="dark"] .rr-answered { background: rgba(10, 132, 255, 0.18); color: #6cb6ff; }
 :root[data-theme="dark"] .rr-card { box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5); }
 .rr-media .rr-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ===== wider anketa cards in the feed ===== */
+.post { margin-left: 6px; margin-right: 6px; margin-bottom: 16px; }
+.card { border-radius: 30px; padding: 12px; }
+.post .frame-clip { border-radius: 26px; max-height: 540px; }
+.post .caption { margin-left: 4px; margin-right: 4px; }
+.post .post-meta { margin-left: 4px; margin-right: 4px; }
+.post .post-head { padding: 2px 2px 12px; }
+.post .card-rate { margin-left: 2px; margin-right: 2px; }
+/* profile card follows the same geometry */
+.screen-profile .own-card .card { border-radius: 30px; }
+@media (min-width: 520px) {
+  .post { margin-left: 14px; margin-right: 14px; }
+}
