@@ -1538,3 +1538,8 @@ body, #app {
 .lottie-emoji { padding: 0; overflow: hidden; }
 .fire-lottie { display: block; width: 30px; height: 30px; }
 .fire-lottie svg { width: 100%; height: 100%; }
+
+/* send button: graphite, visually separated from the input */
+.story-comment-box { gap: 10px; }
+.story-send-btn { background: rgba(255, 255, 255, 0.9); margin-left: 2px; }
+.story-send-btn svg { color: #1c1c1e; }

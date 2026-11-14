@@ -3451,8 +3451,10 @@
       if (g.held) { if (S.story) S.story.paused = false; return; }
       var rect = g.layer.getBoundingClientRect();
       var x = g.x - rect.left;
-      if (x < rect.width * 0.35) prevStory();
-      else nextStory();
+      var w = rect.width;
+      /* only clear taps on the left/right thirds navigate; the middle does nothing */
+      if (x < w * 0.28) { prevStory(); return; }
+      if (x > w * 0.72) { nextStory(); return; }
       return;
     }
     if (g.kind === 'edge-wait' && g.mode === 'story') {
