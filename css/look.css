@@ -1770,3 +1770,19 @@ body, #app {
   opacity: 0.9;
 }
 :root[data-theme="dark"] .dock-btn.on::after { background: #6cb6ff; }
+/* dock: Apple-like selected pill (no dot) */
+.dock-btn.on::after { content: none !important; }
+.dock-btn {
+  border-radius: 18px;
+  transition: background 0.25s var(--spring), box-shadow 0.25s var(--spring), transform 0.25s var(--spring);
+}
+.dock-btn.on {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 14px rgba(20, 45, 90, 0.10), inset 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+:root[data-theme="dark"] .dock-btn.on {
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), inset 0 0 0 0.5px rgba(255, 255, 255, 0.12);
+}
+.dock-btn.on:active { transform: translateY(-1px) scale(0.97); }
