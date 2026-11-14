@@ -2679,7 +2679,7 @@
       return;
     }
     if (act === 'reg-next') { advanceReg(); return; }
-    if (act === 'skip-bio') { S.reg.bio = ''; finishReg(); return; }
+    if (act === 'skip-bio') { S.reg.bio = ''; S.regStep = 4; S.regDir = 1; S.regError = ''; render(); return; }
     if (act === 'edit') { openEditSheet(); return; }
     if (act === 'pick-avatar') { S.pickPurpose = 'avatar'; pickFiles('avatar'); return; }
     if (act === 'tg-avatar') {
