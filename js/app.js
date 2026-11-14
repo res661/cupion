@@ -142,7 +142,7 @@
     }
     var fires = document.querySelectorAll('[data-heart]');
     for (i = 0; i < fires.length; i++) {
-      try { fireAnims.push(window.lottie.loadAnimation({ container: fires[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart2.json' })); } catch (e) {}
+      try { fireAnims.push(window.lottie.loadAnimation({ container: fires[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heartfire.json' })); } catch (e) {}
     }
   }
 
@@ -1921,7 +1921,7 @@
     if (dockAnim) { try { dockAnim.destroy(); } catch (e) {} dockAnim = null; }
     host.innerHTML = '';
     try {
-      dockAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart2.json' });
+      dockAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heartfire.json' });
     } catch (e) {}
   }
 
@@ -1931,7 +1931,7 @@
     if (!host || host.__mounted) return;
     host.__mounted = true;
     try {
-      window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart2.json' });
+      window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heartfire.json' });
     } catch (e) {}
   }
 
