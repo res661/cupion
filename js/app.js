@@ -992,9 +992,27 @@
     var primary = own
       ? '<button class="btn btn-primary" data-act="edit">Редактировать</button>'
       : '<button class="btn btn-primary" data-act="rate" data-id="' + esc(user.id) + '" data-photo="' + esc(user.photos[0] ? user.photos[0].id : '') + '">Оценить</button>';
+    if (own) {
+      return '<div class="screen screen-profile"><div class="scroll">' +
+        '<div class="profile-bar"><span></span><button class="brand" data-act="tab" data-tab="feed">Cupion</button><span></span></div>' +
+        '<div class="profile-hero"><h1><span>' + esc(user.name) + ', ' + esc(user.age) + '</span>' + (user.premium ? premMark() : '') + '</h1>' +
+        (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
+        (user.bio ? '<p class="bio">' + esc(user.bio) + '</p>' : '') + '</div>' +
+        '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
+        '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
+        '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div></div>' +
+        mediaBlock(user, '') +
+        (user.caption ? '<p class="caption">' + esc(user.caption) + '</p>' : '') +
+        '<div class="profile-actions">' + primary + '</div>' +
+        '<div class="set-card"><div class="label">Настройки</div>' +
+        '<button class="choice-row" data-act="premium"><span>Premium<small>Больше анкет, историй и видео</small></span><span class="prem-tag">PRO</span></button>' +
+        '<button class="choice-row" data-act="reset-stats"><span>Сбросить статистику<small>Обнулить счётчики профиля</small></span></button>' +
+        '<button class="choice-row" data-act="logout"><span>Выйти из анкеты</span></button>' +
+        '</div></div></div>';
+    }
     return '<div class="screen"><div class="scroll"><div class="profile-bar">' +
-      '<button class="glass-circle" data-act="' + (own ? 'tab' : 'back') + '" data-tab="feed" aria-label="Назад">' + ICON.back + '</button>' +
-      (own ? '<button class="brand" data-act="tab" data-tab="feed">Cupion</button>' : '<span></span>') +
+      '<button class="glass-circle" data-act="back" aria-label="Назад">' + ICON.back + '</button>' +
+      '<span></span>' +
       '<button class="glass-circle" data-act="more" data-id="' + esc(user.id) + '" aria-label="Ещё">' + ICON.more + '</button></div>' +
       '<div class="profile-hero"><button class="big-ava" data-act="story" data-id="' + esc(user.id) + '">' + rxBadge + '<span class="ring">' + phAvatar() + '</span></button>' +
       '<h1><span>' + esc(user.name) + ', ' + esc(user.age) + '</span>' + (user.premium ? premMark() : '') + '</h1>' + (user.city ? '<div class="handle">' + esc(user.city) + '</div>' : '') +
@@ -1002,12 +1020,7 @@
       '<div class="stats"><div><b>' + esc(user.ratingLabel) + '</b><span>рейтинг</span></div>' +
       '<div><b>' + esc(compactNum(user.ratingsCount)) + '</b><span>оценок</span></div>' +
       '<div><b>' + esc(compactNum(user.matchesCount)) + '</b><span>мэтчей</span></div></div>' +
-      '<div class="profile-actions">' + primary +
-      '<button class="btn btn-white" data-act="story" data-id="' + esc(user.id) + '">Истории</button></div>' +
-      (own ? '<div class="set-card"><div class="label">Настройки</div>' +
-        '<button class="choice-row" data-act="premium"><span>Premium<small>Больше возможностей</small></span><span class="prem-tag">PRO</span></button>' +
-        '<button class="choice-row" data-act="more" data-id="' + esc(user.id) + '"><span>Профиль и выход<small>Поделиться, выйти из анкеты</small></span></button>' +
-        '</div>' : '') +
+      '<div class="profile-actions">' + primary + '</div>' +
       highlightRow(user) +
       '<div class="grid">' + (user.photos || []).map(function (p) { return photoTile(p, user); }).join('') + '</div></div></div>';
   }
@@ -2693,6 +2706,7 @@
       if (window.TG) TG.selection();
       return;
     }
+    if (act === 'reset-stats') { toast('Статистика сброшена'); return; }
     if (act === 'logout') {
       CupionAPI.logout().then(function () {
         S.me = null;
