@@ -1012,14 +1012,14 @@
     }
     var mineScore = incoming && row.repliedScore ? '<span class="score-outline mine">ты ★ ' + esc(row.repliedScore) + '</span>' : '';
     var nameBtn = revealed
-      ? '<b data-act="open-profile" data-id="' + esc(who.id) + '">' + esc(title) + (who.premium ? premMark() : '') + '</b>'
+      ? '<b data-act="person" data-id="' + esc(who.id) + '">' + esc(title) + (who.premium ? premMark() : '') + '</b>'
       : '<b>' + esc(title) + '</b>';
-    var open = revealed ? ' data-act="open-profile" data-id="' + esc(who.id) + '"' : '';
+    var open = revealed ? ' data-act="person" data-id="' + esc(who.id) + '"' : '';
     var fresh = S.freshRatingId && S.freshRatingId === who.id ? ' fresh' : '';
     return '<article class="rate-row' + (revealed ? '' : ' anon') + fresh + '"' + open + ' style="--i:' + Math.min(index || 0, 7) + '">' +
       '<div class="rate-main">' + phAvatar(revealed ? '' : 'anon') +
       '<div>' + nameBtn + '<div class="sub">' + esc(line) + '</div></div>' +
-      (revealed ? '<button class="thumb-btn" data-act="open-profile" data-id="' + esc(who.id) + '">' + phPhoto() + '</button>' : '<span class="thumb-btn">' + phPhoto() + '</span>') +
+      (revealed ? '<button class="thumb-btn" data-act="person" data-id="' + esc(who.id) + '">' + phPhoto() + '</button>' : '<span class="thumb-btn">' + phPhoto() + '</span>') +
       '</div>' + quote +
       '<div class="hair"></div>' +
       '<div class="rate-foot">' +
