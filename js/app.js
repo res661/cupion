@@ -985,8 +985,10 @@
   function incomingCard(row, index) {
     var who = row.user;
     var photo = (who.photos || [])[0] || {};
-    var shown = realImg(photo.url) || realImg(photo.poster);
-    var media = shown || letterArt(who, 'rr-art');
+    var isVid = (photo.type === 'video');
+    var media = isVid
+      ? '<video class="rr-vid" src="' + esc(photo.url) + '" poster="' + esc(photo.poster || '') + '" autoplay muted loop playsinline></video>'
+      : (realImg(photo.url) || realImg(photo.poster) || letterArt(who, 'rr-art'));
     var cells = '';
     for (var k = 1; k <= 10; k++) {
       cells += '<button type="button" class="rr-cell' + (row.score === k ? ' given' : '') + '" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
