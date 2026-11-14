@@ -140,9 +140,9 @@
     for (i = 0; i < badges.length; i++) {
       try { premAnims.push(window.lottie.loadAnimation({ container: badges[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/prem.json' })); } catch (e) {}
     }
-    var fires = document.querySelectorAll('[data-fire]');
+    var fires = document.querySelectorAll('[data-heart]');
     for (i = 0; i < fires.length; i++) {
-      try { fireAnims.push(window.lottie.loadAnimation({ container: fires[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/fire.json' })); } catch (e) {}
+      try { fireAnims.push(window.lottie.loadAnimation({ container: fires[i], renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart2.json' })); } catch (e) {}
     }
   }
 
@@ -1632,10 +1632,10 @@
       (isOwnStory && S.me && S.me.premium ? '<button class="rx-pill story-pause" data-act="story-pause" data-story="' + esc(item.id) + '" data-paused="' + (item.paused ? '1' : '0') + '">' + (item.paused ? 'Показать' : 'Скрыть') + '</button>' : '') +
       (isOwnStory ? '' : 
         '<div class="story-bottom">' +
-        '<div class="story-actions">' + ['❤️', '😂', '😍', '😮', '🔥'].map(function (emo) {
+        '<div class="story-actions">' + ['😂', '😍', '❤️', '😮', '🔥'].map(function (emo) {
           var picked = S.picked && S.picked[item.id] === emo;
-          if (emo === '🔥') {
-        return '<button class="emoji-btn lottie-emoji' + (picked ? ' on' : '') + '" data-act="react" data-emoji="🔥" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="🔥"><span class="fire-lottie" data-fire></span></button>';
+          if (emo === '❤️') {
+        return '<button class="emoji-btn lottie-emoji' + (picked ? ' on' : '') + '" data-act="react" data-emoji="❤️" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="❤️"><span class="heart-reaction" data-heart></span></button>';
       }
       return '<button class="emoji-btn' + (picked ? ' on' : '') + '" data-act="react" data-emoji="' + emo + '" data-id="' + esc(st.userId) + '" data-story="' + esc(item.id) + '" aria-label="' + emo + '">' + emo + '</button>';
         }).join('') + '</div>' +
