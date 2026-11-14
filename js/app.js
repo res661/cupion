@@ -2056,7 +2056,7 @@
       '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + '<img class="dock-ico" src="assets/anim/mag.webp" alt="">' + '</button>' +
       '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + '<img class="dock-ico" src="assets/anim/gold.webp" alt="">' + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
-      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<img class="dock-ico" src="assets/dock/heart.webp" alt="">' +
+      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<img class="dock-ico" src="assets/anim/heart_dock.webp" alt="">' +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
       '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + '<img class="dock-ico" src="assets/anim/profile.webp" alt="">' + '</button>' +
       '</div></div>';
