@@ -237,8 +237,38 @@
     return photo.poster || photo.url;
   }
 
+  function applyTestMedia() {
+    if (applyTestMedia.done) return;
+    applyTestMedia.done = true;
+    var MEDIA = {
+      test_photo_1: [{ id: 'tp1', type: 'photo', url: 'assets/photos/test1.jpg' }],
+      test_photo_2: [
+        { id: 'tp2', type: 'photo', url: 'assets/photos/test2.jpg' },
+        { id: 'tp2b', type: 'photo', url: 'assets/photos/test3.jpg' }
+      ],
+      test_photo_3: [
+        { id: 'tp3', type: 'photo', url: 'assets/photos/test4.jpg' },
+        { id: 'tp3b', type: 'photo', url: 'assets/photos/test5.jpg' },
+        { id: 'tp3c', type: 'photo', url: 'assets/photos/test6.jpg' }
+      ],
+      test_photo_4: [
+        { id: 'tp4v', type: 'video', url: 'assets/video/clip1.mp4', poster: 'assets/photos/test1.jpg' },
+        { id: 'tp4', type: 'photo', url: 'assets/photos/test2.jpg' }
+      ],
+      test_photo_5: [{ id: 'tp5', type: 'photo', url: 'assets/photos/test3.jpg' }],
+      test_photo_6: [
+        { id: 'tp6', type: 'photo', url: 'assets/photos/test5.jpg' },
+        { id: 'tp6b', type: 'photo', url: 'assets/photos/test6.jpg' }
+      ]
+    };
+    PEOPLE.forEach(function (p) {
+      if (MEDIA[p.id]) p.photos = MEDIA[p.id];
+    });
+  }
+
   function publicUser(p) {
     if (!p) return null;
+    applyTestMedia();
     var rating = ratingInfo(p.id);
     var stories = storyList(p);
     return {
