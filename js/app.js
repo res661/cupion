@@ -986,32 +986,30 @@
     var who = row.user;
     var photo = (who.photos || [])[0] || {};
     var shown = realImg(photo.url) || realImg(photo.poster);
-    var media = shown || letterArt(who, 'rc-thumb-art');
-    var chips = '';
-    for (var k = 1; k <= 10; k++) chips += '<button type="button" class="mini-star" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
-    var answered = !!row.repliedScore;
+    var media = shown || letterArt(who, 'rr-art');
+    var cells = '';
+    for (var k = 1; k <= 10; k++) {
+      cells += '<button type="button" class="rr-cell' + (row.score === k ? ' given' : '') + '" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
+    }
     var canWrite = row.score > 5;
-    var action = answered
-      ? (canWrite
-        ? '<button class="btn btn-primary rc-btn" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>'
-        : '<span class="rate-hint">ниже 6 — писать нельзя</span>')
-      : (canWrite ? '<button class="btn btn-glass rc-btn" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>' : '');
+    var answered = !!row.repliedScore;
     var fresh = S.freshRatingId && S.freshRatingId === who.id ? ' fresh' : '';
-    return '<article class="rate-card' + fresh + '" style="--i:' + Math.min(index || 0, 7) + '">' +
-      '<div class="rc-row">' +
-      '<button class="rc-thumb" data-act="person" data-id="' + esc(who.id) + '">' + media + '</button>' +
-      '<div class="rc-info">' +
-      '<div class="rc-line"><b>' + esc(who.name) + ', ' + esc(who.age) + '</b>' + (who.premium ? premMark() : '') +
-      '<span class="rc-badge">★ ' + esc(row.score) + '</span></div>' +
-      (who.city ? '<div class="rc-city">' + esc(who.city) + '</div>' : '') +
-      ((row.text || who.bio || who.caption) ? '<p class="rc-quote">' + esc(row.text || who.bio || who.caption) + '</p>' : '') +
-      '<div class="rc-meta">оценил' + (who.gender === 'female' ? 'а' : '') + ' тебя · ' + timeAgo(row.createdAt) + '</div>' +
-      '</div></div>' +
+    var scale = '<div class="rr-scale">' + cells + '</div>';
+    return '<article class="rr-card' + fresh + '" style="--i:' + Math.min(index || 0, 7) + '">' +
+      '<button class="rr-media" data-act="person" data-id="' + esc(who.id) + '">' + media +
+      '<span class="rr-given">оценил' + (who.gender === 'female' ? 'а' : '') + ' тебя на ' + esc(row.score) + '</span>' +
+      '<span class="rr-veil"></span>' +
+      '<span class="rr-head"><b>' + esc(who.name) + ', ' + esc(who.age) + '</b>' + (who.premium ? premMark() : '') +
+      (who.city ? '<small>' + esc(who.city) + '</small>' : '') + '</span>' +
+      '</button>' +
+      ((row.text || who.bio || who.caption) ? '<p class="rr-bio">' + esc(row.text || who.bio || who.caption) + '</p>' : '') +
       (answered
-        ? '<div class="rc-answered">ты ★ ' + esc(row.repliedScore) + '</div>'
-        : '<div class="reply-stars-row rc-stars"><span class="quick-stars">' + chips + '</span></div>') +
-      (action ? '<div class="rc-foot">' + action + '</div>' : '') +
-      '</article>';
+        ? '<div class="rr-answered"><span>ты ★ ' + esc(row.repliedScore) + '</span></div>'
+        : scale) +
+      '<div class="rr-actions">' +
+      (answered ? '' : '<span class="rr-hint">' + (canWrite ? 'или напиши сразу' : 'ниже 6 — писать нельзя') + '</span>') +
+      (canWrite ? '<button class="btn btn-primary rr-write" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>' : '') +
+      '</div></article>';
   }
 
   function ratingRow(row, incoming, index) {
