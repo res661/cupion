@@ -377,6 +377,7 @@
         state.me.caption = state.me.bio;
       }
       if (patch.city != null) state.me.city = String(patch.city).trim();
+      if (patch.age != null) { var ag = parseInt(patch.age, 10); if (ag >= 18) state.me.age = ag; }
       if (patch.lookingFor) state.me.lookingFor = patch.lookingFor;
       if (patch.gender) state.me.gender = String(patch.gender);
       if (patch.photos) {

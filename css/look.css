@@ -1865,3 +1865,23 @@ body, #app {
 .edit-preview .media-dots { display: none; }
 .card-edit { display: block; width: 100%; margin: 14px auto 2px; height: 46px; border-radius: 999px; }
 .card-stats { display: none; }
+
+/* ===== edit sheet: nicer layout ===== */
+.edit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.edit-head h2 { margin: 4px 0 6px; }
+.edit-count { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.edit-fields { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.edit-field { display: flex; flex-direction: column; gap: 5px; }
+.edit-field > span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding-left: 2px;
+}
+.edit-field .field,
+.edit-field .area { margin: 0; }
+.edit-field .area { min-height: 78px; }
+.edit-preview .frame-clip { border-radius: 20px; }
+.ava-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }

@@ -854,12 +854,20 @@
       dots + '</div>' + (chip || '') + '</div>';
   }
 
+  function cardAvatar(post) {
+    var p = post && post.photos && post.photos[0];
+    var src = p ? (displayUrl(p.url) || '') : '';
+    if (!src && post && post.avatar) src = displayUrl(post.avatar) || '';
+    if (!src) return phAvatar();
+    return '<img class="ava-img" src="' + esc(src) + '" alt="">';
+  }
+
   function postCard(post, index) {
     if (!post) return '';
     var photo = (post.photos || [])[0] || { id: '' };
     var city = post.city ? ' · ' + esc(post.city) : '';
     var count = Number(post.ratingsCount) ? ' <span class="muted">· оценили ' + esc(post.ratingsCount) + '</span>' : '';
-    var score = avgScore(post);
+    var score = post.isMine ? (post.ratingLabel || avgScore(post)) : avgScore(post);
     var scoreHtml = '<div class="post-score"><i>★</i><b' + (score ? ' data-tick="' + esc(score) + '"' : '') + '>' + esc(score || '—') + '</b></div>';
 
     // Rating UI - inline in card
@@ -876,7 +884,7 @@
     }
     
     return '<article class="post" data-post="' + esc(post.id) + '" style="--i:' + Math.min(index || 0, 7) + '"><div class="card">' +
-      '<div class="post-head"><button class="mini-ava">' + phAvatar() + '</button>' +
+      '<div class="post-head"><button class="mini-ava">' + cardAvatar(post) + '</button>' +
       '<div class="post-user">' + esc(post.name) + (post.premium ? premMark() : '') + '</div>' +
       (post.isMine ? '' : '<button class="card-more" data-act="card-more" data-id="' + esc(post.id) + '" aria-label="Ещё">•••</button>') +
       '</div>' +
@@ -1232,144 +1240,16 @@
     var stars = '';
     for (var i = 1; i <= 10; i++) stars += '<button type="button" data-act="star" data-n="' + i + '" class="' + (i <= n ? 'on' : '') + '" aria-label="' + i + '">★</button>';
     return sheetFrame(
-      '<h2>Оценка</h2><p class="hint">' + esc(p.name || 'анкета') + (p.city ? ' · ' + esc(p.city) : '') + '</p>' +
-      '<div class="big-score"><b data-score>' + n + '</b></div>' +
-      '<div class="rate-controls"><div class="stars">' + stars + '</div>' +
-      '<input class="slider" data-score-range type="range" min="1" max="10" step="1" value="' + n + '" aria-label="Оценка от 1 до 10"></div>' +
-      '<textarea class="area" id="rate-note" maxlength="180" placeholder="Комментарий — уйдёт вместе с оценкой"></textarea><div class="count"><span id="rate-count">0</span>/180</div>',
-      '<button class="btn btn-primary btn-block" data-act="send-rate" data-id="' + esc(p.userId) + '" data-photo="' + esc(p.photoId || '') + '">Готово</button>'
-    );
-  }
-
-  function messageSheet(p) {
-    var left = S.limits && S.limits.messagesLeft != null
-      ? '<p class="hint">Осталось сообщений: ' + S.limits.messagesLeft + '</p>' : '<p class="hint">для @' + esc(p.username || '') + '</p>';
-    return sheetFrame(
-      '<h2>Сообщение</h2>' + left +
-      '<textarea class="area" id="msg-text" maxlength="180" placeholder="Напиши что-нибудь тёплое"></textarea><div class="count"><span id="msg-count">0</span>/180</div>' +
-      '<div class="sheet-error" id="sheet-error"></div>',
-      '<button class="btn btn-primary btn-block" data-act="send-message" data-id="' + esc(p.userId) + '" data-photo="' + esc(p.photoId || '') + '">Отправить</button>'
-    );
-  }
-
-  function premiumSheet() {
-    var active = S.me && S.me.premium;
-    var cats = [
-      ['Знакомства', '20 анкет вместо 10 и приоритет в рекомендациях'],
-      ['Истории', '3 активные, срок 10 часов, видео до 30 секунд'],
-      ['Профиль', 'Видео в анкете, значок Premium, сброс статистики'],
-      ['Внимание', 'Полный список: кто смотрел, кто поставил реакцию']
-    ].map(function (c) {
-      return '<div class="pcat"><b>' + esc(c[0]) + '</b><span>' + esc(c[1]) + '</span></div>';
-    }).join('');
-    var table = '<div class="pcat-list">' + cats + '</div>';
-    var plans = active ? '<p class="hint">Premium уже подключён</p>' :
-      '<div class="choice-list">' +
-      ['3d|3 дня|59|', '7d|7 дней|119|', '14d|14 дней|189|', '30d|30 дней|270|Выгоднее всего'].map(function (row) {
-        var p = row.split('|');
-        return '<button class="choice-row plan' + (S.plan === p[0] ? ' on' : '') + '" data-act="plan" data-plan="' + p[0] + '">' +
-          '<span>' + p[1] + (p[3] ? '<small class="save">' + p[3] + '</small>' : '') + '</span>' +
-          '<span class="price">' + p[2] + ' ★</span></button>';
-      }).join('') + '</div>';
-    var cta = active
-      ? '<button class="btn btn-primary btn-block" data-act="sheet-close">Готово</button>'
-      : '<button class="btn btn-primary btn-block" data-act="buy">Получить Premium</button>';
-    return sheetFrame(
-      '<div class="pay"><div class="pay-hero"><img class="pay-diamond" src="assets/anim/diamond2.webp" alt=""><span class="pay-badge">PREMIUM</span></div>' +
-      '<h2>Больше знакомств.<br>Больше внимания.</h2>' +
-      '<p class="hint">Оценивай больше людей, публикуй больше историй и получай больше внимания в ленте.</p>' +
-      table + plans +
-      '<p class="terms">Тестовая активация: реальная оплата через Telegram Stars подключается на бэкенде.</p></div>',
-      cta
-    );
-  }
-
-  function storyPickSheet() {
-    var lim = (S.me && S.me.premium) ? 30 : 10;
-    var photoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>';
-    var fileIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>';
-    return sheetFrame(
-      '<h2>Новая история</h2><p class="hint">Фото или видео до ' + lim + ' сек. Дальше — текст и эмодзи.</p>' +
-      '<div class="story-pick">' +
-      '<button class="sp-btn" data-act="story-file"><span class="sm-ico">' + photoIco + '</span><b>Фотографии</b><small>из галереи</small></button>' +
-      '<button class="sp-btn" data-act="story-file"><span class="sm-ico">' + fileIco + '</span><b>Файлы</b><small>видео или фото</small></button>' +
-      '</div>',
-      '<button class="btn btn-glass btn-block" data-act="sheet-close">Отмена</button>'
-    );
-  }
-
-  function composeSheet() {
-    var c = S.compose || { stage: 'menu', photos: [], caption: '' };
-    if (c.type === 'story' && c.stage !== 'preview') return storyPickSheet();
-    if (c.stage === 'preview') {
-      var tiles = c.photos.map(function (p) {
-        var face = (p.type === 'video' && ownUrl(p.poster)) ? realImg(p.poster) : (realImg(p.url) || (p.type === 'video' && ownUrl(p.url) ? realVideo(p.url, p.poster) : '') || phPhoto());
-        return '<div class="pick">' + face + '</div>';
-      }).join('');
-      var emojis = ['😀','😍','🔥','💔','✨','🥰','😎','👀','🙈','💫'];
-      var ratio = c.ratio || '9:16';
-      var stage = '<div class="story-stage ratio-' + ratio.replace(':', '-') + '">' + tiles + '</div>' +
-        '<div class="story-ratios">' + ['9:16', '4:5', '1:1'].map(function (r) {
-          return '<button class="ratio-btn' + (r === ratio ? ' on' : '') + '" data-act="story-ratio" data-ratio="' + r + '">' + r.replace(':', ' / ') + '</button>';
-        }).join('') + '</div>';
-      var storyEditor = stage +
-        '<textarea class="area" id="story-caption" maxlength="120" placeholder="Текст к истории">' + esc(c.caption || '') + '</textarea>' +
-        '<div class="story-emojis">' + emojis.map(function (e) {
-          return '<button class="se-btn" data-act="story-emoji" data-emoji="' + e + '">' + e + '</button>';
-        }).join('') + '</div>' +
-        '<p class="hint">' + ((S.me && S.me.premium) ? 'Видео до 30 сек · история на 10 часов' : 'Видео до 10 сек · история на 1 час') + '</p>';
-      var topBar = c.type === 'story' ? '<div class="compose-top"><button class="compose-x" data-act="story-clear" aria-label="Назад">×</button><b>Новая история</b><span class="compose-gap"></span></div>' : '';
-      return sheetFrame(
-        topBar + '<h2' + (c.type === 'story' ? ' class="sr-only"' : '') + '>' + (c.type === 'story' ? 'Новая история' : 'Новая анкета') + '</h2>' +
-        (c.type === 'story' ? '' : '<div class="pick-grid">' + tiles + '</div>') +
-        (c.type === 'story' ? storyEditor : '<textarea class="area" id="cap-text" maxlength="80" placeholder="Короткая подпись">' + esc(c.caption || '') + '</textarea>'),
-        c.type === 'story'
-          ? '<div class="compose-actions"><button class="btn btn-glass" data-act="story-clear">Удалить</button><button class="btn btn-primary" data-act="publish">Опубликовать</button></div>'
-          : '<button class="btn btn-primary btn-block" data-act="publish">Опубликовать</button>'
-      );
-    }
-    var premium = !!(S.me && S.me.premium);
-    var cap = photoCap();
-    var used = countPhotos(S.me && S.me.photos);
-    var photoAct = (!premium && used >= cap) ? 'premium' : 'pick-post';
-    var photoHint = (!premium && used >= cap) ? 'лимит · больше в Premium' : ('до ' + cap + ' фото');
-    var videoRow = premium
-      ? '<button class="choice-row" data-act="pick-video"><span>Видео<small>в ленту и профиль</small></span></button>'
-      : '<button class="choice-row" data-act="premium"><span>Видео<small>Premium</small></span><span class="prem-tag">Premium</span></button>';
-    var storyRow = premium
-      ? '<button class="choice-row" data-act="pick-story"><span>История<small>на 10 часов</small></span></button>'
-      : '<button class="choice-row" data-act="pick-story"><span>История<small>на 1 час</small></span><span class="prem-tag">10 часов в Premium</span></button>';
-    return sheetFrame(
-      '<h2>Новая публикация</h2><p class="hint">Фото, видео или история.</p><div class="choice-list">' +
-      '<button class="choice-row" data-act="' + photoAct + '"><span>Фото в анкету<small>' + photoHint + '</small></span>' +
-      (photoAct === 'premium' ? '<span class="prem-tag">Premium</span>' : '') + '</button>' +
-      videoRow +
-      storyRow + '</div>'
-    );
-  }
-
-  function editSheet() {
-    var e = S.edit;
-    if (!e) return '';
-    var cap = photoCap();
-    var used = countPhotos(e.photos);
-    var tiles = e.photos.map(function (p, idx) {
-      return photoPick(p, idx, e.photos.length, 'edit');
-    }).join('');
-    var add = used < cap
-      ? '<button class="pick-add" data-act="pick-edit" aria-label="Добавить фото">+</button>'
-      : (S.me && S.me.premium ? '' : '<button class="pick-add" data-act="premium" aria-label="Больше фото в Premium">+</button>');
-    var look = function (v, label) {
-      return '<button type="button" data-act="edit-look" data-value="' + v + '" class="' + (e.lookingFor === v ? 'on' : '') + '">' + label + '</button>';
-    };
-    var li = e.lookingFor === 'male' ? 1 : e.lookingFor === 'female' ? 2 : 0;
-    return sheetFrame(
-      '<h2>Анкета</h2><input class="field" id="edit-name" maxlength="32" value="' + esc(e.name) + '" placeholder="Имя">' +
-      '<div style="height:10px"></div><textarea class="area" id="edit-bio" maxlength="80" placeholder="О себе">' + esc(e.bio) + '</textarea>' +
-      '<div class="count">' + e.bio.length + '/80</div>' +
-      '<div style="height:8px"></div><input class="field" id="edit-city" maxlength="32" value="' + esc(e.city || '') + '" placeholder="Город (необязательно)">' +
+      '<div class="edit-head"><h2>Твоя анкета</h2><span class="edit-count">' + used + ' / ' + cap + ' фото</span></div>' +
       '<div class="edit-preview">' + mediaBlock({ id: 'edit-preview', photos: e.photos }, '') + '</div>' +
-      '<p class="hint">' + (S.me && S.me.premium ? 'До 5 фото. Нажми на фото, чтобы заменить.' : 'До 2 фото. Больше — в Premium.') + '</p><div class="pick-grid">' + tiles + add + '</div>' +
+      '<div class="pick-grid">' + tiles + add + '</div>' +
+      '<div class="edit-fields">' +
+      '<label class="edit-field"><span>Имя</span><input class="field" id="edit-name" maxlength="32" value="' + esc(e.name) + '" placeholder="Как тебя зовут"></label>' +
+      '<label class="edit-field"><span>Возраст</span><input class="field" id="edit-age" inputmode="numeric" maxlength="2" value="' + esc(e.age || '') + '" placeholder="18"></label>' +
+      '<label class="edit-field"><span>Город</span><input class="field" id="edit-city" maxlength="32" value="' + esc(e.city || '') + '" placeholder="Необязательно"></label>' +
+      '<label class="edit-field"><span>О себе</span><textarea class="area" id="edit-bio" maxlength="80" placeholder="Пара слов о тебе">' + esc(e.bio) + '</textarea></label>' +
+      '<div class="count">' + e.bio.length + '/80</div>' +
+      '</div>' +
       '<div class="sheet-error" id="sheet-error"></div>',
       '<button class="btn btn-primary btn-block" data-act="save-edit">Сохранить</button>'
     );
@@ -2709,11 +2589,16 @@
     if (act === 'edit') {
       S.edit = {
         name: S.me.name,
+        age: S.me.age || '',
         bio: S.me.bio || '',
         lookingFor: S.me.lookingFor || 'all',
         photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '', ratio: p.ratio || 0 }; })
       };
-      openSheet('edit', { key: 'edit' });
+      Promise.all(S.edit.photos.map(function (p) { return resolveMedia(p.url); })).then(function () {
+        openSheet('edit', { key: 'edit' });
+        sheetSig = '';
+        renderSheet();
+      }).catch(function () { openSheet('edit', { key: 'edit' }); });
       return;
     }
     if (act === 'edit-look') {
@@ -2840,7 +2725,7 @@
     }
     S.edit.name = name.trim();
     S.edit.bio = bio.trim();
-    CupionAPI.updateMe({ name: S.edit.name, bio: S.edit.bio, city: (document.getElementById('edit-city') || {}).value || '', lookingFor: S.edit.lookingFor, photos: S.edit.photos }).then(function (me) {
+    CupionAPI.updateMe({ name: S.edit.name, age: parseInt((document.getElementById('edit-age') || {}).value, 10) || S.edit.age, bio: S.edit.bio, city: (document.getElementById('edit-city') || {}).value || '', lookingFor: S.edit.lookingFor, photos: S.edit.photos }).then(function (me) {
       S.me = me;
       closeSheet();
       toast('Анкета обновлена');
