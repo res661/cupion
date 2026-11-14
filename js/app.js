@@ -1153,16 +1153,24 @@
         return photoPick(p, idx, r.photos.length, 'reg');
       }).join('');
       var regCap = (S.me && S.me.premium) ? 5 : 2;
-      var add = r.photos.length < regCap ? '<button class="pick-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : (r.photos.length && !(S.me && S.me.premium) ? '<button class="pick-add locked" data-act="premium" aria-label="Больше в Premium">+</button>' : '');
-      var av = r.avatar || '';
-      var hero = r.photos.length ? '<div class="reg-photo-hero">' + (realImg(r.photos[0].url) || phPhoto()) + '</div>' : '';
-      body = '<h1>Аватарка и фото</h1><p class="lead">Аватарка — кружок рядом с именем. Фото анкеты видят в ленте (1–2, с Premium до 5).</p>' + hero +
-        '<div class="edit-sub">Аватарка<small>можно из Telegram</small></div>' +
-        '<div class="avatar-row"><span class="avatar-pick' + (av ? ' has' : '') + '">' + (av ? '<img src="' + esc(displayUrl(av) || av) + '" alt="">' : phAvatar()) + '</span>' +
-        '<button class="btn btn-white avatar-btn" data-act="reg-avatar">Выбрать</button>' +
-        '<button class="btn btn-white avatar-btn" data-act="reg-tg-avatar">Из Telegram</button></div>' +
-        '<div class="edit-sub">Фото анкеты<small>от 1 до 3</small></div>' +
-        '<div class="pick-grid">' + tiles + add + '</div>';
+      var add = r.photos.length < regCap
+        ? '<button class="pick-add" data-act="pick-reg" aria-label="Добавить фото">+</button>'
+        : (r.photos.length && !(S.me && S.me.premium) ? '<button class="pick-add locked" data-act="premium" aria-label="Больше в Premium">+</button>' : '');
+      var first = r.photos[0];
+      var face = first ? (realImg(first.url) || phPhoto()) : '<span class="reg-add-plus">+</span>';
+      var avatarFace = r.avatar
+        ? '<img src="' + esc(displayUrl(r.avatar) || r.avatar) + '" alt="">'
+        : (first ? (realImg(first.url) || phAvatar()) : phAvatar());
+      body = '<h1>Как выглядит анкета</h1><p class="lead">Аватарка — кружок слева. Фото — в карточке, как увидят другие. Нажми на фото, чтобы выбрать.</p>' +
+        '<div class="reg-card">' +
+        '<div class="post-head"><button class="mini-ava" data-act="reg-avatar">' + avatarFace + '</button>' +
+        '<div class="post-user">' + esc(r.name || 'Твоё имя') + '</div>' +
+        '<button class="reg-tg" data-act="reg-tg-avatar">Из Telegram</button></div>' +
+        '<button class="reg-hero' + (first ? ' filled' : '') + '" data-act="pick-reg" aria-label="Выбрать фото">' + face + '</button>' +
+        '<div class="post-meta"><div class="post-title">' + esc(r.name || 'Имя') + ', ' + esc(r.age || '—') + (r.city ? ' · ' + esc(r.city) : '') + '</div></div>' +
+        '<p class="caption">' + (first ? 'Нажми на фото, чтобы заменить' : 'Нажми на плюс, чтобы добавить фото') + '</p>' +
+        '</div>' +
+        (r.photos.length ? '<div class="pick-grid reg-thumbs">' + tiles + add + '</div>' : '');
     }
     var label = S.regStep === 4 ? 'Готово' : 'Дальше';
     var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : '';

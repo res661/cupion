@@ -1999,3 +1999,43 @@ body, #app {
 .reg-photo-hero img, .reg-photo-hero .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 :root[data-theme="dark"] .pick-add { background: rgba(255, 255, 255, 0.06); }
 :root[data-theme="dark"] .pick { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45); }
+/* ===== registration: card preview step ===== */
+.reg-card {
+  margin: 8px 0 14px;
+  padding: 14px;
+  border-radius: 32px;
+  background: var(--card);
+  box-shadow: 0 14px 36px rgba(20, 45, 90, 0.10);
+  border: 1px solid var(--hairline);
+}
+.reg-card .post-head { display: flex; align-items: center; gap: 10px; padding: 0 2px 12px; }
+.reg-card .mini-ava { position: relative; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; padding: 0; background: var(--input); }
+.reg-card .mini-ava img, .reg-card .mini-ava .ph { width: 100%; height: 100%; object-fit: cover; }
+.reg-card .post-user { flex: 1; font-size: 17px; font-weight: 650; }
+.reg-tg { height: 32px; padding: 0 12px; border-radius: 999px; background: var(--input); color: var(--text); font-size: 13px; font-weight: 600; }
+.reg-hero {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 42vh;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(120, 120, 128, 0.10);
+  border: 1.5px dashed rgba(120, 120, 128, 0.4);
+  padding: 0;
+}
+.reg-hero.filled { border-style: solid; border-color: rgba(255, 255, 255, 0.6); }
+.reg-hero img, .reg-hero .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.reg-add-plus {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 44px;
+  font-weight: 300;
+  color: #0a84ff;
+}
+.reg-card .post-meta { margin: 12px 2px 0; }
+.reg-card .caption { margin: 6px 2px 2px; font-size: 14px; color: var(--text-2); }
+.reg-thumbs { margin-top: 4px; }
+:root[data-theme="dark"] .reg-card { background: var(--card); border-color: rgba(255, 255, 255, 0.08); }
