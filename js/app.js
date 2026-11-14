@@ -403,7 +403,7 @@
       city: S.me.city || '',
       lookingFor: S.me.lookingFor || 'all',
       avatar: S.me.avatar || '',
-      photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '', ratio: p.ratio || 0 }; })
+      photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '', ratio: p.ratio || 0, zoom: p.zoom || 1, posX: p.posX, posY: p.posY }; })
     };
     Promise.all(S.edit.photos.map(function (p) { return resolveMedia(p.url); })).then(function () {
       openSheet('edit', { key: 'edit' });
@@ -860,6 +860,11 @@
       if (photo && photo.type === 'video' && !(ownUrl(shown) || file)) {
         visual += '<button class="play-badge" data-act="play" data-src="' + esc(photo.url) + '" data-poster="' + esc(photo.poster || '') + '" aria-label="Смотреть видео">' + ICON.play + '</button>';
       }
+      var z = Number(photo.zoom) || 1;
+      var px = Number(photo.posX);  if (!isFinite(px)) px = 50;
+      var py = Number(photo.posY);  if (!isFinite(py)) py = 50;
+      var st = (z !== 1 || px !== 50 || py !== 50) ? ' style="object-position:' + px + '% ' + py + '%;transform:scale(' + z + ')"' : '';
+      visual = visual.replace('<img ', '<img ' + st + ' ').replace('<video ', '<video ' + st + ' ');
       return '<div class="media-slide">' + visual + '</div>';
     }).join('');
     var dots = photos.length > 1
@@ -1282,6 +1287,7 @@
     return sheetFrame(
       '<div class="edit-head"><h2>Твоя анкета</h2><span class="edit-count">' + used + ' / ' + cap + ' фото</span></div>' +
       '<div class="edit-preview">' + mediaBlock({ id: 'edit-preview', photos: e.photos }, '') + '</div>' +
+      '<div class="zoom-row"><span>Масштаб</span><input type="range" id="photo-zoom" min="100" max="200" step="5" value="' + Math.round((Number(e.photos[0] && e.photos[0].zoom) || 1) * 100) + '"></div>' +
       '<div class="edit-sub">Аватарка<small>Кружок рядом с именем</small></div>' +
       '<div class="avatar-row">' +
       '<span class="avatar-pick' + (e.avatar ? ' has' : '') + '">' + (e.avatar ? '<img src="' + esc(displayUrl(e.avatar) || e.avatar) + '" alt="">' : phAvatar()) + '</span>' +
@@ -2652,8 +2658,9 @@
       var photoUrl = tu && tu.photo_url ? tu.photo_url : '';
       if (!photoUrl) { toast('В Telegram нет фото профиля'); return; }
       S.edit.avatar = photoUrl;
-      sheetSig = '';
-      renderSheet();
+      var ap2 = document.querySelector('.avatar-pick');
+      if (ap2) { ap2.innerHTML = '<img src="' + esc(photoUrl) + '" alt="">'; ap2.classList.add('has'); }
+      toast('Аватарка из Telegram');
       return;
     }
     if (act === 'reg-avatar') { S.pickPurpose = 'avatar-reg'; pickFiles('avatar-reg'); return; }
@@ -2662,7 +2669,9 @@
       var rp = ru && ru.photo_url ? ru.photo_url : '';
       if (!rp) { toast('В Telegram нет фото профиля'); return; }
       S.reg.avatar = rp;
-      render();
+      var ap = document.querySelector('.avatar-pick');
+      if (ap) { ap.innerHTML = '<img src="' + esc(rp) + '" alt="">'; ap.classList.add('has'); }
+      toast('Аватарка из Telegram');
       return;
     }
     if (act === 'edit-look') {
@@ -2938,6 +2947,14 @@
       };
       video.onerror = function () { finish(''); };
     });
+  }
+
+  function onZoomInput(e) {
+    if (!e.target || e.target.id !== 'photo-zoom') return;
+    if (!S.edit || !S.edit.photos || !S.edit.photos[0]) return;
+    S.edit.photos[0].zoom = (parseInt(e.target.value, 10) || 100) / 100;
+    var host = document.querySelector('.edit-preview .media-slide img, .edit-preview .media-slide video');
+    if (host) host.style.transform = 'scale(' + S.edit.photos[0].zoom + ')';
   }
 
   function onFiles(e) {
@@ -3537,8 +3554,9 @@
       '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden><input id="pick-story" type="file" accept="image/*,video/*" hidden><input id="pick-avatar" type="file" accept="image/*" hidden><input id="pick-avatar-reg" type="file" accept="image/*" hidden>';
     document.addEventListener('click', onClick);
     document.addEventListener('input', onInput);
+    document.addEventListener('input', onZoomInput);
     document.addEventListener('change', function (e) {
-      if (e.target && (e.target.id === 'pick-images' || e.target.id === 'pick-video' || e.target.id === 'pick-story')) onFiles(e);
+      if (e.target && (e.target.id === 'pick-images' || e.target.id === 'pick-video' || e.target.id === 'pick-story' || e.target.id === 'pick-avatar' || e.target.id === 'pick-avatar-reg')) onFiles(e);
     });
     document.addEventListener('input', onRange);
     document.addEventListener('scroll', function (e) {

@@ -2062,3 +2062,7 @@ body, #app {
 .reg-hero { max-height: 46vh; }
 .reg-card .post-title { font-size: 17px; font-weight: 700; }
 .reg-card .caption { min-height: 18px; }
+.zoom-row { display: flex; align-items: center; gap: 10px; margin: 2px 0 10px; }
+.zoom-row span { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-3); }
+.zoom-row input[type=range] { flex: 1; }
+.edit-preview .media-slide { overflow: hidden; }

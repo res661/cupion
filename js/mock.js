@@ -227,7 +227,7 @@
         var presets = [0.8, 1, 1.25, 1.5, 1.91, 0.9, 1.15];
         var ratio = Number(photo.ratio);
         if (!ratio || ratio <= 0) ratio = presets[(String(photo.id || i).length + i) % presets.length];
-        return { id: photo.id, type: photo.type || 'photo', url: photo.url, poster: photo.poster || '', ratio: ratio };
+        return { id: photo.id, type: photo.type || 'photo', url: photo.url, poster: photo.poster || '', ratio: ratio, zoom: Number(photo.zoom) || 1, posX: Number(photo.posX) || 50, posY: Number(photo.posY) || 50 };
       }),
       stories: stories.map(function (s) {
         return {
@@ -393,7 +393,7 @@
           kept.push(p);
         });
         state.me.photos = kept.map(function (p, i) {
-          return { id: p.id || ('me_p' + (i + 1) + '_' + Date.now()), type: p.type || 'photo', url: p.url, poster: p.poster || '', ratio: Number(p.ratio) || 0 };
+          return { id: p.id || ('me_p' + (i + 1) + '_' + Date.now()), type: p.type || 'photo', url: p.url, poster: p.poster || '', ratio: Number(p.ratio) || 0, zoom: Number(p.zoom) || 1, posX: Number(p.posX) || 50, posY: Number(p.posY) || 50 };
         });
         var first = state.me.photos[0];
         state.me.avatar = first ? (first.poster || first.url) : '';
