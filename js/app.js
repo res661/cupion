@@ -394,6 +394,24 @@
     render();
   }
 
+  function openEditSheet() {
+    if (!S.me) return;
+    S.edit = {
+      name: S.me.name,
+      age: S.me.age || '',
+      bio: S.me.bio || '',
+      city: S.me.city || '',
+      lookingFor: S.me.lookingFor || 'all',
+      avatar: S.me.avatar || '',
+      photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '', ratio: p.ratio || 0 }; })
+    };
+    Promise.all(S.edit.photos.map(function (p) { return resolveMedia(p.url); })).then(function () {
+      openSheet('edit', { key: 'edit' });
+      sheetSig = '';
+      renderSheet();
+    }).catch(function () { openSheet('edit', { key: 'edit' }); });
+  }
+
   function openPerson(id, ret) {
     if (!id) return;
     if (S.me && (id === 'me' || id === S.me.id)) {
@@ -1135,7 +1153,14 @@
         return photoPick(p, idx, r.photos.length, 'reg');
       }).join('');
       var add = r.photos.length < 3 ? '<button class="pick-add" data-act="pick-reg" aria-label="Добавить фото">+</button>' : '';
-      body = '<h1>Добавь фото</h1><p class="lead">От 1 до 3. Больше фото и видео — в Premium.</p><div class="pick-grid">' + tiles + add + '</div>';
+      var av = r.avatar || '';
+      body = '<h1>Аватарка и фото</h1><p class="lead">Аватарка — кружок рядом с именем. Фото анкеты видят в ленте.</p>' +
+        '<div class="edit-sub">Аватарка<small>можно из Telegram</small></div>' +
+        '<div class="avatar-row"><span class="avatar-pick' + (av ? ' has' : '') + '">' + (av ? '<img src="' + esc(displayUrl(av) || av) + '" alt="">' : phAvatar()) + '</span>' +
+        '<button class="btn btn-white avatar-btn" data-act="reg-avatar">Выбрать</button>' +
+        '<button class="btn btn-white avatar-btn" data-act="reg-tg-avatar">Из Telegram</button></div>' +
+        '<div class="edit-sub">Фото анкеты<small>от 1 до 3</small></div>' +
+        '<div class="pick-grid">' + tiles + add + '</div>';
     }
     var label = S.regStep === 4 ? 'Готово' : 'Дальше';
     var skip = S.regStep === 1 ? '<button class="text-btn" data-act="skip-city">Пропустить</button>' : '';
@@ -1165,6 +1190,7 @@
 
   function finishReg() {
     var err = document.getElementById('reg-error');
+    S.reg.avatar = S.reg.avatar || '';
     CupionAPI.register(S.reg).then(function (me) {
       S.me = me;
       S.screen = 'feed';
@@ -2605,23 +2631,7 @@
     }
     if (act === 'reg-next') { advanceReg(); return; }
     if (act === 'skip-bio') { S.reg.bio = ''; finishReg(); return; }
-    if (act === 'edit') {
-      S.edit = {
-        name: S.me.name,
-        age: S.me.age || '',
-        bio: S.me.bio || '',
-        lookingFor: S.me.lookingFor || 'all',
-        photos: (S.me.photos || []).map(function (p) { return { id: p.id, url: p.url, type: p.type, poster: p.poster || '', ratio: p.ratio || 0 }; })
-      };
-      S.edit.photos = S.edit.photos || [];
-      S.edit.avatar = S.edit.avatar || S.me.avatar || '';
-      Promise.all(S.edit.photos.map(function (p) { return resolveMedia(p.url); })).then(function () {
-        openSheet('edit', { key: 'edit' });
-        sheetSig = '';
-        renderSheet();
-      }).catch(function () { openSheet('edit', { key: 'edit' }); });
-      return;
-    }
+    if (act === 'edit') { openEditSheet(); return; }
     if (act === 'pick-avatar') { S.pickPurpose = 'avatar'; pickFiles('avatar'); return; }
     if (act === 'tg-avatar') {
       var tu = window.TG ? TG.user() : null;
@@ -2630,6 +2640,15 @@
       S.edit.avatar = photoUrl;
       sheetSig = '';
       renderSheet();
+      return;
+    }
+    if (act === 'reg-avatar') { S.pickPurpose = 'avatar-reg'; pickFiles('avatar-reg'); return; }
+    if (act === 'reg-tg-avatar') {
+      var ru = window.TG ? TG.user() : null;
+      var rp = ru && ru.photo_url ? ru.photo_url : '';
+      if (!rp) { toast('В Telegram нет фото профиля'); return; }
+      S.reg.avatar = rp;
+      render();
       return;
     }
     if (act === 'edit-look') {
@@ -2846,7 +2865,7 @@
 
   function pickFiles(purpose) {
     S.pickPurpose = purpose;
-    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : (purpose === 'avatar' ? 'pick-avatar' : 'pick-images'));
+    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : (purpose === 'avatar' ? 'pick-avatar' : (purpose === 'avatar-reg' ? 'pick-avatar-reg' : 'pick-images')));
     var input = document.getElementById(id);
     if (!input) return;
     input.value = '';
@@ -2911,6 +2930,10 @@
     var files = Array.prototype.slice.call(e.target.files || []);
     if (!files.length) return;
     var purpose = S.pickPurpose;
+    if (purpose === 'avatar-reg') {
+      readImage(files[0]).then(function (pic) { S.reg.avatar = pic.url; render(); }).catch(function () { toast('Не удалось загрузить'); });
+      return;
+    }
     if (purpose === 'avatar') {
       readImage(files[0]).then(function (pic) {
         S.edit.avatar = pic.url;
@@ -3487,10 +3510,17 @@
   }
 
   function boot() {
+    document.addEventListener('pointerup', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('[data-act="edit"]') : null;
+      if (!el) return;
+      if (S.sheet) return;
+      openEditSheet();
+    }, true);
+
     var root = document.getElementById('app');
     if (!root) return;
     root.innerHTML = '<div id="stage"></div><div id="tabs"></div><div id="sheet-root"></div><div id="story-root"></div><div id="peek-root"></div><div id="match-root"></div><div id="toast-root"></div>' +
-      '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden><input id="pick-story" type="file" accept="image/*,video/*" hidden><input id="pick-avatar" type="file" accept="image/*" hidden>';
+      '<input id="pick-images" type="file" accept="image/*" multiple hidden><input id="pick-video" type="file" accept="video/*" hidden><input id="pick-story" type="file" accept="image/*,video/*" hidden><input id="pick-avatar" type="file" accept="image/*" hidden><input id="pick-avatar-reg" type="file" accept="image/*" hidden>';
     document.addEventListener('click', onClick);
     document.addEventListener('input', onInput);
     document.addEventListener('change', function (e) {

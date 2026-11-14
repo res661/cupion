@@ -362,7 +362,7 @@
         premium: false,
         photos: photos,
         stories: [],
-        avatar: '',
+        avatar: String(draft.avatar || ''),
         createdAt: Date.now()
       };
       writeStore();
