@@ -861,6 +861,10 @@
 
   function mediaBlock(post, chip) {
     var photos = (post.photos || []).filter(function (p) { return !!p; });
+    if (!photos.length && post.isMine) {
+      return '<button type="button" class="me-empty" data-act="me-add-photo" aria-label="Добавить фото">' +
+        '<span class="me-empty-plus">+</span><span class="me-empty-text">Добавить фото</span></button>';
+    }
     if (!photos.length) photos = [{ id: '', type: 'photo' }];
     var idx = Math.min(Math.max(0, S.photoIndex[post.id] || 0), photos.length - 1);
     var slides = photos.map(function (photo) {
@@ -894,7 +898,6 @@
       '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
       dots + '</div>' +
       (post.isMine && photos.length ? '<button type="button" class="reg-rm" data-act="me-rm-photo" aria-label="Удалить фото">−</button>' : '') +
-      (post.isMine ? '<button type="button" class="me-add" data-act="me-add-photo" aria-label="Добавить фото">+</button>' : '') +
       '</div>';
   }
 
