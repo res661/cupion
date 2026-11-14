@@ -986,27 +986,32 @@
     var who = row.user;
     var photo = (who.photos || [])[0] || {};
     var shown = realImg(photo.url) || realImg(photo.poster);
-    var media = shown || letterArt(who, 'rate-media');
-    var city = who.city ? ' · ' + esc(who.city) : '';
+    var media = shown || letterArt(who, 'rc-thumb-art');
     var chips = '';
     for (var k = 1; k <= 10; k++) chips += '<button type="button" class="mini-star" data-act="reply-star" data-id="' + esc(who.id) + '" data-n="' + k + '">' + k + '</button>';
-    var mine = row.repliedScore
-      ? '<div class="rc-done">ты ★ ' + esc(row.repliedScore) + '</div>'
-      : '<div class="reply-stars-row rc-stars"><span class="quick-stars">' + chips + '</span></div>';
-    var write = row.score > 5
-      ? '<button class="btn btn-primary rc-write" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>'
-      : '';
+    var answered = !!row.repliedScore;
+    var canWrite = row.score > 5;
+    var action = answered
+      ? (canWrite
+        ? '<button class="btn btn-primary rc-btn" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>'
+        : '<span class="rate-hint">ниже 6 — писать нельзя</span>')
+      : (canWrite ? '<button class="btn btn-glass rc-btn" data-act="tg" data-user="' + esc(who.username) + '">Написать</button>' : '');
     var fresh = S.freshRatingId && S.freshRatingId === who.id ? ' fresh' : '';
     return '<article class="rate-card' + fresh + '" style="--i:' + Math.min(index || 0, 7) + '">' +
-      '<button class="rc-media" data-act="person" data-id="' + esc(who.id) + '">' + media +
-      '<span class="rc-score">оценил' + (who.gender === 'female' ? 'а' : '') + ' на ' + esc(row.score) + ' ★</span>' +
-      '<span class="rc-name"><b>' + esc(who.name) + ', ' + esc(who.age) + '</b>' + (who.premium ? premMark() : '') + '<small>' + city.replace(' · ', '') + '</small></span>' +
-      '</button>' +
-      (row.text ? '<p class="rc-quote">«' + esc(row.text) + '»</p>' : (who.bio || who.caption ? '<p class="rc-quote">' + esc(who.bio || who.caption) + '</p>' : '')) +
-      mine +
-      '<div class="rc-foot">' +
-      (row.repliedScore ? (row.score > 5 ? write : '<span class="rate-hint">написать нельзя — оценка ниже 6</span>') : '<span class="rate-hint">оцени в ответ</span>') +
-      '</div></article>';
+      '<div class="rc-row">' +
+      '<button class="rc-thumb" data-act="person" data-id="' + esc(who.id) + '">' + media + '</button>' +
+      '<div class="rc-info">' +
+      '<div class="rc-line"><b>' + esc(who.name) + ', ' + esc(who.age) + '</b>' + (who.premium ? premMark() : '') +
+      '<span class="rc-badge">★ ' + esc(row.score) + '</span></div>' +
+      (who.city ? '<div class="rc-city">' + esc(who.city) + '</div>' : '') +
+      ((row.text || who.bio || who.caption) ? '<p class="rc-quote">' + esc(row.text || who.bio || who.caption) + '</p>' : '') +
+      '<div class="rc-meta">оценил' + (who.gender === 'female' ? 'а' : '') + ' тебя · ' + timeAgo(row.createdAt) + '</div>' +
+      '</div></div>' +
+      (answered
+        ? '<div class="rc-answered">ты ★ ' + esc(row.repliedScore) + '</div>'
+        : '<div class="reply-stars-row rc-stars"><span class="quick-stars">' + chips + '</span></div>') +
+      (action ? '<div class="rc-foot">' + action + '</div>' : '') +
+      '</article>';
   }
 
   function ratingRow(row, incoming, index) {
@@ -1057,7 +1062,8 @@
   }
 
   function ratingsScreen() {
-    var i = S.ratingsTab === 'out' ? 1 : S.ratingsTab === 'matches' ? 2 : 0;
+    var i = S.ratingsTab === 'matches' ? 1 : 0;
+    if (S.ratingsTab === 'out') S.ratingsTab = 'in';
     var hero = '';
     var body = '';
     if (S.ratingsTab === 'in') {
@@ -1088,8 +1094,7 @@
     return '<div class="screen"><div class="scroll"><div class="page-head"><h1>Оценки</h1><p>Кто оценил тебя</p></div>' +
       '<div class="pad"><div class="seg" data-i="' + i + '"><i class="seg-pill"></i>' +
       '<button type="button" data-act="rtab" data-tab="in" class="' + (i === 0 ? 'on' : '') + '">Тебе</button>' +
-      '<button type="button" data-act="rtab" data-tab="out" class="' + (i === 1 ? 'on' : '') + '">Ты</button>' +
-      '<button type="button" data-act="rtab" data-tab="matches" class="' + (i === 2 ? 'on' : '') + '">Взаимные</button></div></div>' +
+      '<button type="button" data-act="rtab" data-tab="matches" class="' + (i === 1 ? 'on' : '') + '">Взаимные</button></div></div>' +
       hero + body + '</div></div>';
   }
 
