@@ -1252,7 +1252,7 @@
       ? '<button class="btn btn-primary btn-block" data-act="sheet-close">Готово</button>'
       : '<button class="btn btn-primary btn-block" data-act="buy">Получить Premium</button>';
     return sheetFrame(
-      '<div class="pay"><div class="pay-hero"><span class="pay-badge">PREMIUM</span></div>' +
+      '<div class="pay"><div class="pay-hero"><img class="pay-diamond" src="assets/anim/diamond.webp" alt=""><span class="pay-badge">PREMIUM</span></div>' +
       '<h2>Больше знакомств.<br>Больше внимания.</h2>' +
       '<p class="hint">Оценивай больше людей, публикуй больше историй и получай больше внимания в ленте.</p>' +
       table + plans +
