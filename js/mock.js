@@ -87,6 +87,13 @@
     return Date.now() - at < STORY_RETURN_MS;
   }
 
+  function storyCounter(seed, min, max) {
+    var h = 0;
+    seed = String(seed || '');
+    for (var i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 100000;
+    return min + (h % (max - min + 1));
+  }
+
   function storyList(person) {
     var ttl = storyTTL(person);
     return (person.stories || []).map(function (entry, i) {
@@ -111,6 +118,8 @@
         paused: typeof entry === 'string' ? false : !!entry.pausedAt,
         createdAt: createdAt,
         ttl: entryTtl,
+        views: storyCounter(id, 12, 180),
+        reactions: storyCounter(id + 'r', 2, 40),
         remain: remain,
         expiresAt: createdAt + entryTtl
       };

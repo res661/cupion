@@ -2245,3 +2245,38 @@ body, #app {
 @media (prefers-reduced-motion: reduce) {
   .sheet, .sheet.show .sheet-scroll > *, .sheet.show .sheet-foot { animation: none !important; transition: none !important; }
 }
+/* ===== own story stats ===== */
+.story-stats-row { margin-top: 8px; }
+.story-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(14px);
+}
+.story-stats b { font-weight: 750; }
+.story-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 14px; }
+.story-stat-grid > div {
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(120, 120, 128, 0.12);
+  text-align: center;
+}
+.story-stat-grid b { display: block; font-size: 26px; letter-spacing: -0.02em; }
+.story-stat-grid span { font-size: 12px; color: var(--text-2); }
+.story-stat-list { display: flex; flex-direction: column; gap: 8px; }
+.stat-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
+.stat-row .mini-ava { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; background: var(--input); }
+.stat-row .mini-ava img { width: 100%; height: 100%; object-fit: cover; }
+.stat-row b { flex: 1; font-size: 15px; }
+.stat-row small { font-size: 12px; color: var(--text-3); }
+.stat-lock { padding: 14px; border-radius: 20px; background: rgba(120, 120, 128, 0.10); text-align: center; }
+.stat-lock b { display: block; margin-bottom: 4px; }
+.stat-lock p { margin: 0 0 12px; font-size: 13px; color: var(--text-2); }

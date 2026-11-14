@@ -1446,6 +1446,7 @@
     else if (S.sheet === 'compose') html = composeSheet();
     else if (S.sheet === 'storynew') html = storyNewSheet();
     else if (S.sheet === 'gender') html = genderSheet();
+    else if (S.sheet === 'story-stats') html = storyStatsSheet();
     else if (S.sheet === 'looking') html = lookingSheet();
     else if (S.sheet === 'theme') html = themeSheet();
     else if (S.sheet === 'edit') html = editSheet();
@@ -1635,6 +1636,8 @@
     }
     var item = st.items[st.index];
     var isOwnStory = st.userId === 'me' || !!(S.me && st.userId === S.me.id);
+    var ownChip = isOwnStory ? '<button class="story-stats" data-act="story-stats" data-id="' + esc(item.id) + '">' +
+      '<b>' + (Number(item.views) || 0) + '</b> просмотров · <b>' + (Number(item.reactions) || 0) + '</b> реакций</button>' : '';
     var bars = st.items.map(function (_, i) {
       var w = i < st.index ? 100 : 0;
       return '<b><i data-bar="' + i + '" style="width:' + w + '%"></i></b>';
@@ -1649,6 +1652,7 @@
       '<div class="story-shade"></div><div class="story-ui"><div class="bars">' + bars + '</div>' +
       '<div class="story-user">' + phAvatar() + '<span>' + esc(st.user ? st.user.name : '') + '</span>' +
       '<em>' + timeAgo(item.createdAt) + '</em></div>' +
+      (isOwnStory ? '<div class="story-stats-row">' + ownChip + '</div>' : '') +
       (item.caption ? '<div class="story-caption">' + esc(item.caption) + '</div>' : '') + '</div>' +
       (isOwnStory ? '<button class="rx-pill" data-act="story-reactions" data-story="' + esc(item.id) + '">Реакции' +
         (storyReactionCount(item.id) ? '<b>' + (storyReactionCount(item.id) > 9 ? '9+' : storyReactionCount(item.id)) + '</b>' : '') + '</button>' : '') +
@@ -2267,6 +2271,25 @@
     return sheetFrame('<h2>Кого искать</h2><div class="choice-list">' + row('male', 'Парней') + row('female', 'Девушек') + row('all', 'Всех') + '</div>');
   }
 
+  function storyStatsSheet() {
+    var item = S.story && S.story.items ? S.story.items[S.story.index] : null;
+    var views = item ? Number(item.views) || 0 : 0;
+    var reactions = item ? Number(item.reactions) || 0 : 0;
+    var premium = !!(S.me && S.me.premium);
+    var people = (S.feed || []).slice(0, 6);
+    var rows = people.map(function (p) {
+      return '<div class="stat-row"><span class="mini-ava">' + cardAvatar(p) + '</span><b>' + esc(p.name) + '</b><small>' + (premium ? 'смотрел(а)' : '•••') + '</small></div>';
+    }).join('');
+    return sheetFrame(
+      '<h2>Статистика истории</h2>' +
+      '<div class="story-stat-grid"><div><b>' + views + '</b><span>просмотров</span></div><div><b>' + reactions + '</b><span>реакций</span></div></div>' +
+      (premium
+        ? '<div class="story-stat-list">' + rows + '</div>'
+        : '<div class="stat-lock"><b>Кто смотрел — в Premium</b><p>Список зрителей и все реакции доступны подписчикам.</p><button class="btn btn-primary btn-block" data-act="premium">Открыть Premium</button></div>') +
+      '<div class="sheet-error" id="sheet-error"></div>'
+    );
+  }
+
   function genderSheet() {
     var g = S.me && S.me.gender;
     return sheetFrame(
@@ -2787,6 +2810,7 @@
       toast('Аватарка из Telegram');
       return;
     }
+    if (act === 'story-stats') { openSheet('story-stats', { key: 'story-stats' }); return; }
     if (act === 'me-avatar') { S.pickPurpose = 'avatar-me'; pickFiles('avatar-me'); return; }
     if (act === 'me-tg-avatar') {
       var tgUser = window.TG ? TG.user() : null;
