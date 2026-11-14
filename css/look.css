@@ -1445,3 +1445,79 @@ body, #app {
 
 .set-card .choice-row { background: #fff; }
 .set-card .choice-row + .choice-row { margin-top: 6px; }
+
+/* ===== own profile: polished look ===== */
+.screen-profile .scroll { padding-bottom: calc(var(--inset-bottom) + 96px); }
+.screen-profile .profile-bar { background: transparent; }
+.screen-profile .profile-hero {
+  position: relative;
+  padding: 6px 20px 14px;
+  text-align: left;
+}
+.screen-profile .profile-hero::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -40px;
+  width: 260px;
+  height: 160px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(0, 122, 255, 0.16), transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+.screen-profile .profile-hero h1 { font-size: 34px; letter-spacing: -0.04em; line-height: 1.05; }
+.screen-profile .profile-hero .handle { margin-top: 4px; color: var(--text-2); font-size: 15px; }
+.screen-profile .profile-hero .bio { margin-top: 10px; font-size: 16px; line-height: 1.35; color: var(--text); }
+.screen-profile .stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 4px 16px 14px;
+}
+.screen-profile .stats > div {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 8px;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(20, 45, 90, 0.06);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+.screen-profile .stats b { display: block; font-size: 20px; letter-spacing: -0.03em; }
+.screen-profile .stats span { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.screen-profile .frame { margin: 0 16px 10px; }
+.screen-profile .frame-clip { box-shadow: 0 18px 44px rgba(20, 45, 90, 0.16); }
+.screen-profile .caption {
+  margin: 0 20px 14px;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--text);
+}
+.screen-profile .profile-actions { display: flex; gap: 10px; margin: 0 16px 14px; }
+.screen-profile .set-card {
+  margin: 0 16px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 30px rgba(20, 45, 90, 0.08);
+  backdrop-filter: blur(18px) saturate(160%);
+}
+.screen-profile .set-card .label {
+  padding: 12px 16px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.screen-profile .set-card .choice-row {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 14px 16px;
+  font-size: 16px;
+  border-top: 0.5px solid var(--hairline);
+}
+.screen-profile .set-card .choice-row:first-of-type { border-top: 0; }
