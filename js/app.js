@@ -3063,6 +3063,17 @@
       });
       return;
     }
+    if (purpose === 'reg') {
+      /* registration: exactly one photo, replaces the previous one */
+      readImage(files[0]).then(function (pic) {
+        S.reg.photos = [pic];
+        S.regDir = 0;
+        render();
+        toast('Фото добавлено');
+      }).catch(function () { toast('Не удалось загрузить фото'); });
+      return;
+    }
+
     var room = 1;
     if (purpose === 'reg') room = Math.max(0, ((S.me && S.me.premium) ? 3 : 1) - S.reg.photos.length);
     else if (purpose === 'edit') room = Math.max(0, photoCap() - countPhotos(S.edit.photos));
@@ -3082,7 +3093,7 @@
         return;
       }
       if (purpose === 'reg') {
-        S.reg.photos = S.reg.photos.concat(pics).slice(0, (S.me && S.me.premium) ? 3 : 1);
+        S.reg.photos = pics.slice(0, 1);
         render();
       } else if (purpose === 'edit') {
         var roomLeft = photoCap() - countPhotos(S.edit.photos);
