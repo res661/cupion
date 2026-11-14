@@ -1171,7 +1171,7 @@
         '<button class="reg-tg" data-act="reg-tg-avatar">Из Telegram</button></div>' +
         '<button class="reg-hero' + (first ? ' filled' : '') + '" data-act="pick-reg" aria-label="Выбрать фото">' + face + '</button>' +
         '<div class="post-meta"><div class="post-title">' + esc(r.name || 'Имя') + ', ' + esc(r.age || '—') + (r.city ? ' · ' + esc(r.city) : '') + '</div></div>' +
-        '<p class="caption">' + (first ? 'Нажми на фото, чтобы заменить' : 'Нажми на плюс, чтобы добавить фото') + '</p>' +
+        '<p class="caption">' + (r.bio ? esc(r.bio) : (first ? 'Нажми на фото, чтобы заменить' : 'Нажми на плюс, чтобы добавить фото')) + '</p>' +
         '</div>' +
         (r.photos.length ? '<div class="pick-grid reg-thumbs">' + tiles + add + '</div>' : '');
     }

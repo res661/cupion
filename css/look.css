@@ -2057,3 +2057,8 @@ body, #app {
 .reg-card { padding: 12px; border-radius: 26px; margin: 4px 0 12px; }
 .reg-card .post-head { padding-bottom: 10px; }
 .reg-hero { max-height: 32vh; }
+/* registration preview: no shadow, taller photo, show city/bio */
+.reg-card { box-shadow: none !important; border: 1px solid var(--hairline); }
+.reg-hero { max-height: 46vh; }
+.reg-card .post-title { font-size: 17px; font-weight: 700; }
+.reg-card .caption { min-height: 18px; }
