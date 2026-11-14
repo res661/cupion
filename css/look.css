@@ -2222,3 +2222,26 @@ body, #app {
 .reg-sub { margin: 18px 0 0; font-size: 15px; font-weight: 700; color: var(--text); }
 :root[data-theme="dark"] .reg-chip { background: rgba(255, 255, 255, 0.09); }
 :root[data-theme="dark"] .reg-chip.on { background: #0a84ff; }
+/* ===== apple-like sheet open animation ===== */
+.sheet {
+  transition: transform 0.55s cubic-bezier(0.22, 1.12, 0.36, 1), opacity 0.3s ease;
+  will-change: transform;
+}
+.backdrop { transition: opacity 0.36s ease, backdrop-filter 0.36s ease; }
+.sheet.show .sheet-scroll > * {
+  animation: sheetItem 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sheet.show .sheet-scroll > *:nth-child(1) { animation-delay: 0.04s; }
+.sheet.show .sheet-scroll > *:nth-child(2) { animation-delay: 0.08s; }
+.sheet.show .sheet-scroll > *:nth-child(3) { animation-delay: 0.12s; }
+.sheet.show .sheet-scroll > *:nth-child(4) { animation-delay: 0.16s; }
+.sheet.show .sheet-scroll > *:nth-child(5) { animation-delay: 0.2s; }
+.sheet.show .sheet-scroll > *:nth-child(n+6) { animation-delay: 0.24s; }
+.sheet.show .sheet-foot { animation: sheetItem 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
+@keyframes sheetItem {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .sheet.show .sheet-scroll > *, .sheet.show .sheet-foot { animation: none !important; transition: none !important; }
+}
