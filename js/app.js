@@ -895,11 +895,19 @@
       dots + '</div>' + (chip || '') + '</div>';
   }
 
+  function firstPhoto(post) {
+    var list = (post && post.photos) || [];
+    for (var i = 0; i < list.length; i++) {
+      if ((list[i].type || 'photo') !== 'video') return list[i];
+    }
+    return null;
+  }
+
   function cardAvatar(post) {
     var src = '';
     if (post && post.avatar) src = displayUrl(post.avatar) || '';
     if (!src) {
-      var p = post && post.photos && post.photos[0];
+      var p = firstPhoto(post);
       if (p) src = displayUrl(p.url) || '';
     }
     if (!src) return phAvatar();
@@ -1124,7 +1132,7 @@
     }
     if (S.regStep === 2) return validName(r.name);
     if (S.regStep === 3) return String(r.bio || '').trim().length >= 2;
-    if (S.regStep === 4) return r.photos.length >= 1 && r.photos.length <= ((S.me && S.me.premium) ? 3 : 1);
+    if (S.regStep === 4) return !!r.avatar && r.photos.length >= 1 && r.photos.length <= ((S.me && S.me.premium) ? 3 : 1);
     return true;
   }
 
@@ -1237,6 +1245,7 @@
 
   function finishReg() {
     var err = document.getElementById('reg-error');
+    if (!S.reg.avatar) { if (err) err.textContent = 'Выбери аватарку'; toast('Выбери аватарку'); return; }
     S.reg.avatar = S.reg.avatar || '';
     CupionAPI.register(S.reg).then(function (me) {
       S.me = me;
@@ -2693,7 +2702,8 @@
       var tu = window.TG ? TG.user() : null;
       var photoUrl = tu && tu.photo_url ? tu.photo_url : '';
       if (!photoUrl) {
-        var fb = S.reg && S.reg.photos && S.reg.photos[0] ? S.reg.photos[0].url : '';
+        var fp = firstPhoto(S.reg);
+        var fb = fp ? fp.url : '';
         if (fb) { S.reg.avatar = fb; setAvatarPreview(displayUrl(fb) || fb); toast('Фото из Telegram недоступно — взяли фото анкеты'); return; }
         S.reg.avatar = initialsAvatar(S.reg.name);
         setAvatarPreview(S.reg.avatar);
@@ -2701,7 +2711,8 @@
         return;
       }
       if (!photoUrl) {
-        var fb2 = S.edit.photos && S.edit.photos[0] ? S.edit.photos[0].url : '';
+        var fp2 = firstPhoto(S.edit);
+        var fb2 = fp2 ? fp2.url : '';
         S.edit.avatar = fb2 || initialsAvatar(S.edit.name);
         setAvatarPreview(displayUrl(S.edit.avatar) || S.edit.avatar);
         toast(fb2 ? 'Фото из Telegram недоступно — взяли фото анкеты' : 'Поставили буквенную аватарку');
