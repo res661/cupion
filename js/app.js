@@ -1840,6 +1840,18 @@
     storyRAF = 0;
   }
 
+  var dockAnim = null;
+  function mountDockLottie() {
+    if (!window.lottie) return;
+    var host = document.getElementById('dock-lottie');
+    if (!host) return;
+    if (dockAnim) { try { dockAnim.destroy(); } catch (e) {} dockAnim = null; }
+    host.innerHTML = '';
+    try {
+      dockAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart.json' });
+    } catch (e) {}
+  }
+
   function mountHeartLottie() {
     if (!window.lottie) return;
     var host = document.getElementById('heart-lottie');
@@ -1972,7 +1984,7 @@
       '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + iconPair(ICON.home, ICON.homeFill) + '</button>' +
       '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + iconPair(ICON.trophy, ICON.trophyFill) + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
-      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + iconPair(ICON.heart, ICON.heartFill) +
+      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<span class="dock-lottie" id="dock-lottie"></span>' +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
       '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + iconPair(ICON.user, ICON.userFill) + '</button>' +
       '</div></div>';
@@ -2084,6 +2096,7 @@
       S.spring = '';
     }
     nav.innerHTML = tabsVisible() ? tabs() : '';
+    mountDockLottie();
     restoreScroll();
     renderSheet();
     renderStory();

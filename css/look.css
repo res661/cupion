@@ -1434,3 +1434,6 @@ body, #app {
 
 .heart-lottie { width: 100%; height: 100%; display: grid; place-items: center; }
 .heart-lottie svg { width: 100%; height: 100%; }
+
+.dock-lottie { display: block; width: 26px; height: 26px; }
+.dock-lottie svg { width: 100%; height: 100%; }
