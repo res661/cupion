@@ -1840,6 +1840,18 @@
     storyRAF = 0;
   }
 
+  var topAnim = null;
+  function mountTopLottie() {
+    if (!window.lottie) return;
+    var host = document.getElementById('dock-top-lottie');
+    if (!host) return;
+    if (topAnim) { try { topAnim.destroy(); } catch (e) {} topAnim = null; }
+    host.innerHTML = '';
+    try {
+      topAnim = window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/top.json' });
+    } catch (e) {}
+  }
+
   var profileAnim = null;
   function mountProfileLottie() {
     if (!window.lottie) return;
@@ -1994,7 +2006,7 @@
     var onRates = S.screen === 'ratings';
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
       '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + iconPair(ICON.home, ICON.homeFill) + '</button>' +
-      '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + iconPair(ICON.trophy, ICON.trophyFill) + '</button>' +
+      '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + '<span class="dock-lottie" id="dock-top-lottie"></span>' + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
       '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<span class="dock-lottie" id="dock-lottie"></span>' +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
@@ -2110,6 +2122,7 @@
     nav.innerHTML = tabsVisible() ? tabs() : '';
     mountDockLottie();
     mountProfileLottie();
+    mountTopLottie();
     restoreScroll();
     renderSheet();
     renderStory();
