@@ -1576,3 +1576,5 @@ body, #app {
 .prem svg { display: block; }
 
 .dock-ico { width: 28px; height: 28px; object-fit: contain; display: block; }
+
+.prem-img { width: 16px; height: 16px; object-fit: contain; display: block; }

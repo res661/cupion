@@ -126,7 +126,7 @@
 
   function premMark() {
     /* static verified-style blue check: no animation, no load */
-    return '<span class="prem" aria-label="Premium"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#0a84ff"/><path fill="#fff" d="M7.1 10.6 5.2 8.7l-1 1 2.9 2.9 4.7-4.7-1-1z"/></svg></span>';
+    return '<span class="prem" aria-label="Premium"><img class="prem-img" src="assets/icons/prem.webp" alt="" width="16" height="16"></span>';
   }
 
   var premAnims = [];
