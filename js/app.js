@@ -1252,7 +1252,7 @@
       ? '<button class="btn btn-primary btn-block" data-act="sheet-close">Готово</button>'
       : '<button class="btn btn-primary btn-block" data-act="buy">Получить Premium</button>';
     return sheetFrame(
-      '<div class="pay"><div class="pay-hero"><img class="pay-diamond" src="assets/anim/diamond.webp" alt=""><span class="pay-badge">PREMIUM</span></div>' +
+      '<div class="pay"><div class="pay-hero"><img class="pay-diamond" src="assets/anim/diamond2.webp" alt=""><span class="pay-badge">PREMIUM</span></div>' +
       '<h2>Больше знакомств.<br>Больше внимания.</h2>' +
       '<p class="hint">Оценивай больше людей, публикуй больше историй и получай больше внимания в ленте.</p>' +
       table + plans +
@@ -2053,12 +2053,12 @@
     var onBoard = S.screen === 'rating';
     var onRates = S.screen === 'ratings';
     return '<div class="dock"><div class="dock-bg"></div><div class="dock-inner">' +
-      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + '<img class="dock-ico" src="assets/anim/mag.webp" alt="">' + '</button>' +
-      '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + '<img class="dock-ico" src="assets/anim/gold.webp" alt="">' + '</button>' +
+      '<button class="dock-btn' + (onFeed ? ' on' : '') + '" data-act="tab" data-tab="feed" aria-label="Главная">' + '<img class="dock-ico" src="assets/anim/mag2.webp" alt="">' + '</button>' +
+      '<button class="dock-btn' + (onBoard ? ' on' : '') + '" data-act="tab" data-tab="rating" aria-label="Рейтинг">' + '<img class="dock-ico" src="assets/anim/gold2.webp" alt="">' + '</button>' +
       '<button class="dock-plus" data-act="compose" aria-label="Добавить">' + ICON.plus + '</button>' +
-      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<img class="dock-ico" src="assets/anim/heart_dock.webp" alt="">' +
+      '<button class="dock-btn heart-tab' + (onRates ? ' on' : '') + '" data-act="tab" data-tab="ratings" aria-label="Оценки">' + '<img class="dock-ico" src="assets/anim/heart2d.webp" alt="">' +
       (S.unseen ? '<span class="badge">' + (S.unseen > 9 ? '9+' : S.unseen) + '</span>' : '') + '</button>' +
-      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + '<img class="dock-ico" src="assets/anim/profile.webp" alt="">' + '</button>' +
+      '<button class="dock-btn' + (onProfile ? ' on' : '') + '" data-act="tab" data-tab="profile" aria-label="Профиль">' + '<img class="dock-ico" src="assets/anim/profile2.webp" alt="">' + '</button>' +
       '</div></div>';
   }
 
