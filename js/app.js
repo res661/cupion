@@ -893,7 +893,8 @@
     return '<div class="frame"><div class="frame-clip"' + (photos.length > 1 ? ' data-swipe="' + esc(post.id) + '"' : '') + '>' +
       '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
       dots + '</div>' +
-      (post.isMine ? '<button type="button" class="reg-rm" data-act="me-rm-photo" aria-label="Удалить фото">−</button>' : '') +
+      (post.isMine && photos.length ? '<button type="button" class="reg-rm" data-act="me-rm-photo" aria-label="Удалить фото">−</button>' : '') +
+      (post.isMine ? '<button type="button" class="me-add" data-act="me-add-photo" aria-label="Добавить фото">+</button>' : '') +
       '</div>';
   }
 
@@ -2763,8 +2764,7 @@
     }
     if (act === 'me-rm-photo') {
       var rest = ((S.me && S.me.photos) || []).slice(1);
-      if (!rest.length) { toast('Нужно хотя бы одно фото'); return; }
-      CupionAPI.updateMe({ photos: rest }).then(function (me) { S.me = me; render(); toast('Фото удалено'); }).catch(function () {});
+      CupionAPI.updateMe({ photos: rest }).then(function (me) { S.me = me; render(); toast(rest.length ? 'Фото удалено' : 'Добавь новое фото'); }).catch(function (err) { toast(err && err.message ? err.message : 'Не получилось'); });
       return;
     }
     if (act === 'me-avatar') { return; }
@@ -2982,7 +2982,7 @@
 
   function pickFiles(purpose) {
     S.pickPurpose = purpose;
-    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : (purpose === 'avatar' ? 'pick-avatar' : (purpose === 'avatar-reg' ? 'pick-avatar-reg' : (purpose === 'avatar-me' ? 'pick-avatar' : 'pick-images'))));
+    var id = purpose === 'video' ? 'pick-video' : (purpose === 'story' ? 'pick-story' : (purpose === 'avatar' ? 'pick-avatar' : (purpose === 'avatar-reg' ? 'pick-avatar-reg' : (purpose === 'avatar-me' ? 'pick-avatar' : (purpose === 'photo-me' ? 'pick-images' : 'pick-images')))));
     var input = document.getElementById(id);
     if (!input) return;
     input.value = '';
@@ -3068,6 +3068,14 @@
     var files = Array.prototype.slice.call(e.target.files || []);
     if (!files.length) return;
     var purpose = S.pickPurpose;
+    if (purpose === 'photo-me') {
+      readImage(files[0]).then(function (pic) {
+        var list = ((S.me && S.me.photos) || []).concat([{ id: 'me_p' + Date.now(), type: 'photo', url: pic.url, ratio: pic.ratio, width: pic.width, height: pic.height }]);
+        var cap = (S.me && S.me.premium) ? 3 : 1;
+        return CupionAPI.updateMe({ photos: list.slice(0, cap) });
+      }).then(function (me) { if (me) S.me = me; render(); toast('Фото добавлено'); }).catch(function () { toast('Не удалось загрузить'); });
+      return;
+    }
     if (purpose === 'avatar-me') {
       readImage(files[0]).then(function (pic) {
         return CupionAPI.updateMe({ avatar: pic.url });

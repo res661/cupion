@@ -2106,3 +2106,79 @@ body, #app {
 }
 /* no page-like re-animation when editing reg photos */
 .reg.enter-fwd, .reg.enter-back { animation: none; }
+
+/* ===== stats hero v2: cleaner apple-ish ===== */
+.stats-hero {
+  position: relative;
+  margin: 18px 16px 14px;
+  padding: 22px 20px 16px;
+  border-radius: 30px;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(10, 132, 255, 0.16), rgba(10, 132, 255, 0) 62%),
+    var(--card);
+  border: 0.5px solid var(--hairline);
+  box-shadow: 0 18px 44px rgba(20, 45, 90, 0.10);
+  overflow: hidden;
+}
+.stats-hero .sh-main { text-align: center; }
+.stats-hero .sh-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-weight: 650;
+}
+.stats-hero .sh-main b {
+  display: block;
+  margin-top: 6px;
+  font-size: 62px;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #0a84ff, #64d2ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.stats-hero .sh-main b i {
+  font-style: normal;
+  font-size: 24px;
+  vertical-align: super;
+  -webkit-text-fill-color: #ffb300;
+  color: #ffb300;
+  margin-left: 2px;
+}
+.stats-hero .sh-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--hairline);
+}
+.stats-hero .sh-row > div { text-align: center; position: relative; }
+.stats-hero .sh-row > div + div::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 0.5px;
+  background: var(--hairline);
+}
+.stats-hero .sh-row b { display: block; font-size: 21px; font-weight: 750; letter-spacing: -0.02em; }
+.stats-hero .sh-row span { display: block; margin-top: 3px; font-size: 11px; color: var(--text-3); }
+:root[data-theme="dark"] .stats-hero { background: radial-gradient(120% 90% at 50% -10%, rgba(10, 132, 255, 0.22), rgba(10, 132, 255, 0) 60%), var(--card); border-color: rgba(255,255,255,0.08); box-shadow: 0 18px 44px rgba(0,0,0,0.5); }
+:root[data-theme="dark"] .stats-hero .sh-main b { background: linear-gradient(180deg, #4aa8ff, #64d2ff); -webkit-background-clip: text; background-clip: text; }
+
+/* plus overlay on own card */
+.me-add {
+  position: absolute; bottom: 10px; right: 10px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92); color: #0a84ff;
+  font-size: 24px; line-height: 1;
+  display: grid; place-items: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+.frame { position: relative; }
