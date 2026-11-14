@@ -1934,3 +1934,68 @@ body, #app {
 
 /* video in cards: fill the 4:5 frame like photos */
 .frame .feed-video { object-fit: cover; border-radius: 24px; }
+/* ===== photo picker & registration gallery ===== */
+.pick-grid { gap: 10px; }
+.pick { border-radius: 22px; overflow: hidden; box-shadow: 0 8px 22px rgba(20, 45, 90, 0.10); }
+.pick-face { display: block; width: 100%; height: 100%; padding: 0; }
+.pick-face img, .pick-face .ph { width: 100%; height: 100%; object-fit: cover; }
+.pick-add,
+.pick-add.locked {
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed rgba(120, 120, 128, 0.45);
+  border-radius: 22px;
+  color: #0a84ff;
+  font-size: 34px;
+  font-weight: 300;
+  background: rgba(120, 120, 128, 0.06);
+  aspect-ratio: 1;
+  line-height: 1;
+}
+.pick-add.locked { color: rgba(120, 120, 128, 0.6); border-style: solid; font-size: 26px; }
+.pick .rm {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+}
+.pick .mv {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.pick .mv:first-of-type { left: 4px; }
+.pick .mv.next { right: 4px; left: auto; }
+.reg-photo-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 34vh;
+  border-radius: 26px;
+  overflow: hidden;
+  margin: 6px 0 12px;
+  box-shadow: 0 16px 40px rgba(20, 45, 90, 0.18);
+  background: #E4E8EE;
+}
+.reg-photo-hero img, .reg-photo-hero .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+:root[data-theme="dark"] .pick-add { background: rgba(255, 255, 255, 0.06); }
+:root[data-theme="dark"] .pick { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45); }
