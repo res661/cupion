@@ -412,6 +412,23 @@
     }).catch(function () { openSheet('edit', { key: 'edit' }); });
   }
 
+  function initialsAvatar(name) {
+    var letter = String(name || 'C').trim().charAt(0).toUpperCase() || 'C';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160">' +
+      '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#64d2ff"/></linearGradient></defs>' +
+      '<rect width="160" height="160" rx="80" fill="url(#g)"/>' +
+      '<text x="80" y="108" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="76" font-weight="700" fill="#fff" text-anchor="middle">' + letter + '</text></svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  function setAvatarPreview(src) {
+    var ap = document.querySelector('.avatar-pick');
+    if (!ap) return;
+    ap.innerHTML = '<img src="' + esc(src) + '" alt="">';
+    ap.classList.add('has');
+  }
+
   function openPerson(id, ret) {
     if (!id) return;
     if (S.me && (id === 'me' || id === S.me.id)) {
@@ -2664,8 +2681,18 @@
       var photoUrl = tu && tu.photo_url ? tu.photo_url : '';
       if (!photoUrl) {
         var fb = S.reg && S.reg.photos && S.reg.photos[0] ? S.reg.photos[0].url : '';
-        if (fb) { S.reg.avatar = fb; var apf = document.querySelector('.avatar-pick'); if (apf) { apf.innerHTML = '<img src="' + esc(displayUrl(fb) || fb) + '" alt="">'; apf.classList.add('has'); } toast('Фото из Telegram недоступно — взяли фото анкеты'); return; }
-        toast('В Telegram нет фото профиля'); return;
+        if (fb) { S.reg.avatar = fb; setAvatarPreview(displayUrl(fb) || fb); toast('Фото из Telegram недоступно — взяли фото анкеты'); return; }
+        S.reg.avatar = initialsAvatar(S.reg.name);
+        setAvatarPreview(S.reg.avatar);
+        toast('Поставили буквенную аватарку');
+        return;
+      }
+      if (!photoUrl) {
+        var fb2 = S.edit.photos && S.edit.photos[0] ? S.edit.photos[0].url : '';
+        S.edit.avatar = fb2 || initialsAvatar(S.edit.name);
+        setAvatarPreview(displayUrl(S.edit.avatar) || S.edit.avatar);
+        toast(fb2 ? 'Фото из Telegram недоступно — взяли фото анкеты' : 'Поставили буквенную аватарку');
+        return;
       }
       S.edit.avatar = photoUrl;
       var ap2 = document.querySelector('.avatar-pick');
@@ -2691,8 +2718,7 @@
       var rp = ru && ru.photo_url ? ru.photo_url : '';
       if (!rp) { toast('В Telegram нет фото профиля'); return; }
       S.reg.avatar = rp;
-      var ap = document.querySelector('.avatar-pick');
-      if (ap) { ap.innerHTML = '<img src="' + esc(rp) + '" alt="">'; ap.classList.add('has'); }
+      setAvatarPreview(rp);
       toast('Аватарка из Telegram');
       return;
     }
