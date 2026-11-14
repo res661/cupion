@@ -1578,3 +1578,6 @@ body, #app {
 .dock-ico { width: 28px; height: 28px; object-fit: contain; display: block; }
 
 .prem-img { width: 16px; height: 16px; object-fit: contain; display: block; }
+
+.pay-diamond { width: 74px; height: 74px; object-fit: contain; margin: 4px 1px 4px 5px; }
+.pay-hero { display: flex; align-items: flex-end; gap: 6px; }
