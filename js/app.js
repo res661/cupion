@@ -1454,10 +1454,16 @@
     });
   }
 
+  var reactBurstAt = 0;
+  var reactBigBusy = false;
+
   var REACT_GLOW = { '❤️': '255,45,85', '😂': '255,204,0', '😍': '255,55,95', '😮': '90,200,250', '🔥': '255,149,0', '👏': '255,214,10' };
 
   function burstReaction(layer, btn, emo) {
     if (!layer || motionOff()) return;
+    var nowMs = Date.now();
+    if (nowMs - reactBurstAt < 140) return; /* rapid taps don't stack huge animations */
+    reactBurstAt = nowMs;
     var host = layer.getBoundingClientRect();
     var rect = btn.getBoundingClientRect();
     var cx = rect.left - host.left + rect.width / 2;
@@ -1476,7 +1482,8 @@
     add('react-flash', '', { '--glow': glow });
     add('react-ring', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
     add('react-ring r2', '', { left: cx + 'px', top: cy + 'px', '--glow': glow });
-    if (emo === '❤️') {
+    if (emo === '❤️' && !reactBigBusy) {
+      reactBigBusy = true;
       var heartHost = document.createElement('span');
       heartHost.className = 'react-lottie';
       layer.appendChild(heartHost);
@@ -1486,9 +1493,15 @@
         try {
           heartAnim = window.lottie.loadAnimation({ container: heartHost, renderer: 'svg', loop: false, autoplay: true, path: 'assets/lottie/heartfire.json' });
         } catch (e) {}
-        if (heartAnim) setTimeout(function () { try { heartAnim.destroy(); } catch (e) {} }, 1900);
+        setTimeout(function () {
+          if (heartAnim) { try { heartAnim.destroy(); } catch (e) {} }
+          if (heartHost.parentNode) heartHost.remove();
+          reactBigBusy = false;
+        }, 1900);
+      } else {
+        setTimeout(function () { reactBigBusy = false; }, 1900);
       }
-    } else {
+    } else if (emo !== '❤️') {
       add('react-big', emo, { '--glow': glow });
     }
     for (var i = 0; i < 22; i++) {
