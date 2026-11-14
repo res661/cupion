@@ -1840,11 +1840,22 @@
     storyRAF = 0;
   }
 
+  function mountHeartLottie() {
+    if (!window.lottie) return;
+    var host = document.getElementById('heart-lottie');
+    if (!host || host.__mounted) return;
+    host.__mounted = true;
+    try {
+      window.lottie.loadAnimation({ container: host, renderer: 'svg', loop: true, autoplay: true, path: 'assets/lottie/heart.json' });
+    } catch (e) {}
+  }
+
   function showMatch(user, kind) {
     S.match = user;
     S.matchKind = kind || 'rate';
     matchSig = '';
     renderMatch();
+    mountHeartLottie();
     syncBack();
     if (window.TG) TG.notify('success');
   }
@@ -1867,7 +1878,7 @@
     root.innerHTML = '<div class="match-layer"><div class="match-stage">' +
       phAvatar('match-ava a') +
       phAvatar('match-ava b') +
-      '<div class="match-heart">♥</div>' + bits + '</div>' +
+      '<div class="match-heart"><div class="heart-lottie" id="heart-lottie"></div></div>' + bits + '</div>' +
       '<h2>Вы замэтчились</h2><p class="subline">с ' + esc(u.name) + ' · ' + (S.matchKind === 'story' ? 'мэтч по истории' : 'вы оценили друг друга') + '</p>' +
       '<button class="btn btn-primary" data-act="match-open" data-id="' + esc(u.id) + '">Смотреть профиль</button>' +
       '<button class="btn btn-glass" data-act="match-close">Продолжить</button></div>';
@@ -2077,6 +2088,7 @@
     renderSheet();
     renderStory();
     renderMatch();
+    mountHeartLottie();
     syncBack();
     requestAnimationFrame(function () { placePill(false); syncFloatPill(document.getElementById('feed-scroll')); bindFeedVideos(); schedulePromoHide(); });
     runCountUps(stage);

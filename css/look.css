@@ -1431,3 +1431,6 @@ body, #app {
 .ad-body h2 { color: #0a0a0a; }
 .ad-body p { color: rgba(60,60,67,0.7); }
 .ad-badge { background: #eaf3ff; color: #0a84ff; }
+
+.heart-lottie { width: 100%; height: 100%; display: grid; place-items: center; }
+.heart-lottie svg { width: 100%; height: 100%; }
