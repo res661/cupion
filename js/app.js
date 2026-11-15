@@ -3684,7 +3684,7 @@
     }
     if (gesture.kind === 'photo-wait') {
       var adx = Math.abs(dx), ady = Math.abs(dy);
-      if (adx > 12 && adx > ady * 1.1) {
+      if (adx > 7 && adx > ady * 1.02) {
         gesture.kind = 'photo';
         gesture.w = gesture.clip.clientWidth || 1;
         var track = gesture.clip.querySelector('[data-track]');
@@ -3692,7 +3692,7 @@
         gesture.dotsEl = gesture.clip.querySelector('[data-dots]');
         if (track) track.style.transition = 'none';
         if (gesture.dotsEl) gesture.dotsEl.style.opacity = '0.45';
-      } else if (ady > 14 && ady > adx * 1.2) {
+      } else if (ady > 18 && ady > adx * 1.4) {
         gesture = null;
       }
     }
@@ -3785,8 +3785,8 @@
       var post = null;
       S.feed.forEach(function (p) { if (p.id === g.id) post = p; });
       var next = idx;
-      if (g.drag > 40) next = idx - 1;
-      if (g.drag < -40) next = idx + 1;
+      if (g.drag > 26) next = idx - 1;
+      if (g.drag < -26) next = idx + 1;
       if (post) next = Math.max(0, Math.min(post.photos.length - 1, next));
       S.photoIndex[g.id] = next;
       g.track.style.transform = 'translateX(-' + (next * 100) + '%)';
