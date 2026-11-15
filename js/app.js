@@ -552,15 +552,16 @@
     var el = document.getElementById('feed-scroll');
     if (!el || el.dataset.pullBound === '1') return;
     el.dataset.pullBound = '1';
-    var startY = 0, pulling = false, dist = 0;
+    var startY = 0, startX = 0, pulling = false, dist = 0;
     var ind = function () { return document.getElementById('pull'); };
     el.addEventListener('touchstart', function (e) {
-      if (el.scrollTop <= 0) { startY = e.touches[0].clientY; pulling = true; dist = 0; }
+      if (el.scrollTop <= 0) { startY = e.touches[0].clientY; startX = e.touches[0].clientX; pulling = true; dist = 0; }
     }, { passive: true });
     el.addEventListener('touchmove', function (e) {
       if (!pulling) return;
       var dy = e.touches[0].clientY - startY;
-      if (dy <= 0) { pulling = false; return; }
+      var dx = Math.abs(e.touches[0].clientX - startX);
+      if (dy <= 0 || dx > dy * 1.1) { pulling = false; var box0 = ind(); if (box0) { box0.style.transition = 'height .2s ease'; box0.style.height = '0px'; box0.classList.remove('ready'); } return; }
       dist = Math.min(110, dy * 0.5);
       var box = ind();
       if (box) {
@@ -3819,7 +3820,7 @@
         var sc = document.getElementById('feed-scroll');
         if (sc) sc.scrollTo({ top: 0, behavior: 'auto' });
         if (el) { el.classList.remove('loading'); el.style.height = '0px'; el.style.setProperty('--pp', '0'); el.classList.remove('ready'); }
-        toast('Обновлено');
+
       }).catch(function () {
         if (el) { el.classList.remove('loading'); el.style.height = '0px'; }
         render();
