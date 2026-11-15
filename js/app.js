@@ -2647,20 +2647,18 @@
         if (window.TG) TG.impact('medium');
         setTimeout(function () {
           card.classList.add('post-leave');
-        }, 360);
+        }, 180);
       }
       
       // Send rating
       CupionAPI.rate({ toId: postId, photoId: photoId, score: scoreVal, text: commentText }).then(function (res) {
         if (S.peek) closePeek(true);
         setTimeout(function() {
+          var dead = document.querySelector('.post[data-post="' + postId + '"]');
+          if (dead) dead.remove();
           S.feed = S.feed.filter(function(p) { return p.id !== postId; });
-          if (S.feed.length === 0) {
-            loadFeed(true).then(render);
-          } else {
-            render();
-          }
-        }, 640);
+          if (S.feed.length === 0) loadFeed(true).then(render);
+        }, 280);
         
         if (res.match) {
           setTimeout(function() {

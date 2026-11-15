@@ -2886,3 +2886,5 @@ body, #app {
 /* rating buttons: no white fill on press */
 .star-btn:active, .star-btn.active { background: rgba(10, 132, 255, 0.16) !important; color: #0a84ff !important; }
 :root[data-theme="dark"] .star-btn:active, :root[data-theme="dark"] .star-btn.active { background: rgba(10, 132, 255, 0.24) !important; color: #6cb6ff !important; }
+/* faster, flash-free leave */
+.post.post-leave { animation-duration: 0.22s !important; }
