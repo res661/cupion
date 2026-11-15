@@ -1057,7 +1057,7 @@
       : (cards.length ? cards.join('')
         : '<div class="empty feed-empty"><div class="empty-orb"></div><h3>Пока новых анкет нет</h3><p>Загляни позже</p><button class="btn btn-primary" data-act="feed-restart">Обновить</button></div>');
     return '<div class="screen screen-feed">' +
-      '<div class="scroll" id="feed-scroll"><div class="pull" id="pull"><div class="pull-orb"><i class="pull-ring"></i><svg class="pull-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div></div>' +
+      '<div class="scroll" id="feed-scroll">' +
       '<header class="app-header is-center feed-head" id="feed-head"><div class="wordmark" data-act="tab" data-tab="feed">Cupion</div></header>' +
       orbit() +
       posts + '</div></div>';
@@ -3660,7 +3660,7 @@
         gesture.kind = 'nav';
         gesture.layer = document.getElementById('stage');
         if (gesture.layer) gesture.layer.style.transition = 'none';
-      } else if (dy > 10 && dy > Math.abs(dx) && gesture.scroll && gesture.scroll.scrollTop <= 0) gesture.kind = 'pull';
+      } else if (dy > 10 && dy > Math.abs(dx) && gesture.scroll && gesture.scroll.scrollTop <= 0) gesture = null;
       else if (Math.abs(dy) > 12) gesture = null;
     }
     if (!gesture) return;
@@ -3761,6 +3761,12 @@
   }
 
   function runPullRefresh(ind) {
+    ind = ind || {};
+    if (ind && ind.el) ind.el.style.transform = '';
+    return;
+  }
+
+  function runPullRefreshDisabled(ind) {
     if (S.refreshing) return;
     S.refreshing = true;
     if (ind) {
