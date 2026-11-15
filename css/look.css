@@ -2762,3 +2762,7 @@ body, #app {
 .tutor-list li { margin-bottom: 4px; }
 .tutor-list b { color: var(--text); }
 :root[data-theme="dark"] .tutor-card { background: linear-gradient(160deg, rgba(10, 132, 255, 0.16), rgba(100, 210, 255, 0.04) 60%, transparent), var(--card); }
+/* carousel: smooth snap, dots fade while dragging */
+.frame-track { transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+.frame-clip { touch-action: pan-y; }
+.media-dots { transition: opacity 0.2s ease; }

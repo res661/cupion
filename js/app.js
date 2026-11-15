@@ -3688,18 +3688,28 @@
       return;
     }
     if (gesture.kind === 'photo-wait') {
-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      var adx = Math.abs(dx), ady = Math.abs(dy);
+      if (adx > 12 && adx > ady * 1.1) {
         gesture.kind = 'photo';
         gesture.w = gesture.clip.clientWidth || 1;
         var track = gesture.clip.querySelector('[data-track]');
         gesture.track = track;
+        gesture.dotsEl = gesture.clip.querySelector('[data-dots]');
         if (track) track.style.transition = 'none';
-      } else if (Math.abs(dy) > 10) gesture = null;
+        if (gesture.dotsEl) gesture.dotsEl.style.opacity = '0.45';
+      } else if (ady > 14 && ady > adx * 1.2) {
+        gesture = null;
+      }
     }
     if (gesture && gesture.kind === 'photo' && gesture.track) {
       var idx = S.photoIndex[gesture.id] || 0;
-      gesture.track.style.transform = 'translateX(' + ((-idx * gesture.w) + (e.clientX - gesture.x)) + 'px)';
-      gesture.drag = e.clientX - gesture.x;
+      var total = gesture.clip.querySelectorAll('.media-slide').length || 1;
+      var rawDx = e.clientX - gesture.x;
+      var shift = rawDx;
+      if ((idx === 0 && rawDx > 0) || (idx === total - 1 && rawDx < 0)) shift = rawDx * 0.3;
+      gesture.track.style.transform = 'translateX(' + ((-idx * gesture.w) + shift) + 'px)';
+      gesture.drag = rawDx;
+      if (e.cancelable) e.preventDefault();
       return;
     }
     if (!gesture) return;
@@ -3775,7 +3785,7 @@
     var g = gesture;
     gesture = null;
     if (g.kind === 'photo' && g.track) {
-      g.track.style.transition = '';
+      g.track.style.transition = 'transform .34s cubic-bezier(.22,1,.36,1)';
       var idx = S.photoIndex[g.id] || 0;
       var post = null;
       S.feed.forEach(function (p) { if (p.id === g.id) post = p; });
@@ -3786,6 +3796,7 @@
       S.photoIndex[g.id] = next;
       g.track.style.transform = 'translateX(-' + (next * 100) + '%)';
       var dots = document.querySelector('[data-dots="' + g.id + '"]');
+      if (g.dotsEl) g.dotsEl.style.opacity = '1';
       if (dots) Array.prototype.forEach.call(dots.children, function (dot, i) { dot.classList.toggle('on', i === next); });
       if (post) {
         var card = document.querySelector('[data-post="' + g.id + '"]');
