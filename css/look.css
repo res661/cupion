@@ -2788,3 +2788,12 @@ body, #app {
 .post .frame-clip video,
 .post .frame-clip .feed-video { border-radius: 0 !important; }
 .post .frame-clip { border-radius: 0 !important; }
+
+/* tutorial as a video post */
+.tutor-media { position: relative; width: 100%; aspect-ratio: 4 / 5; max-height: 520px; overflow: hidden; background: #0b0b0d; }
+.tutor-media .tutor-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tutor-veil { position: absolute; inset: auto 0 0 0; height: 62%; background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.72) 100%); }
+.tutor-overlay { position: absolute; left: 16px; right: 16px; bottom: 16px; display: block; color: #fff; }
+.tutor-overlay b { display: block; font-size: 24px; letter-spacing: -0.03em; margin-bottom: 4px; }
+.tutor-overlay em { display: block; font-style: normal; font-size: 13px; opacity: 0.86; line-height: 1.4; }
+.post-tutor .caption { padding: 10px 14px 0; }

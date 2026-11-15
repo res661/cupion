@@ -1004,17 +1004,19 @@
   }
 
   function tutorialCard() {
-    return '<article class="post post-tutor" data-post="tutorial"><div class="tutor-card">' +
-      '<div class="tutor-badge">Как это работает</div>' +
-      '<h3>Оценивай от 1 до 10</h3>' +
-      '<p>Оценка 6+ — можно написать сразу. Взаимная оценка выше 7 у вас обоих — это мэтч.</p>' +
-      '<ul class="tutor-list">' +
-      '<li><b>Листай</b> ленту и ставь оценку в одну касание</li>' +
-      '<li><b>Смотри</b> взаимные в разделе «Оценки»</li>' +
-      '<li><b>Истории</b> — реакции тоже приводят к мэтчу</li>' +
-      '</ul>' +
-      '<button class="btn btn-primary btn-block" data-act="tab" data-tab="ratings">Посмотреть оценки</button>' +
-      '</div></article>';
+    return '<article class="post post-tutor" data-post="tutorial">' +
+      '<div class="post-head"><span class="mini-ava promo-ava"><img src="assets/promo/cupid.jpg" alt=""></span>' +
+      '<div class="post-user">Cupion<span class="promo-tag">гайд</span></div></div>' +
+      '<div class="tutor-media">' +
+      '<video class="tutor-video" src="assets/video/clip1.mp4" autoplay muted loop playsinline></video>' +
+      '<span class="tutor-veil"></span>' +
+      '<span class="tutor-overlay">' +
+      '<b>Как это работает</b>' +
+      '<em>Оценивай 1–10 · 6+ можно написать · взаимно 8+ — мэтч</em>' +
+      '</span></div>' +
+      '<p class="caption">Листай ленту и ставь оценку в одно касание. Взаимные смотри в «Оценках», реакции в историях тоже приводят к мэтчу.</p>' +
+      '<div class="promo-actions"><button class="btn btn-primary" data-act="tab" data-tab="ratings">Посмотреть оценки</button></div>' +
+      '</article>';
   }
 
   function feedScreen() {
