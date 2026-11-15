@@ -1019,12 +1019,6 @@
 
   function feedScreen() {
     var cards = S.feed.length ? S.feed.map(postCard) : [];
-    var promo = premiumPromoCard();
-    if (promo && cards.length > 2) {
-      cards.splice(2, 0, promo);
-      if (cards.length > 10) cards.splice(10, 0, promo);
-      if (cards.length > 18) cards.splice(18, 0, promo);
-    }
     if (!S.tutorSeen && cards.length > 4) { cards.splice(4, 0, tutorialCard()); S.tutorSeen = true; }
     var posts = S.loading
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
@@ -3572,7 +3566,7 @@
       }
     }
     if (!S.sheet && !S.story && !S.viewer && !S.match && (S.screen === 'feed' || S.screen === 'profile' || S.screen === 'ratings' || S.screen === 'rating')) {
-      gesture = { kind: 'nav-wait', x: e.clientX, y: e.clientY, scroll: e.target.closest('#feed-scroll') };
+      gesture = null;
     }
   }
 

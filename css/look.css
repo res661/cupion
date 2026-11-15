@@ -2784,3 +2784,7 @@ body, #app {
 .promo-actions .btn { height: 44px; border-radius: 999px; width: 100%; }
 .promo-card .post-head .promo-ava { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; }
 .promo-card .post-head .promo-ava img { width: 100%; height: 100%; object-fit: cover; }
+/* feed video: full-bleed, no rounded corners */
+.post .frame-clip video,
+.post .frame-clip .feed-video { border-radius: 0 !important; }
+.post .frame-clip { border-radius: 0 !important; }
