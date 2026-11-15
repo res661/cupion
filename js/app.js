@@ -1008,20 +1008,40 @@
       '<div class="post-head"><span class="mini-ava promo-ava"><img src="assets/promo/cupid.jpg" alt=""></span>' +
       '<div class="post-user">Cupion<span class="promo-tag">гайд</span></div></div>' +
       '<div class="tutor-media">' +
-      '<video class="tutor-video" src="assets/video/clip1.mp4" autoplay muted loop playsinline></video>' +
-      '<span class="tutor-veil"></span>' +
+      '<span class="tutor-glow a"></span><span class="tutor-glow b"></span>' +
+      '<img class="tutor-art" src="assets/anim/heart2d.webp" alt="">' +
       '<span class="tutor-overlay">' +
-      '<b>Как это работает</b>' +
-      '<em>Оценивай 1–10 · 6+ можно написать · взаимно 8+ — мэтч</em>' +
+      '<em class="tutor-kicker">CUPION · КАК ЭТО РАБОТАЕТ</em>' +
+      '<b>Оценивай людей.<br>Не анкеты.</b>' +
+      '<span class="tutor-steps">' +
+      '<i>1</i> листай ленту и ставь оценку в одно касание' +
+      '<i>2</i> от 6 — можно сразу написать' +
+      '<i>3</i> взаимно 8+ — это мэтч' +
+      '</span>' +
       '</span></div>' +
-      '<p class="caption">Листай ленту и ставь оценку в одно касание. Взаимные смотри в «Оценках», реакции в историях тоже приводят к мэтчу.</p>' +
+      '<p class="caption">Реакция в историях тоже приводит к мэтчу. Все взаимные — в разделе «Оценки».</p>' +
       '<div class="promo-actions"><button class="btn btn-primary" data-act="tab" data-tab="ratings">Посмотреть оценки</button></div>' +
+      '</article>';
+  }
+
+  function sponsoredCard() {
+    if (S.me && S.me.premium) return '';
+    var c = promoOf(Math.floor(Date.now() / 86400000));
+    return '<article class="post promo-card" data-promo="1">' +
+      '<div class="post-head"><span class="mini-ava promo-ava"><img src="assets/promo/cupid.jpg" alt=""></span>' +
+      '<div class="post-user">Cupion Premium' + premMark() + '<small class="sponsored-label">Реклама</small></div></div>' +
+      '<div class="promo-media"><img src="assets/promo/cupid.jpg" alt="Cupion Premium"></div>' +
+      '<div class="post-meta"><div class="post-title">' + esc(c.title) + '</div></div>' +
+      '<p class="caption">' + esc(c.text) + '</p>' +
+      '<div class="promo-actions"><button class="btn btn-primary" data-act="premium">Открыть Premium</button>' +
+      '<button class="btn btn-white promo-more" data-act="premium">Подробнее</button></div>' +
       '</article>';
   }
 
   function feedScreen() {
     var cards = S.feed.length ? S.feed.map(postCard) : [];
     if (!S.tutorSeen && cards.length > 4) { cards.splice(4, 0, tutorialCard()); S.tutorSeen = true; }
+    if (cards.length > 7) { var sp = sponsoredCard(); if (sp) cards.splice(7, 0, sp); }
     var posts = S.loading
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
       : (cards.length ? cards.join('')

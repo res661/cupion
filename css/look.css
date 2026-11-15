@@ -2797,3 +2797,71 @@ body, #app {
 .tutor-overlay b { display: block; font-size: 24px; letter-spacing: -0.03em; margin-bottom: 4px; }
 .tutor-overlay em { display: block; font-style: normal; font-size: 13px; opacity: 0.86; line-height: 1.4; }
 .post-tutor .caption { padding: 10px 14px 0; }
+/* ===== custom tutorial post (insta-style) ===== */
+.tutor-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 560px;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 0%, #12305a 0%, #0b1220 55%, #08090c 100%);
+  display: grid;
+  place-items: center;
+}
+.tutor-glow {
+  position: absolute;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+.tutor-glow.a { background: #0a84ff; top: -60px; left: -40px; }
+.tutor-glow.b { background: #ff375f; bottom: -80px; right: -50px; }
+.tutor-art {
+  position: relative;
+  width: 132px; height: 132px;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
+  margin-top: -70px;
+}
+.tutor-overlay {
+  position: absolute;
+  left: 20px; right: 20px; bottom: 20px;
+  display: block;
+  color: #fff;
+}
+.tutor-kicker {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+  margin-bottom: 8px;
+}
+.tutor-overlay b { display: block; font-size: 27px; line-height: 1.08; letter-spacing: -0.035em; }
+.tutor-steps { display: block; margin-top: 14px; font-size: 13px; line-height: 1.45; color: rgba(255, 255, 255, 0.82); }
+.tutor-steps i {
+  display: inline-grid;
+  place-items: center;
+  width: 18px; height: 18px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+.tutor-steps br { display: none; }
+.tutor-steps { white-space: pre-line; }
+
+/* sponsored label, Instagram style */
+.sponsored-label {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+.promo-more { height: 40px; border-radius: 999px; margin-top: 8px; width: 100%; font-size: 14px; }
+.promo-actions { display: flex; flex-direction: column; gap: 6px; }
