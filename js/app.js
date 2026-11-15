@@ -472,14 +472,14 @@
   function premiumPromoCard() {
     if (S.me && S.me.premium) return '';
     var c = promoOf(Math.floor(Date.now() / 86400000));
-    return '<article class="post promo-card" data-promo="1"><div class="card">' +
+    return '<article class="post promo-card" data-promo="1">' +
       '<div class="post-head"><span class="mini-ava promo-ava"><img src="assets/promo/cupid.jpg" alt=""></span>' +
-      '<div class="post-user">Cupion Premium' + premMark() + '</div></div>' +
-      '<div class="promo-hero"><img src="assets/promo/cupid.jpg" alt=""></div>' +
+      '<div class="post-user">Cupion' + premMark() + '<span class="promo-tag">реклама</span></div></div>' +
+      '<div class="promo-media"><img src="assets/promo/cupid.jpg" alt="Cupion Premium"></div>' +
       '<div class="post-meta"><div class="post-title">' + esc(c.title) + '</div></div>' +
       '<p class="caption">' + esc(c.text) + '</p>' +
-      '<button class="btn btn-primary btn-block" data-act="premium">Узнать больше</button>' +
-      '</div></article>';
+      '<div class="promo-actions"><button class="btn btn-primary" data-act="premium">Открыть Premium</button></div>' +
+      '</article>';
   }
 
   function premiumPromoBubble() {
@@ -2092,6 +2092,7 @@
   function renderMatch() {
     var root = document.getElementById('match-root');
     if (!root) return;
+    if (S.story || S.viewer) { root.innerHTML = ''; return; }
     if (!S.match) { root.innerHTML = ''; return; }
     var u = S.match;
     root.innerHTML = '<div class="match-mini" data-act="match-close">' +
