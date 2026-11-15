@@ -2711,3 +2711,12 @@ body, #app {
   .post .frame-clip { border-radius: 20px; }
   .post .card { max-width: 520px; margin: 0 auto; }
 }
+/* subtle "card leaves" animation after rating */
+.post.post-out {
+  animation: postOut 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+  pointer-events: none;
+}
+@keyframes postOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-14px) scale(0.985); }
+}

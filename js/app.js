@@ -505,10 +505,33 @@
     return CupionAPI.getFeed({ restart: !next, limit: limit }).then(function (res) {
       var items = (res && res.items) || [];
       if (S.me) items = items.filter(function (p) { return p && p.id !== S.me.id && p.id !== 'me'; });
-      S.feed = items;
+      if (next && S.feed && S.feed.length) { var known = {}; S.feed.forEach(function (x) { known[x.id] = 1; }); items.forEach(function (x) { if (!known[x.id]) { S.feed.push(x); known[x.id] = 1; } }); } else { S.feed = items; }
       S.feedExhausted = items.length === 0;
       S.loading = false;
     });
+  }
+
+  function loadMoreFeed() {
+    if (S.loadingMore || S.feedExhausted || S.loading) return;
+    S.loadingMore = true;
+    var el = document.getElementById('feed-scroll');
+    var top = el ? el.scrollTop : 0;
+    loadFeed(true).then(function () {
+      S.loadingMore = false;
+      render();
+      var el2 = document.getElementById('feed-scroll');
+      if (el2) el2.scrollTop = top;
+    }).catch(function () { S.loadingMore = false; });
+  }
+
+  function bindFeedScroll() {
+    var el = document.getElementById('feed-scroll');
+    if (!el || el.dataset.infinite === '1') return;
+    el.dataset.infinite = '1';
+    el.addEventListener('scroll', function () {
+      if (S.screen !== 'feed' || S.story || S.peek) return;
+      if (el.scrollTop + el.clientHeight > el.scrollHeight - 900) loadMoreFeed();
+    }, { passive: true });
   }
 
   function loadStories() {
@@ -2248,6 +2271,7 @@
   }
 
   function render() {
+    setTimeout(bindFeedScroll, 0);
     var stage = document.getElementById('stage');
     var nav = document.getElementById('tabs');
     if (!stage || !nav) return;
