@@ -2958,3 +2958,5 @@ body, #app {
 .pull.loading .pull-ring { animation: pullSpin 0.8s linear infinite; }
 @keyframes pullSpin { to { transform: rotate(360deg); } }
 #feed-scroll { overscroll-behavior-y: auto; }
+.match-mini { touch-action: none; cursor: grab; }
+.match-mini:active { cursor: grabbing; }
