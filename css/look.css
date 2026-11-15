@@ -2865,3 +2865,24 @@ body, #app {
 }
 .promo-more { height: 40px; border-radius: 999px; margin-top: 8px; width: 100%; font-size: 14px; }
 .promo-actions { display: flex; flex-direction: column; gap: 6px; }
+/* rating: card leaves softly, no white flash */
+.post.post-leave {
+  animation: postLeave 0.34s cubic-bezier(0.32, 0, 0.2, 1) forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+@keyframes postLeave {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 0.35; transform: translateY(-6px) scale(0.995); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.99); }
+}
+/* rating feedback chip: subtle, never a white block */
+.card-rate-pop {
+  background: rgba(10, 132, 255, 0.12) !important;
+  color: #0a84ff !important;
+  box-shadow: none !important;
+}
+:root[data-theme="dark"] .card-rate-pop { background: rgba(10, 132, 255, 0.22) !important; color: #6cb6ff !important; }
+/* rating buttons: no white fill on press */
+.star-btn:active, .star-btn.active { background: rgba(10, 132, 255, 0.16) !important; color: #0a84ff !important; }
+:root[data-theme="dark"] .star-btn:active, :root[data-theme="dark"] .star-btn.active { background: rgba(10, 132, 255, 0.24) !important; color: #6cb6ff !important; }

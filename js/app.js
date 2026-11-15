@@ -2646,9 +2646,8 @@
         pop.classList.add('show');
         if (window.TG) TG.impact('medium');
         setTimeout(function () {
-          card.style.opacity = '0';
-          card.style.transform = 'translateY(-20px)';
-        }, 420);
+          card.classList.add('post-leave');
+        }, 360);
       }
       
       // Send rating
@@ -2661,7 +2660,7 @@
           } else {
             render();
           }
-        }, 300);
+        }, 640);
         
         if (res.match) {
           setTimeout(function() {
