@@ -2926,3 +2926,35 @@ body, #app {
 /* pull-to-refresh removed */
 .pull, .pull-orb { display: none !important; }
 #feed-scroll { overscroll-behavior-y: contain; }
+/* ===== pull to refresh (enabled again) ===== */
+.pull {
+  display: block !important;
+  height: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.pull .pull-orb {
+  display: grid !important;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 8px auto;
+  border-radius: 50%;
+  background: rgba(120, 120, 128, 0.14);
+  transform: rotate(calc(var(--pp, 0) * 200deg)) scale(calc(0.6 + var(--pp, 0) * 0.4));
+  opacity: calc(0.35 + var(--pp, 0) * 0.65);
+  transition: transform 0.1s linear;
+}
+.pull .pull-ring {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(10, 132, 255, 0.28);
+  border-top-color: #0a84ff;
+  display: block;
+}
+.pull.ready .pull-orb { background: rgba(10, 132, 255, 0.16); }
+.pull.loading .pull-ring { animation: pullSpin 0.8s linear infinite; }
+@keyframes pullSpin { to { transform: rotate(360deg); } }
+#feed-scroll { overscroll-behavior-y: auto; }

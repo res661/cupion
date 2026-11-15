@@ -471,6 +471,13 @@
     getFeed: function (opts) {
       opts = opts || {};
       if (opts.restart) state.servedIds = [];
+      var shuffle = function (arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+        }
+        return arr;
+      };
       var premium = !!(state.me && state.me.premium);
       var limit = opts.limit || (premium ? 20 : 10);
       var list = PEOPLE.filter(function (p) {
@@ -479,6 +486,7 @@
         return true;
       });
       list.sort(function (a, b) { return b.createdAt - a.createdAt; });
+      if (opts.restart) list = shuffle(list.slice());
       var fresh = list.filter(function (p) { return state.servedIds.indexOf(p.id) === -1; });
       var slice = fresh.slice(0, limit);
       slice.forEach(function (p) { state.servedIds.push(p.id); });
