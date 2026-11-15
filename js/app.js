@@ -2164,7 +2164,7 @@
       '<div class="mm-text"><b>Это мэтч!</b><span>' + esc(u.name) + ' тоже оценил(а) тебя</span></div>' +
       '<button class="btn btn-primary mm-btn" data-act="person" data-id="' + esc(u.id) + '">Написать</button>' +
       '</div>';
-    syncBack();\r\n    var box = root.querySelector('.match-mini');
+    var box = root.querySelector('.match-mini');
     if (box) {
       var startX = 0, dx = 0, dragging = false;
       box.addEventListener('pointerdown', function (e) { e.stopPropagation(); dragging = true; startX = e.clientX; dx = 0; box.style.transition = 'none'; if (box.setPointerCapture) { try { box.setPointerCapture(e.pointerId); } catch (err) {} } });
