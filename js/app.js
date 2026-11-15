@@ -1025,23 +1025,33 @@
   }
 
   function sponsoredCard() {
-    if (S.me && S.me.premium) return '';
+    var isPrem = !!(S.me && S.me.premium);
     var c = promoOf(Math.floor(Date.now() / 86400000));
     return '<article class="post promo-card" data-promo="1">' +
       '<div class="post-head"><span class="mini-ava promo-ava"><img src="assets/promo/cupid.jpg" alt=""></span>' +
       '<div class="post-user">Cupion Premium' + premMark() + '<small class="sponsored-label">Реклама</small></div></div>' +
-      '<div class="promo-media"><img src="assets/promo/cupid.jpg" alt="Cupion Premium"></div>' +
-      '<div class="post-meta"><div class="post-title">' + esc(c.title) + '</div></div>' +
+      '<div class="promo-media"><img src="assets/promo/cupid.jpg" alt="Cupion Premium">' +
+      '<span class="promo-veil"></span>' +
+      '<span class="promo-overlay"><b>' + (isPrem ? 'Premium активен' : 'Cupion Premium') + '</b>' +
+      '<em>' + esc(c.title) + '</em></span></div>' +
+      '<div class="promo-benefits">' +
+      '<span><i>20</i>анкет в день</span>' +
+      '<span><i>3</i>истории</span>' +
+      '<span><i>5</i>фото в анкете</span>' +
+      '<span><i>1</i>кто смотрел</span>' +
+      '</div>' +
       '<p class="caption">' + esc(c.text) + '</p>' +
-      '<div class="promo-actions"><button class="btn btn-primary" data-act="premium">Открыть Premium</button>' +
-      '<button class="btn btn-white promo-more" data-act="premium">Подробнее</button></div>' +
-      '</article>';
+      '<div class="promo-actions">' +
+      (isPrem
+        ? '<button class="btn btn-white" data-act="premium">Управлять Premium</button>'
+        : '<button class="btn btn-primary" data-act="premium">Активировать Premium</button>' + '<button class="btn btn-white promo-more" data-act="premium">Что входит</button>') +
+      '</div></article>';
   }
 
   function feedScreen() {
     var cards = S.feed.length ? S.feed.map(postCard) : [];
     if (!S.tutorSeen && cards.length > 4) { cards.splice(4, 0, tutorialCard()); S.tutorSeen = true; }
-    if (cards.length > 7) { var sp = sponsoredCard(); if (sp) cards.splice(7, 0, sp); }
+    if (cards.length >= 1) { var sp = sponsoredCard(); if (sp) cards.splice(Math.min(6, cards.length), 0, sp); }
     var posts = S.loading
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
       : (cards.length ? cards.join('')
