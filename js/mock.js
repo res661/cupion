@@ -609,7 +609,7 @@
       }
       var back = findRating(to, 'me');
       var matched = false;
-      if (back && back.score > 8 && score > 8 && !hasMatch(to)) {
+      if (back && back.score > 7 && score > 7 && !hasMatch(to)) {
         state.matches.unshift({ id: 'm_' + Date.now(), userId: to, createdAt: Date.now() });
         matched = true;
       }

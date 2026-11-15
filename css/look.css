@@ -2734,3 +2734,31 @@ body, #app {
 /* Instagram rule: crop only what is outside 3:4..1.91:1, centred */
 .post .frame-clip img,
 .post .frame-clip video { object-position: center center; }
+
+/* tutorial card in the feed */
+.post-tutor { margin: 8px 0 10px; }
+.tutor-card {
+  margin: 0 14px;
+  padding: 20px 18px;
+  border-radius: 26px;
+  background: linear-gradient(160deg, rgba(10, 132, 255, 0.10), rgba(100, 210, 255, 0.05) 60%, transparent), var(--card);
+  border: 0.5px solid var(--hairline);
+}
+.tutor-badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(10, 132, 255, 0.14);
+  color: #0a84ff;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tutor-card h3 { margin: 0 0 6px; font-size: 20px; letter-spacing: -0.02em; }
+.tutor-card > p { margin: 0 0 12px; font-size: 14px; line-height: 1.4; color: var(--text-2); }
+.tutor-list { margin: 0 0 14px; padding-left: 18px; font-size: 14px; line-height: 1.5; color: var(--text-2); }
+.tutor-list li { margin-bottom: 4px; }
+.tutor-list b { color: var(--text); }
+:root[data-theme="dark"] .tutor-card { background: linear-gradient(160deg, rgba(10, 132, 255, 0.16), rgba(100, 210, 255, 0.04) 60%, transparent), var(--card); }

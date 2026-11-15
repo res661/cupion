@@ -1003,10 +1003,29 @@
       (post.isMine ? '<button class="btn btn-primary card-edit" data-act="edit">Редактировать</button>' : '') + rateUI + '</div></article>';
   }
 
+  function tutorialCard() {
+    return '<article class="post post-tutor" data-post="tutorial"><div class="tutor-card">' +
+      '<div class="tutor-badge">Как это работает</div>' +
+      '<h3>Оценивай от 1 до 10</h3>' +
+      '<p>Оценка 6+ — можно написать сразу. Взаимная оценка выше 7 у вас обоих — это мэтч.</p>' +
+      '<ul class="tutor-list">' +
+      '<li><b>Листай</b> ленту и ставь оценку в одну касание</li>' +
+      '<li><b>Смотри</b> взаимные в разделе «Оценки»</li>' +
+      '<li><b>Истории</b> — реакции тоже приводят к мэтчу</li>' +
+      '</ul>' +
+      '<button class="btn btn-primary btn-block" data-act="tab" data-tab="ratings">Посмотреть оценки</button>' +
+      '</div></article>';
+  }
+
   function feedScreen() {
     var cards = S.feed.length ? S.feed.map(postCard) : [];
     var promo = premiumPromoCard();
-    if (promo && cards.length > 2) cards.splice(2, 0, promo);
+    if (promo && cards.length > 2) {
+      cards.splice(2, 0, promo);
+      if (cards.length > 10) cards.splice(10, 0, promo);
+      if (cards.length > 18) cards.splice(18, 0, promo);
+    }
+    if (!S.tutorSeen && cards.length > 4) { cards.splice(4, 0, tutorialCard()); S.tutorSeen = true; }
     var posts = S.loading
       ? '<div class="empty"><div class="empty-orb"></div><h3>Загрузка</h3></div>'
       : (cards.length ? cards.join('')
@@ -2080,6 +2099,34 @@
       '<div class="mm-text"><b>Это мэтч!</b><span>' + esc(u.name) + ' тоже оценил(а) тебя</span></div>' +
       '<button class="btn btn-primary mm-btn" data-act="person" data-id="' + esc(u.id) + '">Написать</button>' +
       '</div>';
+    var box = root.querySelector('.match-mini');
+    if (box) {
+      var startX = 0, dx = 0, dragging = false;
+      box.addEventListener('pointerdown', function (e) { dragging = true; startX = e.clientX; dx = 0; box.style.transition = 'none'; });
+      box.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        dx = e.clientX - startX;
+        box.style.transform = 'translateX(' + dx + 'px)';
+        box.style.opacity = String(Math.max(0.35, 1 - Math.abs(dx) / 240));
+      });
+      var endDrag = function () {
+        if (!dragging) return;
+        dragging = false;
+        box.style.transition = 'transform .22s ease, opacity .22s ease';
+        if (Math.abs(dx) > 90) {
+          box.style.transform = 'translateX(' + (dx > 0 ? 320 : -320) + 'px)';
+          box.style.opacity = '0';
+          setTimeout(function () { S.match = null; renderMatch(); }, 200);
+        } else {
+          box.style.transform = 'translateX(0)';
+          box.style.opacity = '1';
+        }
+      };
+      box.addEventListener('pointerup', endDrag);
+      box.addEventListener('pointercancel', endDrag);
+      clearTimeout(S.matchTimer);
+      S.matchTimer = setTimeout(function () { S.match = null; renderMatch(); }, 8000);
+    }
   }
 
   function renderMatchOld() {
