@@ -2720,3 +2720,14 @@ body, #app {
   0% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-14px) scale(0.985); }
 }
+/* ===== Instagram-like media sizing ===== */
+/* kill the separator strip between posts */
+.post + .post { border-top: 0 !important; padding-top: 0 !important; }
+/* media keeps its own ratio (clamped 4:5 .. 1.91:1), always full width */
+.post .frame-clip { max-height: none; border-radius: 0; height: auto; }
+.post .frame-clip > .frame-track { height: 100%; }
+.post .frame-clip .media-slide { height: 100%; }
+.post .frame-clip img,
+.post .frame-clip video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* small breathing room between posts, like Instagram */
+.post { margin-bottom: 6px; }

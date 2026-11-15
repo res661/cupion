@@ -917,7 +917,10 @@
           return '<i class="' + (i === idx ? 'on' : '') + '"></i>';
         }).join('') + '</span>'
       : '';
-    return '<div class="frame"><div class="frame-clip"' + (photos.length > 1 ? ' data-swipe="' + esc(post.id) + '"' : '') + '>' +
+    var cur = photos[Math.min(Math.max(0, S.photoIndex[post.id] || 0), photos.length - 1)] || {};
+    var ar = Number(cur.ratio) > 0 ? Number(cur.ratio) : 0.8;
+    ar = Math.max(0.8, Math.min(1.91, ar));
+    return '<div class="frame"><div class="frame-clip" style="aspect-ratio:' + ar.toFixed(4) + '"' + (photos.length > 1 ? ' data-swipe="' + esc(post.id) + '"' : '') + '>' +
       '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
       dots + '</div>' +
       (post.isMine && photos.length ? '<button type="button" class="reg-rm" data-act="me-rm-photo" aria-label="Удалить фото">−</button>' : '') +
