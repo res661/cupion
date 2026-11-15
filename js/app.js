@@ -524,6 +524,30 @@
     }).catch(function () { S.loadingMore = false; });
   }
 
+  function fixMediaRatios() {
+    var clips = document.querySelectorAll('.post .frame-clip');
+    Array.prototype.forEach.call(clips, function (clip) {
+      if (clip.dataset.arFix === '1') return;
+      var el = clip.querySelector('img, video');
+      if (!el) return;
+      var apply = function () {
+        var w = el.naturalWidth || el.videoWidth || 0;
+        var h = el.naturalHeight || el.videoHeight || 0;
+        if (!w || !h) return;
+        var r = Math.max(0.56, Math.min(1.91, w / h));
+        clip.style.aspectRatio = String(r.toFixed(4));
+        clip.dataset.arFix = '1';
+      };
+      if (el.tagName === 'VIDEO') {
+        if (el.readyState >= 1) apply();
+        el.addEventListener('loadedmetadata', apply, { once: true });
+      } else {
+        if (el.complete && el.naturalWidth) apply();
+        el.addEventListener('load', apply, { once: true });
+      }
+    });
+  }
+
   function bindFeedScroll() {
     var el = document.getElementById('feed-scroll');
     if (!el || el.dataset.infinite === '1') return;
@@ -919,7 +943,7 @@
       : '';
     var cur = photos[Math.min(Math.max(0, S.photoIndex[post.id] || 0), photos.length - 1)] || {};
     var ar = Number(cur.ratio) > 0 ? Number(cur.ratio) : 0.8;
-    ar = Math.max(0.8, Math.min(1.91, ar));
+    ar = Math.max(0.56, Math.min(1.91, ar));
     return '<div class="frame"><div class="frame-clip" style="aspect-ratio:' + ar.toFixed(4) + '"' + (photos.length > 1 ? ' data-swipe="' + esc(post.id) + '"' : '') + '>' +
       '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
       dots + '</div>' +
@@ -2275,6 +2299,7 @@
 
   function render() {
     setTimeout(bindFeedScroll, 0);
+    setTimeout(fixMediaRatios, 0);
     var stage = document.getElementById('stage');
     var nav = document.getElementById('tabs');
     if (!stage || !nav) return;
