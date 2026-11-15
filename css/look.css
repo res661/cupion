@@ -2960,3 +2960,8 @@ body, #app {
 #feed-scroll { overscroll-behavior-y: auto; }
 .match-mini { touch-action: none; cursor: grab; }
 .match-mini:active { cursor: grabbing; }
+
+/* hide scrollbars, no horizontal page drift */
+.scroll, .sheet-scroll, #feed-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.scroll::-webkit-scrollbar, .sheet-scroll::-webkit-scrollbar, #feed-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
+#stage, .screen, .scroll { overflow-x: hidden; }

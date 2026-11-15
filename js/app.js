@@ -513,12 +513,22 @@
 
   function loadMoreFeed() {
     if (S.loadingMore || S.feedExhausted || S.loading) return;
+    if ((S.feed || []).length >= 50) { S.feedExhausted = true; return; }
     S.loadingMore = true;
     var el = document.getElementById('feed-scroll');
     var top = el ? el.scrollTop : 0;
+    var before = (S.feed || []).length;
     loadFeed(true).then(function () {
       S.loadingMore = false;
-      render();
+      var fresh = (S.feed || []).slice(before);
+      var scroller = document.getElementById('feed-scroll');
+      if (scroller && fresh.length) {
+        var html = fresh.map(function (item, i) { return postCard(item, before + i); }).join('');
+        var last = scroller.querySelector('.post:last-of-type') || scroller.lastElementChild;
+        if (last && last.insertAdjacentHTML) last.insertAdjacentHTML('afterend', html);
+        else scroller.insertAdjacentHTML('beforeend', html);
+        if (typeof fixMediaRatios === 'function') setTimeout(fixMediaRatios, 0);
+      }
       var el2 = document.getElementById('feed-scroll');
       if (el2) el2.scrollTop = top;
     }).catch(function () { S.loadingMore = false; });
@@ -3703,6 +3713,7 @@
       else if (Math.abs(dy) > 12) gesture = null;
     }
     if (!gesture) return;
+    if (gesture.kind === 'nav') { gesture = null; return; }
     if (gesture.kind === 'nav' && gesture.layer) {
       var shift = e.clientX - gesture.x;
       var at = tabIndex();
