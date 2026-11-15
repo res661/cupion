@@ -534,7 +534,7 @@
         var w = el.naturalWidth || el.videoWidth || 0;
         var h = el.naturalHeight || el.videoHeight || 0;
         if (!w || !h) return;
-        var r = Math.max(0.56, Math.min(1.91, w / h));
+        var r = Math.max(0.75, Math.min(1.91, w / h));
         clip.style.aspectRatio = String(r.toFixed(4));
         clip.dataset.arFix = '1';
       };
@@ -943,7 +943,7 @@
       : '';
     var cur = photos[Math.min(Math.max(0, S.photoIndex[post.id] || 0), photos.length - 1)] || {};
     var ar = Number(cur.ratio) > 0 ? Number(cur.ratio) : 0.8;
-    ar = Math.max(0.56, Math.min(1.91, ar));
+    ar = Math.max(0.75, Math.min(1.91, ar));
     return '<div class="frame"><div class="frame-clip" style="aspect-ratio:' + ar.toFixed(4) + '"' + (photos.length > 1 ? ' data-swipe="' + esc(post.id) + '"' : '') + '>' +
       '<div class="frame-track" data-track style="transform:translateX(-' + (idx * 100) + '%)">' + slides + '</div>' +
       dots + '</div>' +

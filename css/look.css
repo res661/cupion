@@ -2731,3 +2731,6 @@ body, #app {
 .post .frame-clip video { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* small breathing room between posts, like Instagram */
 .post { margin-bottom: 6px; }
+/* Instagram rule: crop only what is outside 3:4..1.91:1, centred */
+.post .frame-clip img,
+.post .frame-clip video { object-position: center center; }
